@@ -1,5 +1,10 @@
 const { WebSocketServer } = require('ws');
 
+const randomInteger = (min, max) => {
+  const rand = min - 0.5 + Math.random() * (max - min + 1);
+  return Math.round(rand);
+};
+
 const ABILITIES = {
   0: "Волк",
   1: "Капля",
@@ -95,10 +100,7 @@ const player1 = {
   cards: Object.values(CARDS).splice(0, 6),
   monsters: [
     {
-      body: [CARDS[30], CARDS[47]],
-      abilitiesUsed: false
-    }, {
-      body: [CARDS[60]],
+      body: [CARDS[60], CARDS[47]],
       abilitiesUsed: false
     }
   ],
@@ -110,12 +112,32 @@ const game = {
   step: 0,
 }
 
-const clients = [];
+const clients = {};
 
 const wsServer = new WebSocketServer({ host: 'localhost', port: 9000 });
-wsServer.addListener('connection', (wsClient) => {
-  
+wsServer.on('connection', (wsClient) => {
 
+  const id = Math.random();
+  clients[id] = wsClient;
 
-  wsClient.send(JSON.stringify({ type: 'ANY', game }));
+  wsClient.on("message", (event) => {
+    const message = JSON.parse(event);
+
+    if (message.type === "TAKE_CARD") {
+      const newCard = CARDS[102];
+      game.activePlayer.cards.push(newCard);
+    }
+
+    for (const clientId in clients) {
+      clients[clientId].send(JSON.stringify({ type: message.type, game }))
+    }
+  });
+
+  wsClient.on("close", () => {
+    delete clients[id];
+  });
+
+  for (const clientId in clients) {
+    clients[clientId].send(JSON.stringify({ type: 'ANY', game }))
+  }
 });

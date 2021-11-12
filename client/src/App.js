@@ -41,10 +41,20 @@ const App = () => {
     }
   }, []);
 
+  const onTakeCard = () => {
+    socket.send(JSON.stringify({ type: "TAKE_CARD" }));
+  }
+
+
+  const onPlaceCard = (sourse, destination) => {
+
+
+  }
+
   return (
     <div className="App">
       <div className="controls">
-        <button>Взять карту</button>
+        <button onClick={onTakeCard}>Взять карту</button>
         <button>Выложить карту</button>
         <button>Обменять (лучше не надо)</button>
       </div>
