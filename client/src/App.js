@@ -21,6 +21,8 @@ const App = () => {
 
   const [game, setGame] = useState({});
 
+  const me = (game?.players || []).find(p => p.name === "Roman");
+
   useEffect(() => {
     socket = new WebSocket("ws://localhost:9000");
 
@@ -41,17 +43,45 @@ const App = () => {
 
   return (
     <div className="App">
-      <div className="player">
-        <div className="my-cards">
-          {(game?.activePlayer?.cards || []).map(card => (
-            <div className="card">
-              <div> id: {card.id}</div>
-              <div> часть тела: {BODYPARTS[card.bodypart]} </div>
-              <div> способность: {ABILITIES[card.ability] || '-'} </div>
-            </div>
-          ))}
-        </div>
+      <div className="controls">
+        <button>Взять карту</button>
+        <button>Выложить карту</button>
+        <button>Обменять (лучше не надо)</button>
       </div>
+      <div className="player">
+        {[0, 1, 2, 3, 4].map((monsterIndex) => {
+          const monster = me?.monsters[monsterIndex];
+          return (
+            <div className="monster">
+              {[0, 1, 2].map((bodypartIndex) => {
+                const card = monster?.body[bodypartIndex];
+                if (!card) {
+                  return <div className="card empty" />
+                }
+                return (
+                  <div className="card">
+                    <div> id: {card.id}</div>
+                    <div> часть тела: {BODYPARTS[card.bodypart]} </div>
+                    <div> способность: {ABILITIES[card.ability] || '-'} </div>
+                    <div> легион: {card.legion}</div>
+                  </div>
+                )
+              })}
+            </div>
+          )
+        })}
+      </div>
+      <div className="my-cards">
+        {(me?.cards || []).map(card => (
+          <div className="card">
+            <div> id: {card.id}</div>
+            <div> часть тела: {BODYPARTS[card.bodypart]} </div>
+            <div> способность: {ABILITIES[card.ability] || '-'} </div>
+            <div> легион: {card.legion}</div>
+          </div>
+        ))}
+      </div>
+     
     </div>
   );
 }

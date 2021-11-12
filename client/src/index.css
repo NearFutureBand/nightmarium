@@ -7,14 +7,24 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
-    monospace;
-}
-
 * {
   box-sizing: border-box;
   font-size: 0.9rem;
+}
+
+#root {
+  height: 100vh;
+}
+
+.App {
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+.controls {
 }
 
 .my-cards {
@@ -22,6 +32,7 @@ code {
   position: fixed;
   bottom: 0;
   width: 100%;
+  justify-content: space-around;
 }
 
 .card {
@@ -30,6 +41,21 @@ code {
   display: flex;
   justify-content: center;
   align-items: center;
-  border: 1px solid black;
+  border: 1px solid rgba(0, 0, 0, 0.5);
+  margin: 0.1rem;
   flex-direction: column;
+  border-radius: 0.5rem;
+  flex-shrink: 1;
+}
+
+.card.empty {
+}
+
+.player {
+  display: flex;
+}
+
+.monster {
+  display: flex;
+  flex-direction: column-reverse;
 }
