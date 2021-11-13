@@ -1,4 +1,5 @@
 const { WebSocketServer } = require('ws');
+const _ = require('lodash');
 
 const randomInteger = (min, max) => {
   const rand = min - 0.5 + Math.random() * (max - min + 1);
@@ -93,11 +94,11 @@ const CARDS = {
     legion: "green",
     bodypart: [2],
   }
-}
+};
 
 const player1 = {
   name: "Roman",
-  cards: Object.values(CARDS).splice(0, 6),
+  cards: Object.values(CARDS).splice(0, 5), // 8, 11, 25, 30, 31,
   monsters: [
     {
       body: [CARDS[60], CARDS[47]],
@@ -107,6 +108,8 @@ const player1 = {
 }
 
 const game = {
+  cardsAvailable: _.omit(CARDS, [8, 11, 25, 30, 31, 60, 47]),
+  cardsThrowedAway: {},
   players: [player1],
   activePlayer: player1,
   step: 0,
@@ -124,8 +127,15 @@ wsServer.on('connection', (wsClient) => {
     const message = JSON.parse(event);
 
     if (message.type === "TAKE_CARD") {
-      const newCard = CARDS[102];
+      const availableCards = Object.values(game.cardsAvailable);
+      const newCardIndex = randomInteger(0, availableCards.length);
+      const newCard = availableCards[newCardIndex];
+      delete game.cardsAvailable[newCard.id];
       game.activePlayer.cards.push(newCard);
+    }
+
+    if (message.type === "PLAY_CARD") {
+
     }
 
     for (const clientId in clients) {
