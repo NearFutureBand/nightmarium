@@ -3,7 +3,7 @@ const _ = require('lodash');
 
 const randomInteger = (min, max) => {
   const rand = min - 0.5 + Math.random() * (max - min + 1);
-  return Math.round(rand);
+  return Math.abs(Math.round(rand));
 };
 
 const ABILITIES = {
@@ -103,7 +103,11 @@ const player1 = {
     {
       body: [CARDS[60], CARDS[47]],
       abilitiesUsed: false
-    }
+    },
+    { body: [] },
+    { body: [] },
+    { body: [] },
+    { body: [] }
   ],
 }
 
@@ -128,14 +132,19 @@ wsServer.on('connection', (wsClient) => {
 
     if (message.type === "TAKE_CARD") {
       const availableCards = Object.values(game.cardsAvailable);
-      const newCardIndex = randomInteger(0, availableCards.length);
+      if (availableCards.length === 0) {
+        return;
+      }
+      const newCardIndex = randomInteger(0, availableCards.length - 1);
       const newCard = availableCards[newCardIndex];
       delete game.cardsAvailable[newCard.id];
       game.activePlayer.cards.push(newCard);
     }
 
     if (message.type === "PLAY_CARD") {
-
+      const cardIndex = game.activePlayer.cards.findIndex(card => card.id === message.source.id);
+      const [cardToPlace] = game.activePlayer.cards.splice(cardIndex, 1);
+      game.activePlayer.monsters[message.destination.groupId].body[message.destination.placeId] = cardToPlace;
     }
 
     for (const clientId in clients) {

@@ -1,25 +1,14 @@
 import { useEffect, useState } from 'react';
 
-const BODYPARTS = {
-  0: "Ноги",
-  1: "Туловище",
-  2: "Голова"
-}
-
-const ABILITIES = {
-  0: "Волк",
-  1: "Капля",
-  2: "Улыбка",
-  3: "Топор",
-  4: "Кости",
-  5: "Зубы"
-}
+import { Card } from './components';
 
 let socket;
 
 const App = () => {
 
   const [game, setGame] = useState({});
+  const [cardSelectedOnHand, setCardSelecredOnHand] = useState(null);
+  const [placeSelectedOnMonster, setPlaceSelectedOnMonster] = useState({});
 
   const me = (game?.players || []).find(p => p.name === "Roman");
 
@@ -45,17 +34,33 @@ const App = () => {
     socket.send(JSON.stringify({ type: "TAKE_CARD" }));
   }
 
+  const onPlaceCard = () => {
+    socket.send(JSON.stringify({ type: "PLAY_CARD", source: cardSelectedOnHand, destination: placeSelectedOnMonster }));
+    setCardSelecredOnHand(null);
+    setPlaceSelectedOnMonster({});
+  }
 
-  const onPlaceCard = (sourse, destination) => {
+  const onMonsterCardClick = (card, groupId, placeId) => {
+    if (placeSelectedOnMonster.groupId === groupId && placeSelectedOnMonster.placeId === placeId) {
+      setPlaceSelectedOnMonster({});
+    } else {  
+      setPlaceSelectedOnMonster({ groupId, placeId });
+    }
+  }
 
-
+  const onSelectCardOnHand = (card) => {
+    if (card.id === cardSelectedOnHand?.id) {
+      setCardSelecredOnHand(null);
+    } else {
+      setCardSelecredOnHand(card);
+    }
   }
 
   return (
     <div className="App">
       <div className="controls">
         <button onClick={onTakeCard}>Взять карту</button>
-        <button>Выложить карту</button>
+        <button onClick={onPlaceCard}>Выложить карту</button>
         <button>Обменять (лучше не надо)</button>
       </div>
       <div className="player">
@@ -65,16 +70,16 @@ const App = () => {
             <div className="monster">
               {[0, 1, 2].map((bodypartIndex) => {
                 const card = monster?.body[bodypartIndex];
-                if (!card) {
-                  return <div className="card empty" />
-                }
                 return (
-                  <div className="card">
-                    <div> id: {card.id}</div>
-                    <div> часть тела: {BODYPARTS[card.bodypart]} </div>
-                    <div> способность: {ABILITIES[card.ability] || '-'} </div>
-                    <div> легион: {card.legion}</div>
-                  </div>
+                  <Card
+                    key={bodypartIndex}
+                    card={card}
+                    isEmpty={!card}
+                    groupId={monsterIndex}
+                    placeId={bodypartIndex}
+                    onClick={onMonsterCardClick}
+                    isSelected={placeSelectedOnMonster.groupId === monsterIndex && placeSelectedOnMonster.placeId === bodypartIndex}
+                  />
                 )
               })}
             </div>
@@ -82,13 +87,15 @@ const App = () => {
         })}
       </div>
       <div className="my-cards">
-        {(me?.cards || []).map(card => (
-          <div className="card">
-            <div> id: {card.id}</div>
-            <div> часть тела: {BODYPARTS[card.bodypart]} </div>
-            <div> способность: {ABILITIES[card.ability] || '-'} </div>
-            <div> легион: {card.legion}</div>
-          </div>
+        {(me?.cards || []).map((card, index) => (
+          <Card
+            key={card.id}
+            card={card}
+            groupId={-1}
+            placeId={index}
+            onClick={onSelectCardOnHand}
+            isSelected={cardSelectedOnHand?.id === card.id}
+          />
         ))}
       </div>
      
