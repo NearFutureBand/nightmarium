@@ -43,7 +43,7 @@ const App = () => {
   const onMonsterCardClick = (card, groupId, placeId) => {
     if (placeSelectedOnMonster.groupId === groupId && placeSelectedOnMonster.placeId === placeId) {
       setPlaceSelectedOnMonster({});
-    } else {  
+    } else {
       setPlaceSelectedOnMonster({ groupId, placeId });
     }
   }
@@ -79,6 +79,8 @@ const App = () => {
                     placeId={bodypartIndex}
                     onClick={onMonsterCardClick}
                     isSelected={placeSelectedOnMonster.groupId === monsterIndex && placeSelectedOnMonster.placeId === bodypartIndex}
+                    disabled={Boolean(cardSelectedOnHand && !cardSelectedOnHand?.bodypart.some(index => index === bodypartIndex) && !card)}
+                    isMonsterpart
                   />
                 )
               })}
@@ -95,6 +97,9 @@ const App = () => {
             placeId={index}
             onClick={onSelectCardOnHand}
             isSelected={cardSelectedOnHand?.id === card.id}
+            disabled={
+              placeSelectedOnMonster.groupId && !card.bodypart.some(bodypartIndex => bodypartIndex === placeSelectedOnMonster.placeId)
+            }
           />
         ))}
       </div>
