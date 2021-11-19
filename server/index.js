@@ -98,16 +98,17 @@ const CARDS = {
 
 const player1 = {
   name: "Roman",
-  cards: Object.values(CARDS).splice(0, 5), // 8, 11, 25, 30, 31,
+  cards: Object.values(CARDS).splice(0, 1), // 8
   monsters: [
     {
-      body: [CARDS[60], CARDS[47]],
+      id: 0,
+      body: [CARDS[60],CARDS[47], CARDS[91] ],
       abilitiesUsed: false
     },
-    { body: [] },
-    { body: [] },
-    { body: [] },
-    { body: [] }
+    { id: 1, body: [ CARDS[30]] },
+    { id: 2, body: [] },
+    { id: 3, body: [] },
+    { id: 4, body: [] }
   ],
 }
 

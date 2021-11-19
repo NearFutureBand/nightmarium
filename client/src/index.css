@@ -41,11 +41,11 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  cursor: pointer;
   margin: 0.1rem;
   flex-direction: column;
   border-radius: 0.5rem;
   flex-shrink: 1;
+  border: 1px solid rgba(0, 0, 0, 0.5);
 }
 
 .card.empty {
@@ -58,14 +58,19 @@ body {
 
 .card.disabled {
   opacity: 0.5;
-  cursor: auto;
 }
 
 .player {
+  padding: 1rem 0;
   display: flex;
 }
 
 .monster {
+  width: 10rem;
+  height: 23rem;
+  background-color: #eee;
   display: flex;
   flex-direction: column-reverse;
+  margin: 0 0.5rem;
+  padding: 1rem 0;
 }

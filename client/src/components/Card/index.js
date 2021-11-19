@@ -20,10 +20,10 @@ const Card = ({
   }
 
   if (isEmpty) {
-    return <div className={`card empty ${isSelected ? 'selected' : ''} ${disabled ? 'disabled' : ''}`} onClick={_onClick}/>
+    return <div className={`card empty ${isSelected ? 'selected' : ''} ${disabled ? 'disabled' : ''}`}/>
   }
   return (
-    <div className={`card ${isSelected ? 'selected' : ''} ${disabled ? 'disabled' : ''}`} style={{ backgroundColor: COLORS[card.legion], cursor: (isMonsterpart && ! isEmpty) ? 'auto' : undefined }} onClick={_onClick}>
+    <div className={`card ${isSelected ? 'selected' : ''} ${disabled ? 'disabled' : ''}`} style={{ backgroundColor: COLORS[card.legion], cursor: (isMonsterpart && ! isEmpty) ? 'auto' : undefined }}>
       <div> id: {card.id}</div>
       <div> часть тела: {card.bodypart.map(bodypartIndex => BODYPARTS[bodypartIndex]).join(' | ')} </div>
       <div> способность: {ABILITIES[card.ability] || '-'} </div>
