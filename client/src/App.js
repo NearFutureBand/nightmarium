@@ -7,8 +7,8 @@ let socket;
 const App = () => {
 
   const [game, setGame] = useState({});
-  const [cardSelectedOnHand, setCardSelecredOnHand] = useState(null);
-  const [placeSelectedOnMonster, setPlaceSelectedOnMonster] = useState({});
+  const [selectedCardId, setSelectedCardId] = useState(null);
+  const [selectedMonsterId, setSelectedMonsterId] = useState(null);
 
   const me = (game?.players || []).find(p => p.name === "Roman");
 
@@ -35,24 +35,24 @@ const App = () => {
   }
 
   const onPlaceCard = () => {
-    socket.send(JSON.stringify({ type: "PLAY_CARD", source: cardSelectedOnHand, destination: placeSelectedOnMonster }));
-    setCardSelecredOnHand(null);
-    setPlaceSelectedOnMonster({});
+    socket.send(JSON.stringify({ type: "PLAY_CARD", cardId: selectedCardId, monsterId: selectedMonsterId }));
+    setSelectedCardId(null);
+    setSelectedMonsterId(null);
   }
 
-  const onMonsterCardClick = (card, groupId, placeId) => {
-    if (placeSelectedOnMonster.groupId === groupId && placeSelectedOnMonster.placeId === placeId) {
-      setPlaceSelectedOnMonster({});
+  const onMonsterClick = (monsterId) => {
+    if (selectedMonsterId === monsterId) {
+      setSelectedMonsterId(null);
     } else {
-      setPlaceSelectedOnMonster({ groupId, placeId });
+      setSelectedMonsterId(monsterId);
     }
   }
 
   const onSelectCardOnHand = (card) => {
-    if (card.id === cardSelectedOnHand?.id) {
-      setCardSelecredOnHand(null);
+    if (card.id === selectedCardId) {
+      setSelectedCardId(null);
     } else {
-      setCardSelecredOnHand(card);
+      setSelectedCardId(card.id);
     }
   }
 
@@ -67,22 +67,28 @@ const App = () => {
         {[0, 1, 2, 3, 4].map((monsterIndex) => {
           const monster = me?.monsters[monsterIndex];
           return (
-            <div className="monster">
+            <div
+              className={`monster ${selectedMonsterId === monsterIndex ? 'selected' : ''}`}
+              onClick={() => onMonsterClick(monsterIndex)}
+              key={monsterIndex}
+            >
               {[0, 1, 2].map((bodypartIndex) => {
                 const card = monster?.body[bodypartIndex];
-                return (
-                  <Card
-                    key={bodypartIndex}
-                    card={card}
-                    isEmpty={!card}
-                    groupId={monsterIndex}
-                    placeId={bodypartIndex}
-                    onClick={onMonsterCardClick}
-                    isSelected={placeSelectedOnMonster.groupId === monsterIndex && placeSelectedOnMonster.placeId === bodypartIndex}
-                    disabled={Boolean(cardSelectedOnHand && !cardSelectedOnHand?.bodypart.some(index => index === bodypartIndex) && !card)}
-                    isMonsterpart
-                  />
-                )
+                if (card) {
+                  return (
+                    <Card
+                      key={bodypartIndex}
+                      card={card}
+                      isEmpty={!card}
+                      groupId={monsterIndex}
+                      placeId={bodypartIndex}
+                      //onClick={onMonsterCardClick}
+                      //isSelected={placeSelectedOnMonster.groupId === monsterIndex && placeSelectedOnMonster.placeId === bodypartIndex}
+                      isMonsterpart
+                    />
+                  )
+                }
+                return null;
               })}
             </div>
           )
@@ -96,10 +102,7 @@ const App = () => {
             groupId={-1}
             placeId={index}
             onClick={onSelectCardOnHand}
-            isSelected={cardSelectedOnHand?.id === card.id}
-            disabled={
-              placeSelectedOnMonster.groupId && !card.bodypart.some(bodypartIndex => bodypartIndex === placeSelectedOnMonster.placeId)
-            }
+            isSelected={selectedCardId === card.id}
           />
         ))}
       </div>

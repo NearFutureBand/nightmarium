@@ -126,6 +126,7 @@ wsServer.on('connection', (wsClient) => {
 
   const id = Math.random();
   clients[id] = wsClient;
+  console.log(`new client is connected ${id}`);
 
   wsClient.on("message", (event) => {
     const message = JSON.parse(event);
@@ -142,9 +143,18 @@ wsServer.on('connection', (wsClient) => {
     }
 
     if (message.type === "PLAY_CARD") {
-      const cardIndex = game.activePlayer.cards.findIndex(card => card.id === message.source.id);
-      const [cardToPlace] = game.activePlayer.cards.splice(cardIndex, 1);
-      game.activePlayer.monsters[message.destination.groupId].body[message.destination.placeId] = cardToPlace;
+      const targetMonster = game.activePlayer.monsters[message.monsterId];
+      const cardIndex = game.activePlayer.cards.findIndex(card => card.id === message.cardId);
+      const card = game.activePlayer.cards[cardIndex];
+
+      const possibleToInstall = card.bodypart.some(bodypartIndex => bodypartIndex === targetMonster.body.length);
+
+      if (!possibleToInstall) {
+        return;
+      }
+      
+      game.activePlayer.cards.splice(cardIndex, 1);
+      targetMonster.body.push(card);
     }
 
     for (const clientId in clients) {
