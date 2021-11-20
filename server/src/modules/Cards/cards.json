@@ -11,6 +11,12 @@
     "legion": "blue",
     "bodypart": [0, 1]
   },
+  "23": {
+    "id": 23,
+    "ability": 4,
+    "legion": "blue",
+    "bodypart": [1]
+  },
   "25": {
     "id": 25,
     "ability": 5,
@@ -58,6 +64,18 @@
     "ability": 0,
     "legion": "orange",
     "bodypart": [2]
+  },
+  "82": {
+    "id": 82,
+    "ability": 3,
+    "legion": "green",
+    "bodypart": [2]
+  },
+  "84": {
+    "id": 84,
+    "ability": 3,
+    "legion": "green",
+    "bodypart": [0]
   },
   "91": {
     "id": 91,

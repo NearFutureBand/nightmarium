@@ -1,16 +1,29 @@
 const { omit } = require("lodash");
 
 const { CARDS } = require("../Cards");
+const { randomInteger } = require("../../helpers");
+
+
 
 class Game {
   constructor() {
-    this.cardsAvailable = omit(CARDS, [8, 11, 25, 30, 31, 60, 47]);
+    this.cardsAvailable = CARDS;
     this.cardsThrowedAway = {};
     this.players = [];
     this.activePlayerIndex = null;
     this.activePlayer = null;
     this.actions = null;
     this.idMap = {};
+  }
+
+  static giveDefaulCards() {
+    return new Array(6).fill(null).map(() => {
+      const availableIndices = Object.keys(CARDS);
+      const cardIndex = availableIndices[randomInteger(0, availableIndices.length - 1)];
+      const card = { ...CARDS[cardIndex] };
+      delete CARDS[cardIndex];
+      return card;
+    });
   }
 
   addPlayer(player) {

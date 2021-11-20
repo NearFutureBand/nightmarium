@@ -12,7 +12,6 @@ const App = () => {
 
   const me = (game?.players || []).find(p => p.id === playerId);
   const isMyTurn = game?.activePlayer?.id === playerId;
-  console.log(me);
 
   useEffect(() => {
     socket = new WebSocket("ws://localhost:9000");

@@ -18,6 +18,7 @@ body {
 
 .App {
   height: 100%;
+  width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -28,23 +29,26 @@ body {
 }
 
 .my-cards {
-  display: flex;
   position: fixed;
   bottom: 0;
+  display: flex;
+  flex-wrap: wrap;
   width: 100%;
-  justify-content: space-around;
 }
 
 .card {
   width: 10rem;
-  height: 7rem;
+  min-width: 10rem;
+  height: 6.4rem;
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
   flex-direction: column;
-  border-radius: 0.5rem;
-  flex-shrink: 1;
+  border-radius: 0.8rem;
+  background-size: 100%;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .card.empty {
@@ -69,7 +73,7 @@ body {
   display: flex;
   flex-direction: column-reverse;
   width: calc(10rem + 4px);
-  height: calc(21rem + 4px);
+  height: calc(19.2rem + 4px);
   background-color: #eee;
   margin: 0 0.5rem;
   cursor: pointer;

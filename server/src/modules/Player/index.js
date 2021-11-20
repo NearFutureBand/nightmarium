@@ -15,7 +15,7 @@ class Player {
     this.id = id;
     this.name = null;
     this.wsClient = wsClient;
-    this.cards = Object.values(CARDS).splice(0, 5); // 8, 11, 25, 30, 31, // TODO TMP
+    this.cards = [];
     this.monsters = new Array(5).fill(0).map((item, i) => new Monster(i));
   }
 

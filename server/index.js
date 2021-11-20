@@ -4,11 +4,7 @@ const _ = require('lodash');
 const { CARDS } = require("./src/modules/Cards");
 const Game = require("./src/modules/Game");
 const Player = require("./src/modules/Player");
-
-const randomInteger = (min, max) => {
-  const rand = min - 0.5 + Math.random() * (max - min + 1);
-  return Math.abs(Math.round(rand));
-};
+const { randomInteger } = require("./src/helpers");
 
 const ABILITIES = {
   0: "Волк",
@@ -25,8 +21,6 @@ const BODYPARTS = {
   2: "Голова"
 }
 
-const player1 = new Player("Roman");
-
 const game = new Game();
 
 const wsServer = new WebSocketServer({ host: 'localhost', port: 9000 });
@@ -36,6 +30,7 @@ wsServer.on('connection', (wsClient) => {
   console.log(`new client is connected ${id}`);
 
   const newPlayer = new Player(id, wsClient);
+  newPlayer.cards = Game.giveDefaulCards();
   game.addPlayer(newPlayer);
   newPlayer.sendMessage("CONNECTION", { playerId: id, game: game.getGame() });
 
@@ -83,11 +78,15 @@ wsServer.on('connection', (wsClient) => {
         return;
       }
       
+
       game.activePlayer.cards.splice(cardIndex, 1);
       targetMonster.body.push(card);
       game.actions -= 1;
 
-      // monster is ready
+      if (targetMonster.body.length === 3) {
+        // monster has been built
+        console.log(targetMonster.body);
+      }
 
       if (game.actions === 0) {
         game.setNextActivePlayer();
