@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { Card } from './components';
+import { Card, Monster } from './components';
 
 let socket;
 
@@ -67,10 +67,11 @@ const App = () => {
         {[0, 1, 2, 3, 4].map((monsterIndex) => {
           const monster = me?.monsters[monsterIndex];
           return (
-            <div
-              className={`monster ${selectedMonsterId === monsterIndex ? 'selected' : ''}`}
-              onClick={() => onMonsterClick(monsterIndex)}
+            <Monster
+              monster={monster}
+              isSelected={selectedMonsterId === monsterIndex}
               key={monsterIndex}
+              onClick={() => onMonsterClick(monsterIndex)}
             >
               {[0, 1, 2].map((bodypartIndex) => {
                 const card = monster?.body[bodypartIndex];
@@ -90,7 +91,7 @@ const App = () => {
                 }
                 return null;
               })}
-            </div>
+            </Monster>
           )
         })}
       </div>
