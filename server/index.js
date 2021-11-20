@@ -1,6 +1,10 @@
 const { WebSocketServer } = require('ws');
 const _ = require('lodash');
 
+const { CARDS } = require("./src/modules/Cards");
+const Game = require("./src/modules/Game");
+const Player = require("./src/modules/Player");
+
 const randomInteger = (min, max) => {
   const rand = min - 0.5 + Math.random() * (max - min + 1);
   return Math.abs(Math.round(rand));
@@ -21,115 +25,36 @@ const BODYPARTS = {
   2: "Голова"
 }
 
-const CARDS = {
-  8: {
-    id: 8,
-    ability: 4,
-    legion: "blue",
-    bodypart: [1],
-  },
-  11: {
-    id: 11,
-    ability: 1,
-    legion: "blue",
-    bodypart: [0, 1],
-  },
-  25: {
-    id: 25,
-    ability: 5,
-    legion: "blue",
-    bodypart: [2],
-  },
-  30: {
-    id: 30,
-    ability: null,
-    legion: "red",
-    bodypart: [0],
-  },
-  31: {
-    id: 31,
-    ability: 2,
-    legion: "red",
-    bodypart: [2],
-  },
-  47: {
-    id: 47,
-    ability: 1,
-    legion: "red",
-    bodypart: [1],
-  },
-  60: {
-    id: 60,
-    ability: 2,
-    legion: "orange",
-    bodypart: [0],
-  },
-  61: {
-    id: 61,
-    ability: 1,
-    legion: "orange",
-    bodypart: [2],
-  },
-  68: {
-    id: 68,
-    ability: 0,
-    legion: "orange",
-    bodypart: [1],
-  },
-  76: {
-    id: 76,
-    ability: 0,
-    legion: "orange",
-    bodypart: [2],
-  },
-  91: {
-    id: 91,
-    ability: 5,
-    legion: "green",
-    bodypart: [2],
-  },
-  102: {
-    id: 102,
-    ability: 3,
-    legion: "green",
-    bodypart: [2],
-  }
-};
+const player1 = new Player("Roman");
 
-const player1 = {
-  name: "Roman",
-  cards: Object.values(CARDS).splice(0, 5), // 8, 11, 25, 30, 31,
-  monsters: [
-    {
-      body: [CARDS[60], CARDS[47]],
-      abilitiesUsed: false
-    },
-    { body: [] },
-    { body: [] },
-    { body: [] },
-    { body: [] }
-  ],
-}
-
-const game = {
-  cardsAvailable: _.omit(CARDS, [8, 11, 25, 30, 31, 60, 47]),
-  cardsThrowedAway: {},
-  players: [player1],
-  activePlayer: player1,
-  step: 0,
-}
-
-const clients = {};
+const game = new Game();
 
 const wsServer = new WebSocketServer({ host: 'localhost', port: 9000 });
 wsServer.on('connection', (wsClient) => {
 
   const id = Math.random();
-  clients[id] = wsClient;
   console.log(`new client is connected ${id}`);
+
+  const newPlayer = new Player(id, wsClient);
+  game.addPlayer(newPlayer);
+  newPlayer.sendMessage("CONNECTION", { playerId: id, game: game.getGame() });
 
   wsClient.on("message", (event) => {
     const message = JSON.parse(event);
+
+    if (message.type === "RECONNECT") {
+      // FE sends id from localstorage
+      // set wsClient to the player with given id
+    }
+
+    if (message.type === "REGISTRATION") {
+      // message: {id, name}
+      // setName
+    }
+
+    if (message.type === "START") {
+      game.setNextActivePlayer();
+    }
 
     if (message.type === "TAKE_CARD") {
       const availableCards = Object.values(game.cardsAvailable);
@@ -140,6 +65,11 @@ wsServer.on('connection', (wsClient) => {
       const newCard = availableCards[newCardIndex];
       delete game.cardsAvailable[newCard.id];
       game.activePlayer.cards.push(newCard);
+      game.actions -= 1;
+
+      if (game.actions === 0) {
+        game.setNextActivePlayer();
+      }
     }
 
     if (message.type === "PLAY_CARD") {
@@ -155,18 +85,23 @@ wsServer.on('connection', (wsClient) => {
       
       game.activePlayer.cards.splice(cardIndex, 1);
       targetMonster.body.push(card);
+      game.actions -= 1;
+
+      // monster is ready
+
+      if (game.actions === 0) {
+        game.setNextActivePlayer();
+      }
     }
 
-    for (const clientId in clients) {
-      clients[clientId].send(JSON.stringify({ type: message.type, game }))
-    }
+    game.players.forEach(player => {
+      player.sendMessage(message.type, { game: game.getGame() });
+    });
   });
 
   wsClient.on("close", () => {
-    delete clients[id];
+    console.log(`${id} disconnected`);
+    // const disconnectedPlayer = game.getPlayerById(id);
+    // disconnectedPlayer.unsetWsClient();
   });
-
-  for (const clientId in clients) {
-    clients[clientId].send(JSON.stringify({ type: 'ANY', game }))
-  }
 });

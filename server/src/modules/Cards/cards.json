@@ -1,0 +1,74 @@
+{
+  "8": {
+    "id": 8,
+    "ability": 4,
+    "legion": "blue",
+    "bodypart": [1]
+  },
+  "11": {
+    "id": 11,
+    "ability": 1,
+    "legion": "blue",
+    "bodypart": [0, 1]
+  },
+  "25": {
+    "id": 25,
+    "ability": 5,
+    "legion": "blue",
+    "bodypart": [2]
+  },
+  "30": {
+    "id": 30,
+    "ability": null,
+    "legion": "red",
+    "bodypart": [0]
+  },
+  "31": {
+    "id": 31,
+    "ability": 2,
+    "legion": "red",
+    "bodypart": [2]
+  },
+  "47": {
+    "id": 47,
+    "ability": 1,
+    "legion": "red",
+    "bodypart": [1]
+  },
+  "60": {
+    "id": 60,
+    "ability": 2,
+    "legion": "orange",
+    "bodypart": [0]
+  },
+  "61": {
+    "id": 61,
+    "ability": 1,
+    "legion": "orange",
+    "bodypart": [2]
+  },
+  "68": {
+    "id": 68,
+    "ability": 0,
+    "legion": "orange",
+    "bodypart": [1]
+  },
+  "76": {
+    "id": 76,
+    "ability": 0,
+    "legion": "orange",
+    "bodypart": [2]
+  },
+  "91": {
+    "id": 91,
+    "ability": 5,
+    "legion": "green",
+    "bodypart": [2]
+  },
+  "102": {
+    "id": 102,
+    "ability": 3,
+    "legion": "green",
+    "bodypart": [2]
+  }
+}

@@ -5,23 +5,35 @@ import { Card, Monster } from './components';
 let socket;
 
 const App = () => {
-
+  const [playerId, setPlayerId] = useState(null);
   const [game, setGame] = useState({});
   const [selectedCardId, setSelectedCardId] = useState(null);
   const [selectedMonsterId, setSelectedMonsterId] = useState(null);
 
-  const me = (game?.players || []).find(p => p.name === "Roman");
+  const me = (game?.players || []).find(p => p.id === playerId);
+  const isMyTurn = game?.activePlayer?.id === playerId;
+  console.log(me);
 
   useEffect(() => {
     socket = new WebSocket("ws://localhost:9000");
 
     socket.onopen = () => {
       console.log("CLIENT: connected");
+      // if (!playerId) {
+      //   const playerId = localStorage.getItem("playerId");
+        
+      // }
     }
 
     socket.onmessage = (event) => {
       const m = JSON.parse(event.data);
       console.log("CLIENT: message", m);
+
+      if (m.type === "CONNECTION") {
+        localStorage.setItem("playerId", m.playerId);
+        setPlayerId(m.playerId);
+      }
+
       setGame(m.game);
     }
 
@@ -35,9 +47,16 @@ const App = () => {
   }
 
   const onPlaceCard = () => {
+    if (!selectedCardId || !selectedMonsterId) {
+      return;
+    }
     socket.send(JSON.stringify({ type: "PLAY_CARD", cardId: selectedCardId, monsterId: selectedMonsterId }));
     setSelectedCardId(null);
     setSelectedMonsterId(null);
+  }
+
+  const onStartGame = () => {
+    socket.send(JSON.stringify({ type: "START" }));
   }
 
   const onMonsterClick = (monsterId) => {
@@ -56,13 +75,26 @@ const App = () => {
     }
   }
 
+  if (!game?.activePlayer) {
+    return (
+      <div className="App">
+        Привет, {playerId}. <button onClick={onStartGame}>Начать игру</button>
+      </div>
+    )
+  }
+
   return (
     <div className="App">
-      <div className="controls">
-        <button onClick={onTakeCard}>Взять карту</button>
-        <button onClick={onPlaceCard}>Выложить карту</button>
-        <button>Обменять (лучше не надо)</button>
-      </div>
+      <div>Я  - {playerId}. Ходит {game?.activePlayer?.id}</div>
+      {isMyTurn && (
+        <div className="controls">
+          <div>Действий осталось: {game.actions}</div>
+          <button onClick={onTakeCard}>Взять карту</button>
+          <button onClick={onPlaceCard}>Выложить карту</button>
+          {/* <button>Обменять (лучше не надо)</button> */}
+        </div>
+      )}
+      
       <div className="player">
         {[0, 1, 2, 3, 4].map((monsterIndex) => {
           const monster = me?.monsters[monsterIndex];
