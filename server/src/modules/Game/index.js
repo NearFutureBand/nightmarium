@@ -17,6 +17,7 @@ class Game {
   }
 
   static giveDefaulCards() {
+    // TODO оптимизировать с помощью giveCard
     return new Array(6).fill(null).map(() => {
       const availableIndices = Object.keys(CARDS);
       const cardIndex = availableIndices[randomInteger(0, availableIndices.length - 1)];
@@ -24,6 +25,14 @@ class Game {
       delete CARDS[cardIndex];
       return card;
     });
+  }
+
+  static giveCard() {
+    const availableIndices = Object.keys(CARDS);
+    const cardIndex = availableIndices[randomInteger(0, availableIndices.length - 1)];
+    const card = { ...CARDS[cardIndex] };
+    delete CARDS[cardIndex];
+    return card;
   }
 
   addPlayer(player) {

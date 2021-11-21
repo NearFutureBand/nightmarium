@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { Card, Monster } from './components';
+import { ABILITIES, ABILITIES_DESCRIPTION } from './constants';
 
 let socket;
 
@@ -9,6 +10,7 @@ const App = () => {
   const [game, setGame] = useState({});
   const [selectedCardId, setSelectedCardId] = useState(null);
   const [selectedMonsterId, setSelectedMonsterId] = useState(null);
+  const [awaitingAbility, setAwaitingAbility] = useState({});
 
   const me = (game?.players || []).find(p => p.id === playerId);
   const isMyTurn = game?.activePlayer?.id === playerId;
@@ -31,6 +33,22 @@ const App = () => {
       if (m.type === "CONNECTION") {
         localStorage.setItem("playerId", m.playerId);
         setPlayerId(m.playerId);
+      }
+
+      if (m.type === "AWAIT_ABILITY") {
+        let submitText = "Подтвердить";
+        switch (m.abilityType) {
+          case 0: {
+            submitText = "Расстановка завершена"
+            break;
+          }
+          case 1: {
+            submitText = "Забрать";
+            break;
+          }
+          default: { }
+        }
+        setAwaitingAbility({ ...m, submitText });
       }
 
       setGame(m.game);
@@ -74,6 +92,28 @@ const App = () => {
     }
   }
 
+  const onSpecialCardClick = (card) => {
+    if (awaitingAbility.abilityType === 0) {
+      setSelectedCardId(selectedCardId === card.id ? null : card.id);
+    }
+  }
+
+  const onSubmitAbility = () => {
+    const payload = {
+      abilityType: awaitingAbility.type,
+      abilityNumber: awaitingAbility.number,
+    }
+    
+    if (awaitingAbility.abilityType === 1) {
+      payload.cards = awaitingAbility.cards;
+    }
+    
+    socket.send(JSON.stringify({
+      type: "SUBMIT_ABILITY",
+      ...payload
+    }));
+  }
+
   if (!game?.activePlayer) {
     return (
       <div className="App">
@@ -85,12 +125,30 @@ const App = () => {
   return (
     <div className="App">
       <div>Я  - {playerId}. Ходит {game?.activePlayer?.id}</div>
-      {isMyTurn && (
+      {(isMyTurn && typeof awaitingAbility.abilityType !== "number") && (
         <div className="controls">
           <div>Действий осталось: {game.actions}</div>
           <button onClick={onTakeCard}>Взять карту</button>
           <button onClick={onPlaceCard}>Выложить карту</button>
           {/* <button>Обменять (лучше не надо)</button> */}
+        </div>
+      )}
+
+      {typeof awaitingAbility.abilityType === "number" && (
+        <div>
+          <div>Способность номер {awaitingAbility.abilityNumber + 1} - {ABILITIES[awaitingAbility.abilityType]}</div>
+          <div style={{ display: "flex" }}>
+            {awaitingAbility.cards && awaitingAbility.cards.map((card) => (
+              <Card
+                card={card}
+                key={card.id}
+                onClick={onSpecialCardClick}
+                isSelected={selectedCardId === card.id}
+              />)
+            )}
+          </div>
+          <div>{ABILITIES_DESCRIPTION[awaitingAbility.abilityType]}</div>
+          <button onClick={onSubmitAbility}>{awaitingAbility.submitText}</button>
         </div>
       )}
       

@@ -23,6 +23,35 @@ const BODYPARTS = {
 
 const game = new Game();
 
+let abilitiesState = {};
+
+const onAbility = () => {
+  const ability = abilitiesState.abilities[abilitiesState.currentAbilityIndex];
+  ability.inprogress = true;
+
+  console.log(abilitiesState);
+
+  let payload = {};
+  switch (ability.type) {
+    case 0: {
+      // волк
+      // выдать две карты чтобы игрок сразу попытался их применить
+      payload.cards = [Game.giveCard(), Game.giveCard()];
+    }
+    case 1: {
+      // взять две карты на руку
+      payload.cards = [Game.giveCard(), Game.giveCard()];
+    }
+  }
+
+  payload.abilityNumber = abilitiesState.currentAbilityIndex;
+  payload.abilityType = ability.type;
+
+  game.players.forEach(player => {
+    player.sendMessage("AWAIT_ABILITY", { game: game.getGame(), ...payload });
+  });
+}
+
 const wsServer = new WebSocketServer({ host: 'localhost', port: 9000 });
 wsServer.on('connection', (wsClient) => {
 
@@ -36,6 +65,7 @@ wsServer.on('connection', (wsClient) => {
 
   wsClient.on("message", (event) => {
     const message = JSON.parse(event);
+    console.log("message", message);
 
     if (message.type === "RECONNECT") {
       // FE sends id from localstorage
@@ -86,11 +116,39 @@ wsServer.on('connection', (wsClient) => {
       if (targetMonster.body.length === 3) {
         // monster has been built
         console.log(targetMonster.body);
+        abilitiesState.playerId = game.activePlayer.id;
+        abilitiesState.monsterId = targetMonster.id;
+        abilitiesState.abilities = [...targetMonster.body].reverse().map((bodypart, index) => ({ type: bodypart.ability, done: false, inprogress: false }));
+        abilitiesState.currentAbilityIndex = 0;
+        onAbility();
+        return;
       }
 
       if (game.actions === 0) {
         game.setNextActivePlayer();
       }
+    }
+
+    if (message.type === "SUBMIT_ABILITY") {
+      const ability = abilitiesState.abilities[abilitiesState.currentAbilityIndex]
+      switch (ability.type) {
+        case 1: {
+          // TODO жуткий говнокод, как и все здесь пока
+          game.activePlayer.cards.push(message.cards[0]);
+          game.activePlayer.cards.push(message.cards[1]);
+          break;
+        }
+      }
+      ability.done = true;
+      ability.inprogress = false;
+      abilitiesState.currentAbilityIndex++;
+
+      if (abilitiesState.currentAbilityIndex === 3) {
+        game.setNextActivePlayer();
+        abilitiesState = {};
+        return;
+      }
+      onAbility();
     }
 
     game.players.forEach(player => {
