@@ -1,13 +1,55 @@
 {
+  "1": {
+    "id": 1,
+    "ability": 4,
+    "legion": "blue",
+    "bodypart": [2]
+  },
   "8": {
     "id": 8,
     "ability": 4,
     "legion": "blue",
     "bodypart": [1]
   },
+  "9": {
+    "id": 9,
+    "ability": 4,
+    "legion": "blue",
+    "bodypart": [0]
+  },
   "11": {
     "id": 11,
     "ability": 1,
+    "legion": "blue",
+    "bodypart": [0, 1]
+  },
+  "13": {
+    "id": 13,
+    "ability": null,
+    "legion": "blue",
+    "bodypart": [2]
+  },
+  "15": {
+    "id": 15,
+    "ability": null,
+    "legion": "blue",
+    "bodypart": [0]
+  },
+  "16": {
+    "id": 16,
+    "ability": 4,
+    "legion": "blue",
+    "bodypart": [2]
+  },
+  "17": {
+    "id": 17,
+    "ability": 4,
+    "legion": "blue",
+    "bodypart": [1, 2]
+  },
+  "21": {
+    "id": 21,
+    "ability": 4,
     "legion": "blue",
     "bodypart": [0, 1]
   },
@@ -23,6 +65,18 @@
     "legion": "blue",
     "bodypart": [2]
   },
+  "27": {
+    "id": 27,
+    "ability": null,
+    "legion": "blue",
+    "bodypart": [0]
+  },
+  "29": {
+    "id": 29,
+    "ability": 2,
+    "legion": "red",
+    "bodypart": [1, 2]
+  },
   "30": {
     "id": 30,
     "ability": null,
@@ -35,11 +89,65 @@
     "legion": "red",
     "bodypart": [2]
   },
+  "37": {
+    "id": 37,
+    "ability": null,
+    "legion": "red",
+    "bodypart": [2]
+  },
+  "42": {
+    "id": 42,
+    "ability": 5,
+    "legion": "red",
+    "bodypart": [0]
+  },
+  "44": {
+    "id": 44,
+    "ability": 5,
+    "legion": "red",
+    "bodypart": [0, 1]
+  },
   "47": {
     "id": 47,
     "ability": 1,
     "legion": "red",
     "bodypart": [1]
+  },
+  "48": {
+    "id": 48,
+    "ability": null,
+    "legion": "red",
+    "bodypart": [0]
+  },
+  "49": {
+    "id": 49,
+    "ability": 1,
+    "legion": "red",
+    "bodypart": [2]
+  },
+  "52": {
+    "id": 52,
+    "ability": null,
+    "legion": "red",
+    "bodypart": [2]
+  },
+  "53": {
+    "id": 53,
+    "ability": 5,
+    "legion": "red",
+    "bodypart": [1]
+  },
+  "56": {
+    "id": 56,
+    "ability": 0,
+    "legion": "orange",
+    "bodypart": [1]
+  },
+  "57": {
+    "id": 57,
+    "ability": 0,
+    "legion": "orange",
+    "bodypart": [0]
   },
   "60": {
     "id": 60,
@@ -53,17 +161,59 @@
     "legion": "orange",
     "bodypart": [2]
   },
+  "62": {
+    "id": 62,
+    "ability": 1,
+    "legion": "orange",
+    "bodypart": [0, 1, 2]
+  },
+  "65": {
+    "id": 65,
+    "ability": 0,
+    "legion": "orange",
+    "bodypart": [0, 1, 2]
+  },
   "68": {
     "id": 68,
     "ability": 0,
     "legion": "orange",
     "bodypart": [1]
   },
+  "72": {
+    "id": 72,
+    "ability": null,
+    "legion": "orange",
+    "bodypart": [0]
+  },
   "76": {
     "id": 76,
     "ability": 0,
     "legion": "orange",
     "bodypart": [2]
+  },
+  "77": {
+    "id": 77,
+    "ability": 0,
+    "legion": "orange",
+    "bodypart": [1]
+  },
+  "79": {
+    "id": 79,
+    "ability": null,
+    "legion": "orange",
+    "bodypart": [2]
+  },
+  "80": {
+    "id": 80,
+    "ability": null,
+    "legion": "orange",
+    "bodypart": [1]
+  },
+  "81": {
+    "id": 81,
+    "ability": null,
+    "legion": "orange",
+    "bodypart": [0]
   },
   "82": {
     "id": 82,
@@ -77,16 +227,88 @@
     "legion": "green",
     "bodypart": [0]
   },
+  "85": {
+    "id": 85,
+    "ability": null,
+    "legion": "green",
+    "bodypart": [2]
+  },
+  "86": {
+    "id": 86,
+    "ability": null,
+    "legion": "green",
+    "bodypart": [1]
+  },
+  "87": {
+    "id": 87,
+    "ability": null,
+    "legion": "green",
+    "bodypart": [0]
+  },
   "91": {
     "id": 91,
     "ability": 5,
     "legion": "green",
     "bodypart": [2]
   },
+  "92": {
+    "id": 92,
+    "ability": 5,
+    "legion": "green",
+    "bodypart": [1]
+  },
+  "94": {
+    "id": 94,
+    "ability": 3,
+    "legion": "green",
+    "bodypart": [2]
+  },
+  "96": {
+    "id": 96,
+    "ability": 3,
+    "legion": "green",
+    "bodypart": [0]
+  },
+  "101": {
+    "id": 101,
+    "ability": 3,
+    "legion": "green",
+    "bodypart": [1]
+  },
   "102": {
     "id": 102,
     "ability": 3,
     "legion": "green",
     "bodypart": [2]
+  },
+  "103": {
+    "id": 103,
+    "ability": 3,
+    "legion": "green",
+    "bodypart": [2]
+  },
+  "104": {
+    "id": 104,
+    "ability": 3,
+    "legion": "green",
+    "bodypart": [0, 1]
+  },
+  "106": {
+    "id": 106,
+    "ability": 3,
+    "legion": "green",
+    "bodypart": [2]
+  },
+  "107": {
+    "id": 107,
+    "ability": 3,
+    "legion": "green",
+    "bodypart": [1]
+  },
+  "108": {
+    "id": 108,
+    "ability": 3,
+    "legion": "green",
+    "bodypart": [0]
   }
 }

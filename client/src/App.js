@@ -46,7 +46,7 @@ const App = () => {
   }
 
   const onPlaceCard = () => {
-    if (!selectedCardId || !selectedMonsterId) {
+    if (!selectedCardId || selectedMonsterId === null) {
       return;
     }
     socket.send(JSON.stringify({ type: "PLAY_CARD", cardId: selectedCardId, monsterId: selectedMonsterId }));
