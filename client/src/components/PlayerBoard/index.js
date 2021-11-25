@@ -1,11 +1,17 @@
 import React from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 
 import { BODYPARTS, ABILITIES, COLORS } from '../../constants';
 import { MONSTER_PART } from '../../img';
 import { Monster } from '../Monster';
 import { Card } from '../Card';
 
-const PlayerBoard = ({ player = {} }) => {
+import { getSelectedMonsterId, selectMonster } from '../../slices';
+
+const PlayerBoard = ({ player = {}, isMine }) => {
+  const dispatch = useDispatch();
+
+  const selectedMonsterId = useSelector(getSelectedMonsterId);
 
   if (!player.monsters) {
     return null;
@@ -20,9 +26,9 @@ const PlayerBoard = ({ player = {} }) => {
           return (
             <Monster
               monster={monster}
-              //isSelected={selectedMonsterId === monsterIndex}
+              isSelected={selectedMonsterId === monsterIndex}
               key={monsterIndex}
-              //onClick={() => onMonsterClick(monsterIndex)}
+              onClick={() => dispatch(selectMonster({ monsterId: monsterIndex }))}
             >
               {[0, 1, 2].map((bodypartIndex) => {
                 const card = monster?.body[bodypartIndex];

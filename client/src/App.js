@@ -1,15 +1,20 @@
 import { useEffect, useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 
 import { Card, Monster, PlayerBoard, MyCards} from './components';
 import { ABILITIES, ABILITIES_DESCRIPTION } from './constants';
+import { getSelectedMonsterId, getSelectedCardId, selectMonster, selectCard } from './slices';
 
 let socket;
 
 const App = () => {
+  const dispatch = useDispatch();
+
+  const selectedMonsterId = useSelector(getSelectedMonsterId);
+  const selectedCardId = useSelector(getSelectedCardId);
+
   const [playerId, setPlayerId] = useState(null);
   const [game, setGame] = useState({});
-  const [selectedCardId, setSelectedCardId] = useState(null);
-  const [selectedMonsterId, setSelectedMonsterId] = useState(null);
   const [awaitingAbility, setAwaitingAbility] = useState({});
 
   const me = (game?.players || []).find(p => p.id === playerId) || {};
@@ -68,33 +73,17 @@ const App = () => {
       return;
     }
     socket.send(JSON.stringify({ type: "PLAY_CARD", cardId: selectedCardId, monsterId: selectedMonsterId }));
-    setSelectedCardId(null);
-    setSelectedMonsterId(null);
+    dispatch(selectCard({ cardId: null }));
+    dispatch(selectMonster({ monsterId: null }));
   }
 
   const onStartGame = () => {
     socket.send(JSON.stringify({ type: "START" }));
   }
 
-  const onMonsterClick = (monsterId) => {
-    if (selectedMonsterId === monsterId) {
-      setSelectedMonsterId(null);
-    } else {
-      setSelectedMonsterId(monsterId);
-    }
-  }
-
-  const onSelectCardOnHand = (card) => {
-    if (card.id === selectedCardId) {
-      setSelectedCardId(null);
-    } else {
-      setSelectedCardId(card.id);
-    }
-  }
-
   const onSpecialCardClick = (card) => {
     if (awaitingAbility.abilityType === 0) {
-      setSelectedCardId(selectedCardId === card.id ? null : card.id);
+      //setSelectedCardId(selectedCardId === card.id ? null : card.id);
     }
   }
 
@@ -143,7 +132,7 @@ const App = () => {
                 card={card}
                 key={card.id}
                 onClick={onSpecialCardClick}
-                isSelected={selectedCardId === card.id}
+                //isSelected={selectedCardId === card.id}
               />)
             )}
           </div>
@@ -153,7 +142,7 @@ const App = () => {
       )}
 
       <div>Мои монстры</div>
-      <PlayerBoard player={me} />
+      <PlayerBoard player={me} isMine />
       
       <div className="players">
         {(game.players || []).map((player) => {
