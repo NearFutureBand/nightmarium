@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { Card, Monster } from './components';
+import { Card, Monster, PlayerBoard, MyCards} from './components';
 import { ABILITIES, ABILITIES_DESCRIPTION } from './constants';
 
 let socket;
@@ -12,7 +12,7 @@ const App = () => {
   const [selectedMonsterId, setSelectedMonsterId] = useState(null);
   const [awaitingAbility, setAwaitingAbility] = useState({});
 
-  const me = (game?.players || []).find(p => p.id === playerId);
+  const me = (game?.players || []).find(p => p.id === playerId) || {};
   const isMyTurn = game?.activePlayer?.id === playerId;
 
   useEffect(() => {
@@ -151,51 +151,22 @@ const App = () => {
           <button onClick={onSubmitAbility}>{awaitingAbility.submitText}</button>
         </div>
       )}
+
+      <div>Мои монстры</div>
+      <PlayerBoard player={me} />
       
-      <div className="player">
-        {[0, 1, 2, 3, 4].map((monsterIndex) => {
-          const monster = me?.monsters[monsterIndex];
-          return (
-            <Monster
-              monster={monster}
-              isSelected={selectedMonsterId === monsterIndex}
-              key={monsterIndex}
-              onClick={() => onMonsterClick(monsterIndex)}
-            >
-              {[0, 1, 2].map((bodypartIndex) => {
-                const card = monster?.body[bodypartIndex];
-                if (card) {
-                  return (
-                    <Card
-                      key={bodypartIndex}
-                      card={card}
-                      isEmpty={!card}
-                      groupId={monsterIndex}
-                      placeId={bodypartIndex}
-                      //onClick={onMonsterCardClick}
-                      //isSelected={placeSelectedOnMonster.groupId === monsterIndex && placeSelectedOnMonster.placeId === bodypartIndex}
-                      isMonsterpart
-                    />
-                  )
-                }
-                return null;
-              })}
-            </Monster>
-          )
+      <div className="players">
+        {(game.players || []).map((player) => {
+          if (player.id === me.id) {
+            return null;
+          }
+          return <PlayerBoard player={player} key={player.id} />
         })}
       </div>
-      <div className="my-cards">
-        {(me?.cards || []).map((card, index) => (
-          <Card
-            key={card.id}
-            card={card}
-            groupId={-1}
-            placeId={index}
-            onClick={onSelectCardOnHand}
-            isSelected={selectedCardId === card.id}
-          />
-        ))}
-      </div>
+      
+      <MyCards cards={me.cards || []} />
+
+      <div className="placeholder"/>
      
     </div>
   );
