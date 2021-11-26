@@ -56,6 +56,10 @@ const App = () => {
         setAwaitingAbility({ ...m, submitText });
       }
 
+      if (m.type === "MONSTER_COMPLETED") {
+        setAwaitingAbility({});
+      }
+
       setGame(m.game);
     }
 
@@ -69,10 +73,10 @@ const App = () => {
   }
 
   const onPlaceCard = () => {
-    if (!selectedCardId || selectedMonsterId === null) {
+    if (!selectedCardId || selectedMonsterId[0] === null) {
       return;
     }
-    socket.send(JSON.stringify({ type: "PLAY_CARD", cardId: selectedCardId, monsterId: selectedMonsterId }));
+    socket.send(JSON.stringify({ type: "PLAY_CARD", cardId: selectedCardId, monsterId: selectedMonsterId[0] }));
     dispatch(selectCard({ cardId: null }));
     dispatch(selectMonster({ monsterId: null }));
   }
@@ -96,11 +100,21 @@ const App = () => {
     if (awaitingAbility.abilityType === 1) {
       payload.cards = awaitingAbility.cards;
     }
+
+    if (awaitingAbility.abilityType === 2) {
+      payload.cardId = selectedCardId;
+      payload.monsterId = selectedMonsterId[0];
+    }
     
     socket.send(JSON.stringify({
       type: "SUBMIT_ABILITY",
       ...payload
     }));
+
+    if (awaitingAbility.abilityType === 2) {
+      dispatch(selectCard({ cardId: null }));
+      dispatch(selectMonster({ monsterId: null }));
+    }
   }
 
   if (!game?.activePlayer) {
@@ -123,7 +137,7 @@ const App = () => {
         </div>
       )}
 
-      {typeof awaitingAbility.abilityType === "number" && (
+      {(isMyTurn && typeof awaitingAbility.abilityType === "number") && (
         <div>
           <div>Способность номер {awaitingAbility.abilityNumber + 1} - {ABILITIES[awaitingAbility.abilityType]}</div>
           <div style={{ display: "flex" }}>
@@ -142,7 +156,7 @@ const App = () => {
       )}
 
       <div>Мои монстры</div>
-      <PlayerBoard player={me} isMine />
+      <PlayerBoard player={me} isMyTurn={isMyTurn} />
       
       <div className="players">
         {(game.players || []).map((player) => {

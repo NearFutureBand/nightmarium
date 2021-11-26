@@ -6,7 +6,7 @@ const initialState = {
   name: '',
   game: {},
   selectedCardId: null,
-  selectedMonsterId: null
+  selectedMonsterId: []
 }
 
 export const counterSlice = createSlice({
@@ -23,11 +23,11 @@ export const counterSlice = createSlice({
       }
     },
     selectMonster: (state, { payload }) => {
-      const { monsterId } = payload;
-      if (state.selectedMonsterId === monsterId || monsterId === null) {
-        state.selectedMonsterId = null;
+      const { monsterId, playerId } = payload;
+      if (state.selectedMonsterId[0] === monsterId || monsterId === null) {
+        state.selectedMonsterId = [];
       } else {
-        state.selectedMonsterId = monsterId;
+        state.selectedMonsterId = [monsterId, playerId];
       }
     },
   },

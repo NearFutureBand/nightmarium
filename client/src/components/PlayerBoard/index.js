@@ -8,10 +8,16 @@ import { Card } from '../Card';
 
 import { getSelectedMonsterId, selectMonster } from '../../slices';
 
-const PlayerBoard = ({ player = {}, isMine }) => {
+const PlayerBoard = ({ player = {}, isMyTurn }) => {
   const dispatch = useDispatch();
 
   const selectedMonsterId = useSelector(getSelectedMonsterId);
+
+  const onSelectMonster = (monsterId) => {
+    if (isMyTurn) {
+      dispatch(selectMonster({ monsterId: monsterId, playerId: player.id }));
+    }
+  }
 
   if (!player.monsters) {
     return null;
@@ -26,9 +32,9 @@ const PlayerBoard = ({ player = {}, isMine }) => {
           return (
             <Monster
               monster={monster}
-              isSelected={selectedMonsterId === monsterIndex}
+              isSelected={selectedMonsterId[0] === monsterIndex && selectedMonsterId[1] === player.id}
               key={monsterIndex}
-              onClick={() => dispatch(selectMonster({ monsterId: monsterIndex }))}
+              onClick={() => onSelectMonster(monsterIndex)}
             >
               {[0, 1, 2].map((bodypartIndex) => {
                 const card = monster?.body[bodypartIndex];

@@ -29,7 +29,7 @@ const onAbility = () => {
   const ability = abilitiesState.abilities[abilitiesState.currentAbilityIndex];
   ability.inprogress = true;
 
-  console.log(abilitiesState);
+  console.log("abilities state", abilitiesState);
 
   let payload = {};
   switch (ability.type) {
@@ -133,9 +133,26 @@ wsServer.on('connection', (wsClient) => {
       const ability = abilitiesState.abilities[abilitiesState.currentAbilityIndex]
       switch (ability.type) {
         case 1: {
+          // additional payload: { cards: [...] }
           // TODO жуткий говнокод, как и все здесь пока
           game.activePlayer.cards.push(message.cards[0]);
           game.activePlayer.cards.push(message.cards[1]);
+          break;
+        }
+        case 2: {
+          // additional payload: { cardId, monsterId }
+          const { cardId, monsterId } = message;
+          if (typeof cardId === "number" && typeof monsterId === "number") {
+            // TODO сделать функцию addCardToMonster
+            const targetMonster = game.activePlayer.monsters[monsterId];
+            const cardIndex = game.activePlayer.cards.findIndex(card => card.id === cardId);
+            const card = game.activePlayer.cards[cardIndex];
+            const possibleToInstall = card.bodypart.some(bodypartIndex => bodypartIndex === targetMonster.body.length);
+            if (possibleToInstall) {
+              game.activePlayer.cards.splice(cardIndex, 1);
+              targetMonster.body.push(card);
+            }
+          }
           break;
         }
       }
@@ -144,11 +161,19 @@ wsServer.on('connection', (wsClient) => {
       abilitiesState.currentAbilityIndex++;
 
       if (abilitiesState.currentAbilityIndex === 3) {
-        game.setNextActivePlayer();
         abilitiesState = {};
+
+        if (game.actions === 0) {
+          game.setNextActivePlayer();
+        }
+
+        game.players.forEach(player => {
+          player.sendMessage("MONSTER_COMPLETED", { game: game.getGame() });
+        });
         return;
       }
       onAbility();
+      return;
     }
 
     game.players.forEach(player => {
