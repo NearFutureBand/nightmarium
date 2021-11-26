@@ -155,6 +155,17 @@ wsServer.on('connection', (wsClient) => {
           }
           break;
         }
+        case 5: {
+          // additional payload: { cardId }
+          // уничтожить верхнюю карту своего монстра, кроме текущего
+          // const activeMonster
+          const { cardId } = message;
+          const targetMonster = game.activePlayer.monsters.find(monster => monster.body.find(card => card.id === cardId));
+          console.log(targetMonster);
+
+          const removedCard = targetMonster.body.splice(targetMonster.body.length - 1, 1);
+          game.cardsThrowedAway[removedCard.id] = removedCard;
+        }
       }
       ability.done = true;
       ability.inprogress = false;
@@ -162,6 +173,7 @@ wsServer.on('connection', (wsClient) => {
 
       if (abilitiesState.currentAbilityIndex === 3) {
         abilitiesState = {};
+
 
         if (game.actions === 0) {
           game.setNextActivePlayer();

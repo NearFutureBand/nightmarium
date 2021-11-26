@@ -13,8 +13,8 @@ const Card = ({
   onClick = () => {}
 }) => {
 
-  const _onClick = () => {
-    onClick(card, groupId, placeId);
+  const _onClick = (event) => {
+    onClick(event, card, groupId, placeId);
   }
 
   const image = MONSTER_PART[card.id];

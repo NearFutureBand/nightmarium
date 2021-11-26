@@ -13,7 +13,7 @@ const MyCards = ({ cards }) => {
 
   const selectedCardId = useSelector(getSelectedCardId);
 
-  const onSelectCardOnHand = (card) => {
+  const onSelectCardOnHand = (event, card) => {
     dispatch(selectCard({ cardId: card.id }));
   };
 

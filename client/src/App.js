@@ -85,7 +85,7 @@ const App = () => {
     socket.send(JSON.stringify({ type: "START" }));
   }
 
-  const onSpecialCardClick = (card) => {
+  const onSpecialCardClick = (event, card) => {
     if (awaitingAbility.abilityType === 0) {
       //setSelectedCardId(selectedCardId === card.id ? null : card.id);
     }
@@ -96,6 +96,8 @@ const App = () => {
       abilityType: awaitingAbility.type,
       abilityNumber: awaitingAbility.number,
     }
+
+    // 0 ????
     
     if (awaitingAbility.abilityType === 1) {
       payload.cards = awaitingAbility.cards;
@@ -105,6 +107,19 @@ const App = () => {
       payload.cardId = selectedCardId;
       payload.monsterId = selectedMonsterId[0];
     }
+
+    if (awaitingAbility.abilityType === 3) {
+      payload.cardId = selectedCardId;
+    }
+
+    if (awaitingAbility.abilityType === 4) {
+      payload.monsterId = selectedMonsterId[0];
+    }
+
+    if (awaitingAbility.abilityType === 5) {
+      payload.cardId = selectedCardId;
+    }
+
     
     socket.send(JSON.stringify({
       type: "SUBMIT_ABILITY",
@@ -156,14 +171,14 @@ const App = () => {
       )}
 
       <div>Мои монстры</div>
-      <PlayerBoard player={me} isMyTurn={isMyTurn} />
+      <PlayerBoard player={me} isMyTurn={isMyTurn} awaitingAbility={awaitingAbility} />
       
       <div className="players">
         {(game.players || []).map((player) => {
           if (player.id === me.id) {
             return null;
           }
-          return <PlayerBoard player={player} key={player.id} />
+          return <PlayerBoard player={player} key={player.id} awaitingAbility={awaitingAbility} />
         })}
       </div>
       

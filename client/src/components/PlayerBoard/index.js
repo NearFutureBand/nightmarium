@@ -6,16 +6,26 @@ import { MONSTER_PART } from '../../img';
 import { Monster } from '../Monster';
 import { Card } from '../Card';
 
-import { getSelectedMonsterId, selectMonster } from '../../slices';
+import {
+  getSelectedMonsterId, selectMonster, selectCard, getSelectedCardId
+} from '../../slices';
 
-const PlayerBoard = ({ player = {}, isMyTurn }) => {
+const PlayerBoard = ({ player = {}, isMyTurn, awaitingAbility }) => {
   const dispatch = useDispatch();
 
   const selectedMonsterId = useSelector(getSelectedMonsterId);
+  const selctedCardId = useSelector(getSelectedCardId);
 
   const onSelectMonster = (monsterId) => {
     if (isMyTurn) {
       dispatch(selectMonster({ monsterId: monsterId, playerId: player.id }));
+    }
+  }
+
+  const onCardClick = (event, card) => {
+    if (isMyTurn && awaitingAbility.abilityType === 5) {
+      event.stopPropagation();
+      dispatch(selectCard({ cardId: card.id }));
     }
   }
 
@@ -46,8 +56,8 @@ const PlayerBoard = ({ player = {}, isMyTurn }) => {
                       isEmpty={!card}
                       groupId={monsterIndex}
                       placeId={bodypartIndex}
-                      //onClick={onMonsterCardClick}
-                      //isSelected={placeSelectedOnMonster.groupId === monsterIndex && placeSelectedOnMonster.placeId === bodypartIndex}
+                      onClick={onCardClick}
+                      isSelected={selctedCardId === card.id}
                       isMonsterpart
                     />
                   )
