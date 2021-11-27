@@ -17,8 +17,11 @@ const PlayerBoard = ({ player = {}, isMyTurn, awaitingAbility, itsMe }) => {
   const selctedCardId = useSelector(getSelectedCardId);
 
   const onSelectMonster = (monsterId) => {
-    if (isMyTurn) {
+    if (isMyTurn && itsMe) {
       dispatch(selectMonster({ monsterId: monsterId, playerId: player.id }));
+    }
+    if (isMyTurn && !itsMe && awaitingAbility.abilityType === 4) {
+      dispatch(selectMonster({ monsterId, playerId: player.id }));
     }
   }
 
@@ -35,6 +38,7 @@ const PlayerBoard = ({ player = {}, isMyTurn, awaitingAbility, itsMe }) => {
     }
     if (isMyTurn && !itsMe && awaitingAbility.abilityType === 4) {
       // кости
+      event.stopPropagation();
       dispatch(selectMonster({ monsterId, playerId: player.id }));
     }
 
