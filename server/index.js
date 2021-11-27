@@ -155,16 +155,41 @@ wsServer.on('connection', (wsClient) => {
           }
           break;
         }
+        case 3: {
+          // топор, additional payload { cardId, targetPlayerId, targetMonsterId }
+          // забрать верхнюю карту чужого монстра на руку
+          const { cardId, targetPlayerId, targetMonsterId } = message;
+          const targetPlayer = game.getPlayerById(targetPlayerId);
+
+          const targetMonster = targetPlayer.monsters[targetMonsterId];
+          const [ removedCard ] = targetMonster.body.splice(targetMonster.body.length - 1, 1);
+          game.activePlayer.cards.push(removedCard);
+          break;
+        }
+        case 4: {
+          // additional payload { targetPlayerId, targetMonsterId }
+          // кости, уничтожить недостроенного монстра целиком
+          const { targetPlayerId, targetMonsterId } = message;
+          const targetPlayer = game.getPlayerById(targetPlayerId);
+
+          const targetMonster = targetPlayer.monsters[targetMonsterId];
+          const removedCards = targetMonster.body.splice(0, targetMonster.body.length);
+
+          removedCards.forEach(card => {
+            game.cardsThrowedAway[card.id] = card;
+          });
+          break;
+        }
         case 5: {
-          // additional payload: { cardId }
+          // additional payload: { cardId, targetMonsterId }
           // уничтожить верхнюю карту своего монстра, кроме текущего
           // const activeMonster
           const { cardId } = message;
           const targetMonster = game.activePlayer.monsters.find(monster => monster.body.find(card => card.id === cardId));
-          console.log(targetMonster);
 
           const removedCard = targetMonster.body.splice(targetMonster.body.length - 1, 1);
           game.cardsThrowedAway[removedCard.id] = removedCard;
+          break;
         }
       }
       ability.done = true;

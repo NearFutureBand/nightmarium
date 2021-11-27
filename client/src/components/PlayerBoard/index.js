@@ -10,7 +10,7 @@ import {
   getSelectedMonsterId, selectMonster, selectCard, getSelectedCardId
 } from '../../slices';
 
-const PlayerBoard = ({ player = {}, isMyTurn, awaitingAbility }) => {
+const PlayerBoard = ({ player = {}, isMyTurn, awaitingAbility, itsMe }) => {
   const dispatch = useDispatch();
 
   const selectedMonsterId = useSelector(getSelectedMonsterId);
@@ -22,11 +22,22 @@ const PlayerBoard = ({ player = {}, isMyTurn, awaitingAbility }) => {
     }
   }
 
-  const onCardClick = (event, card) => {
+  const onCardClick = (event, card, monsterId) => {
     if (isMyTurn && awaitingAbility.abilityType === 5) {
+      // зубы
       event.stopPropagation();
-      dispatch(selectCard({ cardId: card.id }));
+      dispatch(selectCard({ cardId: card.id, monsterId, playerId: null }));
     }
+    if (isMyTurn && !itsMe && awaitingAbility.abilityType === 3) {
+      // топор
+      event.stopPropagation();
+      dispatch(selectCard({ cardId: card.id, monsterId, playerId: player.id }));
+    }
+    if (isMyTurn && !itsMe && awaitingAbility.abilityType === 4) {
+      // кости
+      dispatch(selectMonster({ monsterId, playerId: player.id }));
+    }
+
   }
 
   if (!player.monsters) {
@@ -54,10 +65,9 @@ const PlayerBoard = ({ player = {}, isMyTurn, awaitingAbility }) => {
                       key={bodypartIndex}
                       card={card}
                       isEmpty={!card}
-                      groupId={monsterIndex}
-                      placeId={bodypartIndex}
+                      monsterId={monsterIndex}
                       onClick={onCardClick}
-                      isSelected={selctedCardId === card.id}
+                      isSelected={selctedCardId[0] === card.id}
                       isMonsterpart
                     />
                   )

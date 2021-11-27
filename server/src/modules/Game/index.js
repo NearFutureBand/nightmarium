@@ -36,8 +36,8 @@ class Game {
   }
 
   addPlayer(player) {
-    const playerIndex = this.players.push(player);
-    this.idMap[player.id] = playerIndex;
+    const playersArrayLength = this.players.push(player);
+    this.idMap[player.id] = playersArrayLength - 1;
   }
 
   setNextActivePlayer() {

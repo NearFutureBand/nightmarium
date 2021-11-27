@@ -73,10 +73,10 @@ const App = () => {
   }
 
   const onPlaceCard = () => {
-    if (!selectedCardId || selectedMonsterId[0] === null) {
+    if (!selectedCardId[0] || selectedMonsterId[0] === null) {
       return;
     }
-    socket.send(JSON.stringify({ type: "PLAY_CARD", cardId: selectedCardId, monsterId: selectedMonsterId[0] }));
+    socket.send(JSON.stringify({ type: "PLAY_CARD", cardId: selectedCardId[0], monsterId: selectedMonsterId[0] }));
     dispatch(selectCard({ cardId: null }));
     dispatch(selectMonster({ monsterId: null }));
   }
@@ -93,8 +93,8 @@ const App = () => {
 
   const onSubmitAbility = () => {
     const payload = {
-      abilityType: awaitingAbility.type,
-      abilityNumber: awaitingAbility.number,
+      abilityType: awaitingAbility.abilityType,
+      abilityNumber: awaitingAbility.abilityNumber,
     }
 
     // 0 ????
@@ -104,20 +104,24 @@ const App = () => {
     }
 
     if (awaitingAbility.abilityType === 2) {
-      payload.cardId = selectedCardId;
+      payload.cardId = selectedCardId[0];
       payload.monsterId = selectedMonsterId[0];
     }
 
     if (awaitingAbility.abilityType === 3) {
-      payload.cardId = selectedCardId;
+      payload.cardId = selectedCardId[0];
+      payload.targetMonsterId = selectedCardId[1];
+      payload.targetPlayerId = selectedCardId[2]; 
     }
 
     if (awaitingAbility.abilityType === 4) {
-      payload.monsterId = selectedMonsterId[0];
+      payload.targetMonsterId = selectedMonsterId[0];
+      payload.targetPlayerId = selectedMonsterId[1];
     }
 
     if (awaitingAbility.abilityType === 5) {
-      payload.cardId = selectedCardId;
+      payload.cardId = selectedCardId[0];
+      payload.targetMonsterId = selectedCardId[2];
     }
 
     
@@ -171,14 +175,14 @@ const App = () => {
       )}
 
       <div>Мои монстры</div>
-      <PlayerBoard player={me} isMyTurn={isMyTurn} awaitingAbility={awaitingAbility} />
+      <PlayerBoard player={me} isMyTurn={isMyTurn} awaitingAbility={awaitingAbility} itsMe />
       
       <div className="players">
         {(game.players || []).map((player) => {
           if (player.id === me.id) {
             return null;
           }
-          return <PlayerBoard player={player} key={player.id} awaitingAbility={awaitingAbility} />
+          return <PlayerBoard player={player} key={player.id} awaitingAbility={awaitingAbility} isMyTurn={isMyTurn} />
         })}
       </div>
       

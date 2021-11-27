@@ -5,7 +5,7 @@ import { randomColor } from '../helpers';
 const initialState = {
   name: '',
   game: {},
-  selectedCardId: null,
+  selectedCardId: [],
   selectedMonsterId: []
 }
 
@@ -14,12 +14,11 @@ export const counterSlice = createSlice({
   initialState,
   reducers: {
     selectCard: (state, { payload }) => {
-      console.log(payload);
-      const { cardId } = payload;
-      if (state.selectedCardId === cardId || cardId === null) {
-        state.selectedCardId = null;
+      const { cardId, monsterId, playerId } = payload;
+      if (state.selectedCardId[0] === cardId || cardId === null) {
+        state.selectedCardId = [];
       } else {
-        state.selectedCardId = cardId;
+        state.selectedCardId = [cardId, monsterId, playerId];
       }
     },
     selectMonster: (state, { payload }) => {

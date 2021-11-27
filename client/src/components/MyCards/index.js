@@ -14,7 +14,7 @@ const MyCards = ({ cards }) => {
   const selectedCardId = useSelector(getSelectedCardId);
 
   const onSelectCardOnHand = (event, card) => {
-    dispatch(selectCard({ cardId: card.id }));
+    dispatch(selectCard({ cardId: card.id, monsterId: null, playerId: null }));
   };
 
   return (
@@ -25,10 +25,8 @@ const MyCards = ({ cards }) => {
           <Card
             key={card.id}
             card={card}
-            groupId={-1}
-            placeId={index}
             onClick={onSelectCardOnHand}
-            isSelected={selectedCardId === card.id}
+            isSelected={selectedCardId[0] === card.id}
           />
         ))}
       </div>

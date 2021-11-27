@@ -7,14 +7,13 @@ const Card = ({
   card,
   isSelected,
   isEmpty,
-  groupId,
-  placeId,
+  monsterId,
   isMonsterpart,
   onClick = () => {}
 }) => {
 
   const _onClick = (event) => {
-    onClick(event, card, groupId, placeId);
+    onClick(event, card, monsterId);
   }
 
   const image = MONSTER_PART[card.id];
