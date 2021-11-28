@@ -1,8 +1,7 @@
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { BODYPARTS, ABILITIES, COLORS } from '../../constants';
-import { MONSTER_PART } from '../../img';
+import './styles.scss';
 import { Monster } from '../Monster';
 import { Card } from '../Card';
 
@@ -50,7 +49,7 @@ const PlayerBoard = ({ player = {}, isMyTurn, awaitingAbility, itsMe }) => {
 
   return (
     <div className="board">
-      <div>{player.id}</div>
+      <h3>{itsMe ? "Мои монстры" : player.id}</h3>
       <div className="monsters">
         {[0, 1, 2, 3, 4].map((monsterIndex) => {
           const monster = player.monsters[monsterIndex];
@@ -60,6 +59,10 @@ const PlayerBoard = ({ player = {}, isMyTurn, awaitingAbility, itsMe }) => {
               isSelected={selectedMonsterId[0] === monsterIndex && selectedMonsterId[1] === player.id}
               key={monsterIndex}
               onClick={() => onSelectMonster(monsterIndex)}
+              clickable={(isMyTurn && itsMe && !awaitingAbility.abilityType) || awaitingAbility.abilityType === 1 || ( awaitingAbility.abilityType === 4 && !itsMe && isMyTurn) }
+              bodyLength={monster?.body?.length}
+              awaitingAbility={awaitingAbility}
+              itsMe={itsMe}
             >
               {[0, 1, 2].map((bodypartIndex) => {
                 const card = monster?.body[bodypartIndex];
@@ -73,6 +76,7 @@ const PlayerBoard = ({ player = {}, isMyTurn, awaitingAbility, itsMe }) => {
                       onClick={onCardClick}
                       isSelected={selctedCardId[0] === card.id}
                       isMonsterpart
+                      clickable={awaitingAbility.abilityType === 3 && !itsMe && isMyTurn}
                     />
                   )
                 }

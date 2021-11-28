@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { Card, Monster, PlayerBoard, MyCards} from './components';
+import { Card, PlayerBoard, MyCards, Controls } from './components';
 import { ABILITIES, ABILITIES_DESCRIPTION } from './constants';
 import { getSelectedMonsterId, getSelectedCardId, selectMonster, selectCard } from './slices';
 
@@ -130,7 +130,7 @@ const App = () => {
       ...payload
     }));
 
-    if (awaitingAbility.abilityType === 2) {
+    if (awaitingAbility.abilityType === 2 || awaitingAbility.abilityType === 3 || awaitingAbility === 4) {
       dispatch(selectCard({ cardId: null }));
       dispatch(selectMonster({ monsterId: null }));
     }
@@ -146,35 +146,20 @@ const App = () => {
 
   return (
     <div className="App">
-      <div>Я  - {playerId}. Ходит {game?.activePlayer?.id}</div>
-      {(isMyTurn && typeof awaitingAbility.abilityType !== "number") && (
-        <div className="controls">
-          <div>Действий осталось: {game.actions}</div>
-          <button onClick={onTakeCard}>Взять карту</button>
-          <button onClick={onPlaceCard}>Выложить карту</button>
-          {/* <button>Обменять (лучше не надо)</button> */}
-        </div>
-      )}
+      <header className="header">
+        <span>Я  - <strong>{playerId}</strong>. Ходит <strong>{game?.activePlayer?.id}</strong></span>
+      </header>
 
-      {(isMyTurn && typeof awaitingAbility.abilityType === "number") && (
-        <div>
-          <div>Способность номер {awaitingAbility.abilityNumber + 1} - {ABILITIES[awaitingAbility.abilityType]}</div>
-          <div style={{ display: "flex" }}>
-            {awaitingAbility.cards && awaitingAbility.cards.map((card) => (
-              <Card
-                card={card}
-                key={card.id}
-                onClick={onSpecialCardClick}
-                //isSelected={selectedCardId === card.id}
-              />)
-            )}
-          </div>
-          <div>{ABILITIES_DESCRIPTION[awaitingAbility.abilityType]}</div>
-          <button onClick={onSubmitAbility}>{awaitingAbility.submitText}</button>
-        </div>
-      )}
+      <Controls
+        game={game}
+        isMyTurn={isMyTurn}
+        awaitingAbility={awaitingAbility}
+        onTakeCard={onTakeCard}
+        onPlaceCard={onPlaceCard}
+        onSpecialCardClick={onSpecialCardClick}
+        onSubmitAbility={onSubmitAbility}
+      />
 
-      <div>Мои монстры</div>
       <PlayerBoard player={me} isMyTurn={isMyTurn} awaitingAbility={awaitingAbility} itsMe />
       
       <div className="players">

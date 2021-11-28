@@ -1,0 +1,33 @@
+.card {
+  box-sizing: content-box;
+  width: 10rem;
+  min-width: 10rem;
+  height: 6.4rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  flex-direction: column;
+  border-radius: 0.8rem;
+  //background-size: 100%;
+  //background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  transition: all ease 0.2s;
+  border: 3px solid white;
+  &.empty {
+    border: 1px solid #333;
+    cursor: auto;
+  }
+  &.selected {
+    border: 3px solid rgb(11, 236, 228);
+    box-shadow: 0px 0px 5px rgba(11, 236, 228, 1);
+  }
+  &.disabled {
+    opacity: 0.5;
+    cursor: auto;
+  }
+  &.clickable {
+    cursor: pointer;
+  }
+}

@@ -1,0 +1,41 @@
+$monster-width: 10rem;
+
+.monster {
+  box-sizing: content-box;
+  display: flex;
+  flex-direction: column-reverse;
+  width: $monster-width;
+  height: calc(19.2rem - 3px);
+  margin: 0 0.5rem;
+  border-radius: 1rem;
+  border: 3px solid #eee;
+  align-items: center;
+  transition: all ease 0.2s;
+  &.selected {
+    border: 3px solid rgb(11, 236, 228);
+    box-shadow: 0px 0px 5px rgba(11, 236, 228, 1);
+  }
+  & .card {
+    width: $monster-width;
+    border: none;
+    box-sizing: border-box;
+    cursor: auto;
+  }
+  & .card.selected {
+    border: 2px solid rgb(11, 236, 228);
+  }
+  &.clickable {
+    cursor: pointer;
+  }
+  &.allow-select-card {
+    .card {
+      cursor: pointer;
+    }
+  }
+  // &.inprogress {
+  //   .card {
+  //     cursor: auto;
+  //   }
+  //   //border: 3px solid white;
+  // }
+}

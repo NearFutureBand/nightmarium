@@ -1,20 +1,33 @@
 import React from 'react';
 
+import './styles.scss';
+
 const Monster = ({
   monster,
   isSelected,
   onClick = () => { },
-  children
+  children,
+  clickable,
+  bodyLength = 0,
+  awaitingAbility,
+  itsMe
 }) => {
 
   const _onClick = () => {
-    if (monster.body.length !== 3) {
+    if (clickable) {
       onClick();
     }
   }
 
+  const optionalClasses = [
+    `${isSelected ? 'selected' : ''}`,
+    `${clickable ? 'clickable' : ''}`,
+    `${bodyLength ? 'inprogress' : ''}`,
+    `${awaitingAbility.abilityType === 3 && !itsMe ? 'allow-select-card' : ''}`,
+  ].join(' ');
+
   return (
-    <div className={`monster ${isSelected ? 'selected' : ''}`}onClick={_onClick}>
+    <div className={`monster ${optionalClasses}`} onClick={_onClick}>
       {children}
     </div>
   )

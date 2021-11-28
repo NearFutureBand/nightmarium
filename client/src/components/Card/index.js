@@ -1,5 +1,6 @@
 import React from 'react';
 
+import './styles.scss';
 import { BODYPARTS, ABILITIES, COLORS } from '../../constants';
 import { MONSTER_PART } from '../../img';
 
@@ -9,6 +10,9 @@ const Card = ({
   isEmpty,
   monsterId,
   isMonsterpart,
+  zIndex,
+  offset,
+  clickable,
   onClick = () => {}
 }) => {
 
@@ -19,15 +23,18 @@ const Card = ({
   const image = MONSTER_PART[card.id];
 
   const style = {
-    backgroundColor: COLORS[card.legion], cursor: (isMonsterpart && !isEmpty) ? 'auto' : undefined,
+    backgroundColor: !image ? COLORS[card.legion] : undefined,
     backgroundImage: `url(${image})`,
+    //marginLeft: `-${offset}rem`,
+    //zIndex,
+    //boxShadow: "1px 0px 1px black"
   }
 
   if (isEmpty) {
     return <div className={`card empty ${isSelected ? 'selected' : ''}`} onClick={_onClick}/>
   }
   return (
-    <div className={`card ${isSelected ? 'selected' : ''}`} style={style} onClick={_onClick}>
+    <div className={`card ${isSelected ? 'selected' : ''} interactive ${clickable ? 'clickable' : ''}`} style={style} onClick={_onClick}>
       {!image && (
         <>
           <div> id: {card.id}</div>
