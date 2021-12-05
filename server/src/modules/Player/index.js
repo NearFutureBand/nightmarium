@@ -1,21 +1,15 @@
 const { omit } = require("lodash");
 
+const Monster = require('../Monster');
 const { CARDS } = require("../Cards");
+const Game = require("../Game");
 
-class Monster {
-  constructor(id, body = []) {
-    this.id = id;
-    this.body = body;
-    this.abilitiesUsed = false;
-  }
-}
 
 class Player {
-  constructor(id, wsClient = null) {
+  constructor(id) {
     this.id = id;
     this.name = null;
-    this.wsClient = wsClient;
-    this.cards = [];
+    this.cards = Game.giveDefaulCards();
     this.monsters = new Array(5).fill(0).map((item, i) => new Monster(i));
   }
 
@@ -23,24 +17,13 @@ class Player {
     this.name = name;
   }
 
-  setWsClient(wsClient) {
-    this.wsClient = wsClient;
-  }
-
-  unsetWsClient() {
-    this.wsClient = null;
-  }
-
   sendMessage(type, payload) {
-    if (!this.wsClient) {
-      return;
-    }
-    this.wsClient.send(JSON.stringify({ type, ...payload }));
+    // if (!this.wsClient) {
+    //   return;
+    // }
+    //this.wsClient.send(JSON.stringify({ type, ...payload }));
   }
 
-  getPlayer() {
-    return omit(this, ["wsClient"]);
-  }
 }
 
 module.exports = Player;
