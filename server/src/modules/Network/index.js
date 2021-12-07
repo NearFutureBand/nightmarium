@@ -14,6 +14,9 @@ class Network {
     this.playersMap = {}; // playerId -> clientId
     this.messageActionsMap = {
       [MESSAGE_TYPE.HANDSHAKE]: this.onHandshake,
+      [MESSAGE_TYPE.START]: this.onStart,
+      [MESSAGE_TYPE.TAKE_CARD]: this.onTakeCard,
+      [MESSAGE_TYPE.PLAY_CARD]: this.onPlayCard,
     };
   }
 
@@ -42,8 +45,8 @@ class Network {
     const message = JSON.parse(event);
     console.log("message", message);
 
-    const goOn = this.messageActionsMap[message.type](message, clientId);
-    if (goOn) {
+    const noBroadcast = this.messageActionsMap[message.type](message, clientId);
+    if (!noBroadcast) {
       this.broadcast(message.type, { game: this.game });
     }
   }
@@ -62,13 +65,12 @@ class Network {
 
   broadcast = (type, payload) => {
     this.game.players.forEach(player => {
-      this.sendMessage(player.id, type, payload);
+      this.sendMessage(this.playersMap[player.id], type, payload);
     });
   }
 
   onHandshake = (message, clientId) => {
     let playerId = message.playerId;
-    console.log(playerId in this.playersMap);
     if (playerId && playerId in this.playersMap) {
       this.playersMap[playerId] = clientId;
     } else {
@@ -77,7 +79,40 @@ class Network {
       this.playersMap[playerId] = clientId;
     }
     this.sendMessage(clientId, MESSAGE_TYPE.HANDSHAKE, { playerId, game: this.game });
-    return false;
+    return true;
+  }
+
+  onStart = () => {
+    this.game.setNextActivePlayer();
+  }
+
+  onTakeCard = () => {
+    this.game.activePlayer.addCard(this.game.giveCard());
+    game.actions -= 1;
+
+    if (this.game.actions === 0) {
+      this.game.setNextActivePlayer();
+    }
+  }
+
+  onPlayCard = () => {
+    this.game.activePlayer.placeCardToMonster(message.cardId, message.monsterId);
+    game.actions -= 1;
+
+    // if (targetMonster.body.length === 3) {
+    //   // monster has been built
+    //   console.log(targetMonster.body);
+    //   abilitiesState.playerId = game.activePlayer.id;
+    //   abilitiesState.monsterId = targetMonster.id;
+    //   abilitiesState.abilities = [...targetMonster.body].reverse().map((bodypart, index) => ({ type: bodypart.ability, done: false, inprogress: false }));
+    //   abilitiesState.currentAbilityIndex = 0;
+    //   onAbility();
+    //   return;
+    // }
+
+    if (this.game.actions === 0) {
+      this.game.setNextActivePlayer();
+    }
   }
 
   displayClientsMap = () => {

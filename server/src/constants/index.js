@@ -15,6 +15,9 @@ const BODYPARTS = {
 
 const MESSAGE_TYPE = {
   HANDSHAKE: "HANDSHAKE",
+  START: "START",
+  TAKE_CARD: "TAKE_CARD",
+  PLAY_CARD: "PLAY_CARD",
 }
 
 module.exports = {

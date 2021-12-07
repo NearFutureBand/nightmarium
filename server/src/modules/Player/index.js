@@ -1,7 +1,6 @@
-const { omit } = require("lodash");
+
 
 const Monster = require('../Monster');
-const { CARDS } = require("../Cards");
 const Game = require("../Game");
 
 
@@ -17,13 +16,28 @@ class Player {
     this.name = name;
   }
 
-  sendMessage(type, payload) {
-    // if (!this.wsClient) {
-    //   return;
-    // }
-    //this.wsClient.send(JSON.stringify({ type, ...payload }));
+  addCard = (card) => {
+    this.cards.push(card);
   }
 
+  getCardIndexById = (cardId) => {
+    return this.cards.findIndex(card => card.id === cardId);
+  }
+
+  placeCardToMonster = (cardId, monsterId) => {
+    const targetMonster = this.monsters[monsterId];
+    const cardIndex = this.getCardIndexById(cardId);
+    const card = this.cards[cardIndex];
+
+    const possibleToInstall = card.bodypart.some(bodypartIndex => bodypartIndex === targetMonster.body.length);
+
+    if (!possibleToInstall) {
+      return;
+    }
+
+    this.cards.splice(cardIndex, 1);
+    targetMonster.body.push(card);
+  }
 }
 
 module.exports = Player;
