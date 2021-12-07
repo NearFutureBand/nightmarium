@@ -24,18 +24,16 @@ const App = () => {
     socket = new WebSocket("ws://localhost:9000");
 
     socket.onopen = () => {
-      console.log("CLIENT: connected");
-      // if (!playerId) {
-      //   const playerId = localStorage.getItem("playerId");
-        
-      // }
+      const playerId = localStorage.getItem("playerId");
+      console.log("CLIENT: connected", playerId);
+      socket.send(JSON.stringify({ type: "HANDSHAKE", playerId }));
     }
 
     socket.onmessage = (event) => {
       const m = JSON.parse(event.data);
       console.log("CLIENT: message", m);
 
-      if (m.type === "CONNECTION") {
+      if (m.type === "HANDSHAKE") {
         localStorage.setItem("playerId", m.playerId);
         setPlayerId(m.playerId);
       }

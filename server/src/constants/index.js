@@ -13,7 +13,12 @@ const BODYPARTS = {
   2: "Голова"
 }
 
+const MESSAGE_TYPE = {
+  HANDSHAKE: "HANDSHAKE",
+}
+
 module.exports = {
   ABILITIES,
   BODYPARTS,
+  MESSAGE_TYPE,
 }

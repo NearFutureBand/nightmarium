@@ -1,5 +1,5 @@
 const { WebSocketServer } = require('ws');
-const { HOST, PORT } = require('../../constants');
+const { HOST, PORT, MESSAGE_TYPE } = require('../../constants');
 const Game = require('../Game');
 const Player = require('../Player');
 
@@ -10,11 +10,15 @@ class Network {
     this.port = PORT || 9000;
     this.wsServer = null;
     this.game = null;
-    this.clientsMap = {};
+    this.clientsMap = {}; // clientId -> wsClient
+    this.playersMap = {}; // playerId -> clientId
+    this.messageActionsMap = {
+      [MESSAGE_TYPE.HANDSHAKE]: this.onHandshake,
+    };
   }
 
-  addClient = (id, wsClient) => {
-    this.clientsMap[id] = wsClient;
+  addClient = (clientId, wsClient) => {
+    this.clientsMap[clientId] = wsClient;
   } 
 
   launchServer = () => {
@@ -26,30 +30,68 @@ class Network {
   }
 
   onConnection = (wsClient) => {
-    const id = Math.random();
-    console.log(`new client is connected ${id}`);
+    const clientId = Math.random();
+    console.log(`new client is connected ${clientId}`);
+    this.addClient(clientId, wsClient);
 
-    this.addClient(id, wsClient);
-    this.game.addPlayer(new Player(id));
-    this.sendMessage(wsClient, "CONNECTION", { playerId: id, game: this.game });
+    wsClient.on("message", (event) => this.onMessage(event, clientId));
+    wsClient.on("close", () => this.onClose(clientId));
   }
 
-  onMessage = (event, wsClient) => {
+  onMessage = (event, clientId) => {
+    const message = JSON.parse(event);
+    console.log("message", message);
 
+    const goOn = this.messageActionsMap[message.type](message, clientId);
+    if (goOn) {
+      this.broadcast(message.type, { game: this.game });
+    }
   }
 
-  onClose = (wsClient) => {
-    //console.log(`client ${} disconnected`);
+  onClose = (clientId) => {
+    console.log(`${clientId} disconnected`);
+    delete this.clientsMap[clientId];
   }
 
-  sendMessage = (wsClient, type, payload) => {
-    wsClient.send(JSON.stringify({ type, ...payload }));
+  sendMessage = (clientId, type, payload) => {
+    const wsClient = this.clientsMap[clientId];
+    if (wsClient) {
+      wsClient.send(JSON.stringify({ type, ...payload }));
+    }
   }
 
   broadcast = (type, payload) => {
     this.game.players.forEach(player => {
-      this.sendMessage(this.clientsMap[player.id], type, payload);
+      this.sendMessage(player.id, type, payload);
     });
+  }
+
+  onHandshake = (message, clientId) => {
+    let playerId = message.playerId;
+    console.log(playerId in this.playersMap);
+    if (playerId && playerId in this.playersMap) {
+      this.playersMap[playerId] = clientId;
+    } else {
+      playerId = Math.random();
+      this.game.addPlayer(new Player(playerId));
+      this.playersMap[playerId] = clientId;
+    }
+    this.sendMessage(clientId, MESSAGE_TYPE.HANDSHAKE, { playerId, game: this.game });
+    return false;
+  }
+
+  displayClientsMap = () => {
+    console.log("clients map: ");
+    for (const clientId in this.clientsMap) {
+      console.log(clientId, Boolean(this.clientsMap[clientId]));
+    }
+  }
+
+  displayPlayersMap = () => {
+    console.log("players map: ");
+    for (const playerId in this.playersMap) {
+      console.log(playerId, this.playersMap[playerId]);
+    }
   }
   
 }
