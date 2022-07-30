@@ -3,7 +3,12 @@ import { useSelector, useDispatch } from 'react-redux';
 
 import { Card, PlayerBoard, MyCards, Controls } from './components';
 import { ABILITIES, ABILITIES_DESCRIPTION } from './constants';
-import { getSelectedMonsterId, getSelectedCardId, selectMonster, selectCard } from './slices';
+import {
+  getSelectedMonsterId,
+  getSelectedCardId,
+  selectMonster,
+  selectCard,
+} from './slices';
 
 let socket;
 
@@ -17,86 +22,93 @@ const App = () => {
   const [game, setGame] = useState({});
   const [awaitingAbility, setAwaitingAbility] = useState({});
 
-  const me = (game?.players || []).find(p => p.id === playerId) || {};
+  const me = game?.me;
   const isMyTurn = game?.activePlayer?.id === playerId;
 
   useEffect(() => {
-    socket = new WebSocket("ws://localhost:9000");
+    socket = new WebSocket('ws://localhost:9000');
 
     socket.onopen = () => {
-      const playerId = localStorage.getItem("playerId");
-      console.log("CLIENT: connected", playerId);
-      socket.send(JSON.stringify({ type: "HANDSHAKE", playerId }));
-    }
+      const playerId = localStorage.getItem('playerId');
+      console.log('CLIENT: connected', playerId);
+      socket.send(JSON.stringify({ type: 'HANDSHAKE', playerId }));
+    };
 
     socket.onmessage = (event) => {
       const m = JSON.parse(event.data);
-      console.log("CLIENT: message", m);
+      console.log('CLIENT: message', m);
 
-      if (m.type === "HANDSHAKE") {
-        localStorage.setItem("playerId", m.playerId);
+      if (m.type === 'HANDSHAKE') {
+        localStorage.setItem('playerId', m.playerId);
         setPlayerId(m.playerId);
       }
 
-      if (m.type === "AWAIT_ABILITY") {
-        let submitText = "Подтвердить";
+      if (m.type === 'AWAIT_ABILITY') {
+        let submitText = 'Подтвердить';
         switch (m.abilityType) {
           case 0: {
-            submitText = "Расстановка завершена"
+            submitText = 'Расстановка завершена';
             break;
           }
           case 1: {
-            submitText = "Забрать";
+            submitText = 'Забрать';
             break;
           }
-          default: { }
+          default: {
+          }
         }
         setAwaitingAbility({ ...m, submitText });
       }
 
-      if (m.type === "MONSTER_COMPLETED") {
+      if (m.type === 'MONSTER_COMPLETED') {
         setAwaitingAbility({});
       }
 
       setGame(m.game);
-    }
+    };
 
     return () => {
       socket = undefined;
-    }
+    };
   }, []);
 
   const onTakeCard = () => {
-    socket.send(JSON.stringify({ type: "TAKE_CARD" }));
-  }
+    socket.send(JSON.stringify({ type: 'TAKE_CARD' }));
+  };
 
   const onPlaceCard = () => {
     if (!selectedCardId[0] || selectedMonsterId[0] === null) {
       return;
     }
-    socket.send(JSON.stringify({ type: "PLAY_CARD", cardId: selectedCardId[0], monsterId: selectedMonsterId[0] }));
+    socket.send(
+      JSON.stringify({
+        type: 'PLAY_CARD',
+        cardId: selectedCardId[0],
+        monsterId: selectedMonsterId[0],
+      })
+    );
     dispatch(selectCard({ cardId: null }));
     dispatch(selectMonster({ monsterId: null }));
-  }
+  };
 
   const onStartGame = () => {
-    socket.send(JSON.stringify({ type: "START" }));
-  }
+    socket.send(JSON.stringify({ type: 'START' }));
+  };
 
   const onSpecialCardClick = (event, card) => {
     if (awaitingAbility.abilityType === 0) {
       //setSelectedCardId(selectedCardId === card.id ? null : card.id);
     }
-  }
+  };
 
   const onSubmitAbility = () => {
     const payload = {
       abilityType: awaitingAbility.abilityType,
       abilityNumber: awaitingAbility.abilityNumber,
-    }
+    };
 
     // 0 ????
-    
+
     if (awaitingAbility.abilityType === 1) {
       payload.cards = awaitingAbility.cards;
     }
@@ -109,7 +121,7 @@ const App = () => {
     if (awaitingAbility.abilityType === 3) {
       payload.cardId = selectedCardId[0];
       payload.targetMonsterId = selectedCardId[1];
-      payload.targetPlayerId = selectedCardId[2]; 
+      payload.targetPlayerId = selectedCardId[2];
     }
 
     if (awaitingAbility.abilityType === 4) {
@@ -122,30 +134,38 @@ const App = () => {
       payload.targetMonsterId = selectedCardId[2];
     }
 
-    
-    socket.send(JSON.stringify({
-      type: "SUBMIT_ABILITY",
-      ...payload
-    }));
+    socket.send(
+      JSON.stringify({
+        type: 'SUBMIT_ABILITY',
+        ...payload,
+      })
+    );
 
-    if (awaitingAbility.abilityType === 2 || awaitingAbility.abilityType === 3 || awaitingAbility === 4) {
+    if (
+      awaitingAbility.abilityType === 2 ||
+      awaitingAbility.abilityType === 3 ||
+      awaitingAbility === 4
+    ) {
       dispatch(selectCard({ cardId: null }));
       dispatch(selectMonster({ monsterId: null }));
     }
-  }
+  };
 
   if (!game?.activePlayer) {
     return (
       <div className="App">
         Привет, {playerId}. <button onClick={onStartGame}>Начать игру</button>
       </div>
-    )
+    );
   }
 
   return (
     <div className="App">
       <header className="header">
-        <span>Я  - <strong>{playerId}</strong>. Ходит <strong>{game?.activePlayer?.id}</strong></span>
+        <span>
+          Я - <strong>{playerId}</strong>. Ходит{' '}
+          <strong>{game?.activePlayer?.id}</strong>
+        </span>
       </header>
 
       <Controls
@@ -158,23 +178,34 @@ const App = () => {
         onSubmitAbility={onSubmitAbility}
       />
 
-      <PlayerBoard player={me} isMyTurn={isMyTurn} awaitingAbility={awaitingAbility} itsMe />
-      
-      <div className="players">
+      <PlayerBoard
+        player={me}
+        isMyTurn={isMyTurn}
+        awaitingAbility={awaitingAbility}
+        itsMe
+      />
+
+      {/* <div className="players">
         {(game.players || []).map((player) => {
           if (player.id === me.id) {
             return null;
           }
-          return <PlayerBoard player={player} key={player.id} awaitingAbility={awaitingAbility} isMyTurn={isMyTurn} />
+          return (
+            <PlayerBoard
+              player={player}
+              key={player.id}
+              awaitingAbility={awaitingAbility}
+              isMyTurn={isMyTurn}
+            />
+          );
         })}
-      </div>
-      
+      </div> */}
+
       <MyCards cards={me.cards || []} />
 
-      <div className="placeholder"/>
-     
+      <div className="placeholder" />
     </div>
   );
-}
+};
 
 export default App;
