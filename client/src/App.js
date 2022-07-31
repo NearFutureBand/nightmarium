@@ -163,7 +163,7 @@ const App = () => {
     <div className="App">
       <header className="header">
         <span>
-          Я - <strong>{playerId}</strong>. Ходит{' '}
+          {isMyTurn && <h2>ВАШ ХОД</h2>}Я - <strong>{playerId}</strong>. Ходит{' '}
           <strong>{game?.activePlayer?.id}</strong>
         </span>
       </header>
@@ -185,7 +185,7 @@ const App = () => {
         itsMe
       />
 
-      {/* <div className="players">
+      <div className="players">
         {(game.players || []).map((player) => {
           if (player.id === me.id) {
             return null;
@@ -199,7 +199,7 @@ const App = () => {
             />
           );
         })}
-      </div> */}
+      </div>
 
       <MyCards cards={me.cards || []} />
 

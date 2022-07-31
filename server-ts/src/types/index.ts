@@ -9,7 +9,6 @@ export type Card = {
 
 export type CardsDatabase = { [id: string]: Card };
 
-export type Message = {
+export type Message<T = any> = T & {
   type: MESSAGE_TYPE;
-  playerId: string | null;
 };

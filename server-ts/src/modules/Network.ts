@@ -13,7 +13,10 @@ export default class Network {
   private clientsMap: { [clientId: string]: WebSocket }; // clientId -> wsClient
   private playersMap: { [playerId: string]: string }; // playerId -> clientId
   private messageActionsMap: {
-    [messageType: string]: (message: any, clientId: string) => boolean | void;
+    [messageType: string]: (
+      message: Message,
+      clientId: string
+    ) => boolean | void;
   };
 
   constructor() {
@@ -26,8 +29,8 @@ export default class Network {
     this.messageActionsMap = {
       [MESSAGE_TYPE.HANDSHAKE]: this.onHandshake,
       [MESSAGE_TYPE.START]: this.onStart,
-      // [MESSAGE_TYPE.TAKE_CARD]: this.onTakeCard,
-      // [MESSAGE_TYPE.PLAY_CARD]: this.onPlayCard,
+      [MESSAGE_TYPE.TAKE_CARD]: this.onTakeCard,
+      [MESSAGE_TYPE.PLAY_CARD]: this.onPlayCard,
     };
   }
 
@@ -63,10 +66,7 @@ export default class Network {
         clientId
       );
       if (!doNotBroadcast) {
-        console.log;
-        this.broadcast(message.type, {
-          game: this.game!.getGameState(this.getPlayerIdByClientId(clientId)),
-        });
+        this.broadcast(message.type);
       }
     } catch (error) {
       console.log(error);
@@ -92,14 +92,17 @@ export default class Network {
     this.displayPlayersMap();
   };
 
-  broadcast = (type: MESSAGE_TYPE, payload: any) => {
+  broadcast = (type: MESSAGE_TYPE, payload?: any) => {
     // TODO maybe change to loop by players
     this.game!.players.forEach((player) => {
-      this.sendMessage(this.playersMap[player.id], type, payload);
+      this.sendMessage(this.playersMap[player.id], type, {
+        ...payload,
+        game: this.game!.getGameState(player.id),
+      });
     });
   };
 
-  onHandshake = (message: Message, clientId: string) => {
+  onHandshake = (message: Message<{ playerId: string }>, clientId: string) => {
     let playerId = message.playerId;
 
     if (playerId && playerId in this.playersMap) {
@@ -121,43 +124,24 @@ export default class Network {
     this.game!.setNextActivePlayer();
   };
 
+  onTakeCard = () => {
+    this.game!.activePlayerTakesCard();
+  };
+
+  onPlayCard = (message: Message<{ cardId: number; monsterId: number }>) => {
+    try {
+      this.game!.activePlayerPutsCard(message.cardId, message.monsterId);
+    } catch (error) {
+      console.log(error);
+      return true;
+    }
+  };
+
   getPlayerIdByClientId = (clientId: string) => {
     for (const playerId in this.playersMap) {
       if (clientId === this.playersMap[playerId]) return playerId;
     }
   };
-
-  // onTakeCard = () => {
-  //   this.game.activePlayer.addCard(this.game.giveCard());
-  //   game.actions -= 1;
-
-  //   if (this.game.actions === 0) {
-  //     this.game.setNextActivePlayer();
-  //   }
-  // };
-
-  // onPlayCard = () => {
-  //   this.game.activePlayer.placeCardToMonster(
-  //     message.cardId,
-  //     message.monsterId
-  //   );
-  //   game.actions -= 1;
-
-  //   // if (targetMonster.body.length === 3) {
-  //   //   // monster has been built
-  //   //   console.log(targetMonster.body);
-  //   //   abilitiesState.playerId = game.activePlayer.id;
-  //   //   abilitiesState.monsterId = targetMonster.id;
-  //   //   abilitiesState.abilities = [...targetMonster.body].reverse().map((bodypart, index) => ({ type: bodypart.ability, done: false, inprogress: false }));
-  //   //   abilitiesState.currentAbilityIndex = 0;
-  //   //   onAbility();
-  //   //   return;
-  //   // }
-
-  //   if (this.game.actions === 0) {
-  //     this.game.setNextActivePlayer();
-  //   }
-  // };
 
   displayClientsMap = () => {
     console.log('CLIENT_ID           |   WEBSOCKET ');
@@ -175,5 +159,7 @@ export default class Network {
     console.log('----------------------------------\n');
   };
 }
+
+class GameController extends Network {}
 
 module.exports = Network;

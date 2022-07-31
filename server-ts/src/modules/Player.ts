@@ -25,12 +25,32 @@ export default class Player {
     this.name = name;
   };
 
-  public getPlayerState = () => {
+  public getPlayerState = (isMe?: boolean) => {
     return {
       id: this._id,
       name: this.name,
-      cards: this.cards.length,
+      cards: isMe ? this.cards : this.cards.length,
       monsters: this.monsters,
     };
+  };
+
+  public addCard = (card: Card) => {
+    this.cards.push(card);
+  };
+
+  public placeCardToMonster = (cardId: number, monsterId: number): Monster => {
+    const targetMonster = this.monsters[monsterId];
+    const cardIndex = this.findCardOnHandById(cardId);
+    const card = this.cards[cardIndex];
+
+    const added = targetMonster.addCard(card);
+
+    if (!added) throw new Error('Card can not be added');
+    this.cards.splice(cardIndex, 1);
+    return targetMonster;
+  };
+
+  public findCardOnHandById = (cardId: number) => {
+    return this.cards.findIndex((card) => card.id === cardId);
   };
 }
