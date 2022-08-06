@@ -27,4 +27,15 @@ export default class Monster {
   getBody = () => {
     return this.body;
   };
+
+  removeTopBodyPart = (): Card => {
+    const [removedCard] = this.body.splice(this.body.length - 1, 1);
+    return removedCard;
+  };
+
+  kill = (): Card[] => {
+    const removedCards = [...this.body];
+    this.body = [];
+    return removedCards;
+  };
 }

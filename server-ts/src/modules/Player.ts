@@ -54,4 +54,8 @@ export default class Player {
   public findCardOnHandById = (cardId: number) => {
     return this.cards.findIndex((card) => card.id === cardId);
   };
+
+  public getMosterById = (monsterId: number) => {
+    return this.monsters[monsterId];
+  };
 }

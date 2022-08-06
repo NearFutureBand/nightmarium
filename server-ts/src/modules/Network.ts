@@ -135,6 +135,7 @@ class GameController {
     };
   };
 }
+
 export default class Network {
   private host: string;
   private port: number;
@@ -173,7 +174,6 @@ export default class Network {
 
   onMessage = (event: RawData, clientId: string) => {
     const message: Message = JSON.parse(event.toString());
-    console.log('\n');
     console.log('==>', clientId, message);
 
     try {
@@ -205,10 +205,7 @@ export default class Network {
     const wsClient = this.clientsMap[clientId];
     if (!wsClient) return;
     console.log('<==', message.type);
-    console.log('\n');
     wsClient.send(JSON.stringify(message));
-    this.displayClientsMap();
-    this.displayPlayersMap();
   };
 
   broadcast = (message: Message) => {

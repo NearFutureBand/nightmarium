@@ -159,7 +159,7 @@ export default class Game {
   };
 
   areAbilitiesCompelete = () => {
-    return this.abilitiesState!.currentAbilityIndex === 3;
+    return this.abilitiesState!.currentAbilityIndex >= 3;
   };
 
   getCurrentAbility = () => {
@@ -183,23 +183,16 @@ export default class Game {
       return this.onAbility();
     }
 
-    ability.inprogress = true;
-
-    // TODO
     if (this.areAbilitiesCompelete()) {
       this.resetAbilitiesMode();
 
       if (this.actions === 0) {
         this.setNextActivePlayer();
       }
-
-      // TODO broadcast
-
-      // this.forEachPlayer((player) => {
-      //   player.sendMessage('MONSTER_COMPLETED', { game: game.getGame() });
-      // });
       return;
     }
+
+    ability.inprogress = true;
 
     const payload: AbilityMessagePayload = {
       abilityNumber: this.abilitiesState!.currentAbilityIndex,
@@ -213,10 +206,6 @@ export default class Game {
       // взять две карты на руку
       payload.cards = [this.giveCard(), this.giveCard()];
     }
-
-    //   game.players.forEach(player => {
-    //     player.sendMessage("AWAIT_ABILITY", { game: game.getGame(), ...payload });
-    //   });
     return {
       type: MESSAGE_TYPE.AWAIT_ABILITY,
       ...payload,
@@ -240,8 +229,11 @@ export default class Game {
     abilityType,
     cardId,
     monsterId,
+    targetPlayerId,
+    targetMonsterId,
   }: ApplyAbilityParams): Message | undefined => {
-    const ability = this.getCurrentAbility();
+    // currentAbility не может быть null здесь, так как карточки без способностей скипаются в onAbility
+    const ability = this.getCurrentAbility()!;
 
     switch (abilityType) {
       case ABILITIES.DROP: {
@@ -251,6 +243,16 @@ export default class Game {
       case ABILITIES.SMILE: {
         this.applySmileAbility(cardId, monsterId);
         break;
+      }
+      case ABILITIES.AXE: {
+        this.applyAxeAbility(targetPlayerId, targetMonsterId);
+        break;
+      }
+      case ABILITIES.BONES: {
+        this.applyBonesAbility(targetPlayerId, targetMonsterId);
+      }
+      case ABILITIES.TEETH: {
+        this.applyTeethAbility(targetMonsterId);
       }
     }
 
@@ -271,5 +273,42 @@ export default class Game {
   applySmileAbility = (cardId: number, monsterId: number) => {
     const activePlayer = this.getActivePlayer();
     activePlayer.placeCardToMonster(cardId, monsterId);
+  };
+
+  /**
+   * Забрать верхнюю карту чужого монстра на руку
+   */
+  applyAxeAbility = (targetPlayerId: string, targetMonsterId: number) => {
+    const player = this.getActivePlayer();
+    const targetPlayer = this.getPlayerById(targetPlayerId);
+    const targetMonster = targetPlayer.getMosterById(targetMonsterId);
+
+    const removedCard = targetMonster.removeTopBodyPart();
+    player.addCard(removedCard);
+  };
+
+  /**
+   * кости, уничтожить недостроенного монстра целиком
+   */
+  applyBonesAbility = (targetPlayerId: string, targetMonsterId: number) => {
+    const targetPlayer = this.getPlayerById(targetPlayerId);
+    const targetMonster = targetPlayer.getMosterById(targetMonsterId);
+
+    // check if it's unfinished
+
+    const removedCards = targetMonster.kill();
+    removedCards.forEach((card) => {
+      this.cardsThrowedAway[card.id] = card;
+    });
+  };
+
+  /**
+   * Выбросить верхнюю карту своего монстра, кроме текущего
+   */
+  applyTeethAbility = (targetMonsterId: number) => {
+    const player = this.getActivePlayer();
+    const targetMonster = player.getMosterById(targetMonsterId);
+    const removedCard = targetMonster.removeTopBodyPart();
+    this.cardsThrowedAway[removedCard.id] = removedCard;
   };
 }
