@@ -1,5 +1,5 @@
-import { CARDS } from '../Cards';
-import { randomInteger } from '../../helpers';
+import { CARDS } from './Cards';
+import { randomInteger } from '../helpers';
 import {
   AbilitiesState,
   ApplyAbilityParams,
@@ -8,10 +8,10 @@ import {
   GameState,
   Message,
   PlayerState,
-} from '../../types';
-import Player from '../Player';
-import { ABILITIES, MESSAGE_TYPE } from '../../constants';
-import Monster from '../Monster';
+} from '../types';
+import Player from './Player';
+import { ABILITIES, MESSAGE_TYPE } from '../constants';
+import Monster from './Monster';
 
 type AbilityMessagePayload = {
   cards?: Card[];
