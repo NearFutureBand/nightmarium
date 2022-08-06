@@ -1,22 +1,25 @@
 import { CARDS } from '../Cards';
 import { randomInteger } from '../../helpers';
-import { Card, CardsDatabase } from '../../types';
+import {
+  AbilitiesState,
+  AbilityOneData,
+  ApplyAbilityParams,
+  Card,
+  CardsDatabase,
+  GameState,
+  Message,
+  PlayerState,
+} from '../../types';
 import Player from '../Player';
-import { ABILITIES } from '../../constants';
+import { ABILITIES, MESSAGE_TYPE } from '../../constants';
 import Monster from '../Monster';
-
-type AbilitiesState = {
-  playerId: string;
-  monsterId: number;
-  abilities: ({ type: number; done: boolean; inprogress: boolean } | null)[];
-  currentAbilityIndex: number;
-};
 
 type AbilityMessagePayload = {
   cards?: Card[];
   abilityNumber: number;
   abilityType: number;
 };
+
 export default class Game {
   private cardsAvailable: CardsDatabase;
   private cardsThrowedAway: CardsDatabase;
@@ -65,16 +68,23 @@ export default class Game {
     return this._players;
   }
 
-  public getGameState = (requestPlayerId?: string) => {
+  public getGameState = (requestPlayerId?: string): GameState => {
+    // TODO remove 'as'
     return {
       cardsAvailable: this.cardsAvailable,
       cardsThrowedAway: this.cardsThrowedAway,
-      activePlayer: this.getActivePlayer()?.getPlayerState(),
+      activePlayer:
+        this.getActivePlayer()?.getPlayerState() as PlayerState<number>,
       me: requestPlayerId
-        ? this.getPlayerById(requestPlayerId).getPlayerState(true)
+        ? (this.getPlayerById(requestPlayerId).getPlayerState(
+            true
+          ) as PlayerState<Card[]>)
         : undefined,
-      players: this.players.map((player) => player.getPlayerState()),
+      players: this.players.map(
+        (player) => player.getPlayerState() as PlayerState<number>
+      ),
       actions: this.actions,
+      //abilitiesState: this.abilitiesState || undefined,
     };
   };
 
@@ -106,25 +116,20 @@ export default class Game {
   };
 
   activePlayerPutsCard = (cardId: number, monsterId: number) => {
-    try {
-      const activePlayer = this.getActivePlayer();
-      if (!activePlayer) throw new Error('Active player not found');
+    const activePlayer = this.getActivePlayer();
+    if (!activePlayer) throw new Error('Active player not found');
 
-      const targetMonster = activePlayer?.placeCardToMonster(cardId, monsterId);
+    const targetMonster = activePlayer?.placeCardToMonster(cardId, monsterId);
 
-      this.actions -= 1;
+    this.actions -= 1;
 
-      if (targetMonster?.isDone()) {
-        console.log(targetMonster.getBody());
-        this.startAbilitiesMode(activePlayer.id, targetMonster);
-        return this.onAbility();
-      }
-      if (this.actions === 0) {
-        this.setNextActivePlayer();
-      }
-    } catch (error) {
-      console.log(error);
-      return true;
+    if (targetMonster?.isDone()) {
+      console.log(targetMonster.getBody());
+      this.startAbilitiesMode(activePlayer.id, targetMonster);
+      return this.onAbility();
+    }
+    if (this.actions === 0) {
+      this.setNextActivePlayer();
     }
   };
 
@@ -160,58 +165,58 @@ export default class Game {
     ];
   };
 
-  onAbility = () => {
-    try {
-      /** If abilitiesState doesn't exist the error will be thrown
-       * So this.abilitiesState! can be used further
-       */
-      const ability = this.getCurrentAbility();
+  onAbility = (): Message | undefined => {
+    /** If abilitiesState doesn't exist the error will be thrown
+     * So this.abilitiesState! can be used further
+     */
+    const ability = this.getCurrentAbility();
+    console.log('current ability: ', ability);
 
-      if (!ability) {
-        console.log('no ability');
-        this.abilitiesState!.currentAbilityIndex++;
-        console.log(this.abilitiesState);
-        return;
-      }
-
-      ability.inprogress = true;
-      console.log(this.abilitiesState);
-
-      // TODO
-      if (this.areAbilitiesCompelete()) {
-        this.resetAbilitiesMode();
-
-        if (this.actions === 0) {
-          this.setNextActivePlayer();
-        }
-
-        // TODO broadcast
-
-        // this.forEachPlayer((player) => {
-        //   player.sendMessage('MONSTER_COMPLETED', { game: game.getGame() });
-        // });
-        return;
-      }
-
-      const payload: AbilityMessagePayload = {
-        abilityNumber: this.abilitiesState!.currentAbilityIndex,
-        abilityType: ability.type,
-      };
-
-      if (ability.type <= 1) {
-        // волк
-        // выдать две карты чтобы игрок сразу попытался их применить
-        // или
-        // взять две карты на руку
-        payload.cards = [this.giveCard(), this.giveCard()];
-      }
-
-      //   game.players.forEach(player => {
-      //     player.sendMessage("AWAIT_ABILITY", { game: game.getGame(), ...payload });
-      //   });
-    } catch (error) {
-      console.log(error);
+    if (ability === null) {
+      console.log('no ability');
+      this.abilitiesState!.currentAbilityIndex++;
+      // Skip a card without ability and activate the next ability
+      return this.onAbility();
     }
+
+    ability.inprogress = true;
+
+    // TODO
+    if (this.areAbilitiesCompelete()) {
+      this.resetAbilitiesMode();
+
+      if (this.actions === 0) {
+        this.setNextActivePlayer();
+      }
+
+      // TODO broadcast
+
+      // this.forEachPlayer((player) => {
+      //   player.sendMessage('MONSTER_COMPLETED', { game: game.getGame() });
+      // });
+      return;
+    }
+
+    const payload: AbilityMessagePayload = {
+      abilityNumber: this.abilitiesState!.currentAbilityIndex,
+      abilityType: ability.type,
+    };
+
+    if (ability.type <= 1) {
+      // волк
+      // выдать две карты чтобы игрок сразу попытался их применить
+      // или
+      // взять две карты на руку
+      payload.cards = [this.giveCard(), this.giveCard()];
+    }
+
+    //   game.players.forEach(player => {
+    //     player.sendMessage("AWAIT_ABILITY", { game: game.getGame(), ...payload });
+    //   });
+    return {
+      type: MESSAGE_TYPE.AWAIT_ABILITY,
+      ...payload,
+    };
   };
 
   forEachPlayer = (callback: (player: Player, index: number) => void) => {
@@ -223,5 +228,30 @@ export default class Game {
     if (this.actions === 0) {
       this.setNextActivePlayer();
     }
+  };
+
+  applyAbility = ({
+    cards,
+    abilityNumber,
+    abilityType,
+  }: ApplyAbilityParams): Message | undefined => {
+    const ability = this.getCurrentAbility();
+
+    if (ability!.type === 1) {
+      this.applyAbilityOne(cards);
+    }
+
+    ability!.done = true;
+    ability!.inprogress = false;
+    this.abilitiesState!.currentAbilityIndex++;
+
+    return this.onAbility();
+  };
+
+  applyAbilityOne = (cards: Card[]) => {
+    const player = this.getActivePlayer();
+    if (!player) throw new Error('Ability 1: Active player not found');
+    player.addCard(cards[0]);
+    player.addCard(cards[1]);
   };
 }

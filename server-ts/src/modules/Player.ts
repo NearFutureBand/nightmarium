@@ -1,5 +1,5 @@
 import { omit } from 'lodash';
-import { Card } from '../types';
+import { Card, PlayerState } from '../types';
 import { CARDS } from './Cards';
 import Monster from './Monster';
 import { WebSocket } from 'ws';
@@ -25,7 +25,7 @@ export default class Player {
     this.name = name;
   };
 
-  public getPlayerState = (isMe?: boolean) => {
+  public getPlayerState = (isMe?: boolean): PlayerState<Card[] | number> => {
     return {
       id: this._id,
       name: this.name,

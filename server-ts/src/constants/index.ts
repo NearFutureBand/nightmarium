@@ -18,6 +18,8 @@ export enum MESSAGE_TYPE {
   START = 'START',
   TAKE_CARD = 'TAKE_CARD',
   PLAY_CARD = 'PLAY_CARD',
+  AWAIT_ABILITY = 'AWAIT_ABILITY',
+  SUBMIT_ABILITY = 'SUBMIT_ABILITY',
 }
 
 export const HOST = 'localhost';
