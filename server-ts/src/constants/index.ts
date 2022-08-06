@@ -1,10 +1,10 @@
 export enum ABILITIES {
-  'WOLF' = 'Волк',
-  'DROP' = 'Капля',
-  'SMILE' = 'Улыбка',
-  'AXE' = 'Топор',
-  'BONES' = 'Кости',
-  'TEETH' = 'Зубы',
+  'WOLF',
+  'DROP',
+  'SMILE',
+  'AXE',
+  'BONES',
+  'TEETH',
 }
 
 export enum BODYPARTS {

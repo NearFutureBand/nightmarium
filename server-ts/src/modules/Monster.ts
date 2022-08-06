@@ -11,14 +11,13 @@ export default class Monster {
     this.abilitiesUsed = false;
   }
 
-  addCard = (card: Card): boolean => {
+  addCard = (card: Card) => {
     const possibleToInstall = card.bodypart.some(
       (bodypartIndex) => bodypartIndex === this.body.length
     );
-    // TODO throw error ?
-    if (!possibleToInstall) return false;
+    if (!possibleToInstall)
+      throw new Error('This card is impossible to install');
     this.body.push(card);
-    return true;
   };
 
   isDone = () => {

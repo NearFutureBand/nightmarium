@@ -56,6 +56,13 @@ const PlayerBoard = ({ player = {}, isMyTurn, awaitingAbility, itsMe }) => {
       <div className="monsters">
         {[0, 1, 2, 3, 4].map((monsterIndex) => {
           const monster = player.monsters[monsterIndex];
+
+          const isMonsterClickable = isMyTurn && itsMe;
+          // TODO разгрести этот говнокод
+          //(isMyTurn && itsMe && !awaitingAbility.abilityType) ||
+          //awaitingAbility.abilityType === 1 ||
+          //(awaitingAbility.abilityType === 4 && !itsMe && isMyTurn)
+
           return (
             <Monster
               monster={monster}
@@ -65,11 +72,7 @@ const PlayerBoard = ({ player = {}, isMyTurn, awaitingAbility, itsMe }) => {
               }
               key={monsterIndex}
               onClick={() => onSelectMonster(monsterIndex)}
-              clickable={
-                (isMyTurn && itsMe && !awaitingAbility.abilityType) ||
-                awaitingAbility.abilityType === 1 ||
-                (awaitingAbility.abilityType === 4 && !itsMe && isMyTurn)
-              }
+              clickable={isMonsterClickable}
               bodyLength={monster?.body?.length}
               awaitingAbility={awaitingAbility}
               itsMe={itsMe}

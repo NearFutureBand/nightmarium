@@ -38,14 +38,15 @@ export default class Player {
     this.cards.push(card);
   };
 
+  public addCards = (cards: Card[]) => {
+    cards.forEach((card) => this.addCard(card));
+  };
+
   public placeCardToMonster = (cardId: number, monsterId: number): Monster => {
     const targetMonster = this.monsters[monsterId];
     const cardIndex = this.findCardOnHandById(cardId);
     const card = this.cards[cardIndex];
-
-    const added = targetMonster.addCard(card);
-
-    if (!added) throw new Error('Card can not be added');
+    targetMonster.addCard(card);
     this.cards.splice(cardIndex, 1);
     return targetMonster;
   };

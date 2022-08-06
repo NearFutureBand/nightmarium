@@ -2,7 +2,6 @@ import { CARDS } from '../Cards';
 import { randomInteger } from '../../helpers';
 import {
   AbilitiesState,
-  AbilityOneData,
   ApplyAbilityParams,
   Card,
   CardsDatabase,
@@ -69,12 +68,18 @@ export default class Game {
   }
 
   public getGameState = (requestPlayerId?: string): GameState => {
-    // TODO remove 'as'
+    let activePlayer: PlayerState<number> | undefined = undefined;
+    try {
+      activePlayer =
+        this.getActivePlayer()?.getPlayerState() as PlayerState<number>;
+    } catch (error: any) {
+      console.log('ERROR: ', error.message);
+    }
+
     return {
       cardsAvailable: this.cardsAvailable,
       cardsThrowedAway: this.cardsThrowedAway,
-      activePlayer:
-        this.getActivePlayer()?.getPlayerState() as PlayerState<number>,
+      activePlayer,
       me: requestPlayerId
         ? (this.getPlayerById(requestPlayerId).getPlayerState(
             true
@@ -84,7 +89,6 @@ export default class Game {
         (player) => player.getPlayerState() as PlayerState<number>
       ),
       actions: this.actions,
-      //abilitiesState: this.abilitiesState || undefined,
     };
   };
 
@@ -100,7 +104,8 @@ export default class Game {
   }
 
   getActivePlayer = () => {
-    if (this.activePlayerIndex !== 0 && !this.activePlayerIndex) return null;
+    if (this.activePlayerIndex !== 0 && !this.activePlayerIndex)
+      throw new Error('No active player');
     return this._players[this.activePlayerIndex];
   };
 
@@ -117,9 +122,8 @@ export default class Game {
 
   activePlayerPutsCard = (cardId: number, monsterId: number) => {
     const activePlayer = this.getActivePlayer();
-    if (!activePlayer) throw new Error('Active player not found');
 
-    const targetMonster = activePlayer?.placeCardToMonster(cardId, monsterId);
+    const targetMonster = activePlayer.placeCardToMonster(cardId, monsterId);
 
     this.actions -= 1;
 
@@ -234,11 +238,20 @@ export default class Game {
     cards,
     abilityNumber,
     abilityType,
+    cardId,
+    monsterId,
   }: ApplyAbilityParams): Message | undefined => {
     const ability = this.getCurrentAbility();
 
-    if (ability!.type === 1) {
-      this.applyAbilityOne(cards);
+    switch (abilityType) {
+      case ABILITIES.DROP: {
+        this.applyDropAbility(cards);
+        break;
+      }
+      case ABILITIES.SMILE: {
+        this.applySmileAbility(cardId, monsterId);
+        break;
+      }
     }
 
     ability!.done = true;
@@ -248,10 +261,15 @@ export default class Game {
     return this.onAbility();
   };
 
-  applyAbilityOne = (cards: Card[]) => {
+  applyWolfAbility = () => {};
+
+  applyDropAbility = (cards: Card[]) => {
     const player = this.getActivePlayer();
-    if (!player) throw new Error('Ability 1: Active player not found');
-    player.addCard(cards[0]);
-    player.addCard(cards[1]);
+    player.addCards(cards);
+  };
+
+  applySmileAbility = (cardId: number, monsterId: number) => {
+    const activePlayer = this.getActivePlayer();
+    activePlayer.placeCardToMonster(cardId, monsterId);
   };
 }

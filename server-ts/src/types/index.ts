@@ -41,8 +41,14 @@ export type GameState = {
 export type ApplyAbilityParams = {
   abilityNumber: number;
   abilityType: number;
-} & AbilityOneData;
+} & AbilityDropData &
+  AbilitySmileData;
 
-export type AbilityOneData = {
+export type AbilityDropData = {
   cards: Card[];
+};
+
+export type AbilitySmileData = {
+  cardId: number;
+  monsterId: number;
 };
