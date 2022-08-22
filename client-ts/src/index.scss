@@ -1,0 +1,125 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+$card-width: 10rem;
+$card-height: 6.4rem;
+
+.gamepanel {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.monsters {
+  display: flex;
+}
+
+.monster {
+  box-sizing: content-box;
+  display: flex;
+  flex-direction: column-reverse;
+  width: $card-width;
+  height: $card-height * 3;
+  margin: 0 0.5rem;
+  border-radius: 1rem;
+  border: 3px solid white;
+  align-items: center;
+  transition: all ease 0.2s;
+  &.selected {
+    border: 3px solid rgb(11, 236, 228);
+    box-shadow: 0px 0px 5px rgba(11, 236, 228, 1);
+  }
+  // & .card {
+  //   width: $monster-width;
+  //   border: none;
+  //   box-sizing: border-box;
+  //   cursor: auto;
+  // }
+  // & .card.selected {
+  //   border: 2px solid rgb(11, 236, 228);
+  // }
+  &.clickable {
+    cursor: pointer;
+  }
+  &.allow-select-card {
+    .card {
+      cursor: pointer;
+    }
+  }
+  &.draggedOver {
+    border: 3px solid rgb(215, 102, 102);
+  }
+  // &.inprogress {
+  //   .card {
+  //     cursor: auto;
+  //   }
+  //   //border: 3px solid white;
+  // }
+}
+
+.card {
+  width: $card-width;
+  height: $card-height;
+  min-width: 10rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  border-radius: 0.8rem;
+  //background-size: 100%;
+  //background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  transition: all ease 0.2s;
+  border: 3px solid white;
+  &.empty {
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    cursor: auto;
+  }
+  &.selected {
+    border: 3px solid rgb(11, 236, 228);
+    box-shadow: 0px 0px 5px rgba(11, 236, 228, 1);
+  }
+  &.disabled {
+    opacity: 0.5;
+    cursor: auto;
+  }
+  &.clickable {
+    cursor: pointer;
+  }
+}
+
+.my-cards {
+  display: flex;
+  justify-content: center;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  overflow-y: auto;
+  text-align: center;
+  background-color: white;
+  border-top: 1px solid #eee;
+
+  & .card {
+    &.interactive:hover {
+      margin-top: -1rem;
+    }
+  }
+}
