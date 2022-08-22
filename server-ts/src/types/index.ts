@@ -33,7 +33,7 @@ export type GameState = {
   cardsThrowedAway: CardsDatabase;
   activePlayer?: PlayerState<number>;
   me?: PlayerState<Card[]>;
-  players: PlayerState<number>[];
+  otherPlayers: PlayerState<number>[];
   actions: number;
   abilitiesState?: AbilitiesState;
 };

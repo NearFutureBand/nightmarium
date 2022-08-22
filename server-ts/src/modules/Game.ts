@@ -1,5 +1,6 @@
 import { CARDS } from './Cards';
 import { randomInteger } from '../helpers';
+import { sortBy } from 'lodash';
 import {
   AbilitiesState,
   ApplyAbilityParams,
@@ -85,8 +86,11 @@ export default class Game {
             true
           ) as PlayerState<Card[]>)
         : undefined,
-      players: this.players.map(
-        (player) => player.getPlayerState() as PlayerState<number>
+      otherPlayers: sortBy(
+        this.players
+          .filter((player) => player.id !== requestPlayerId)
+          .map((player) => player.getPlayerState() as PlayerState<number>),
+        'id'
       ),
       actions: this.actions,
     };

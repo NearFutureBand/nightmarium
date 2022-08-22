@@ -22,5 +22,5 @@ export enum MESSAGE_TYPE {
   SUBMIT_ABILITY = 'SUBMIT_ABILITY',
 }
 
-export const HOST = 'localhost';
+export const HOST = '192.168.100.5';
 export const PORT = 9000;

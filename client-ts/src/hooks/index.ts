@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { MESSAGE_TYPE } from '../constants';
+import { HOST, MESSAGE_TYPE, PORT } from '../constants';
 import { Message, MessageHandshake, MessageWithGame } from '../types';
 
 type Params = {
@@ -51,7 +51,7 @@ export const useSocket = ({ onHandshake, onGameStart }: Params) => {
   );
 
   useEffect(() => {
-    socket.current = new WebSocket('ws://localhost:9000');
+    socket.current = new WebSocket(`ws://${HOST}:${PORT}`);
 
     socket.current.onopen = onOpen;
 

@@ -43,3 +43,6 @@ export const COLORS = {
   green: '#63d45f',
   orange: '#e29d3d',
 };
+
+export const HOST = '192.168.100.5';
+export const PORT = 9000;
