@@ -48,8 +48,8 @@ export type AbilitySmileData = {
 };
 
 export type AbilityAxeData = {
-  targetPlayerId: string;
-  targetMonsterId: number;
+  playerId: string;
+  monsterId: number;
 };
 
 export type ApplyAbilityParams = {

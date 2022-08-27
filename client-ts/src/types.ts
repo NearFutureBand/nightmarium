@@ -11,6 +11,15 @@ export type Card = {
 
 export type CardMap = { [cardId: string]: Card };
 
+// TODO make generic
+export type AbilityState = {
+  abilityNumber: number;
+  abilityType: number;
+  cards?: Card[];
+  monsterId?: number;
+  playerId: string;
+};
+
 export type Monster = {
   id: number;
   body: Card[];
@@ -30,7 +39,7 @@ export type Game = {
   cardsThrownAway: CardMap;
   playerId: string;
   me: Player<Card[]>;
-  players: Player<number>[];
+  otherPlayers: Player<number>[];
   activePlayer?: Player<number>;
 };
 
@@ -44,3 +53,19 @@ export type MessageHandshake = MessageWithGame &
   Message<{
     playerId: string;
   }>;
+
+export type MessageAwaitAbility = MessageWithGame &
+  Message<{
+    ability: AbilityState;
+  }>;
+
+export type SelectedMonster = {
+  playerId: string;
+  monsterId: number;
+};
+
+export type SelectedCard = {
+  playerId?: string;
+  monsterId?: number;
+  cardId: number;
+};

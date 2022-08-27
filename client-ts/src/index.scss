@@ -7,11 +7,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
-}
-
 * {
   box-sizing: border-box;
 }
@@ -19,12 +14,26 @@ code {
 $card-width: 10rem;
 $card-height: 6.4rem;
 
+.playerBoard {
+  padding: 1rem;
+  margin: 1rem 0;
+  & > header {
+    padding: 1rem;
+  }
+  &.active {
+    border: 2px solid #eee;
+    border-radius: 1rem;
+    box-shadow: 1px 1px 10px #eee;
+  }
+}
+
 .gamepanel {
   width: 100%;
   height: 100vh;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
+  margin-bottom: 10rem;
 }
 
 .monsters {
@@ -39,11 +48,11 @@ $card-height: 6.4rem;
   height: $card-height * 3;
   margin: 0 0.5rem;
   border-radius: 1rem;
-  border: 3px solid white;
+  border: 1px solid #eee;
   align-items: center;
   transition: all ease 0.2s;
   &.selected {
-    border: 3px solid rgb(11, 236, 228);
+    border: 1px solid rgb(11, 236, 228);
     box-shadow: 0px 0px 5px rgba(11, 236, 228, 1);
   }
   // & .card {
@@ -64,7 +73,7 @@ $card-height: 6.4rem;
     }
   }
   &.draggedOver {
-    border: 3px solid rgb(215, 102, 102);
+    border: 1px solid rgb(215, 102, 102);
   }
   // &.inprogress {
   //   .card {
@@ -88,7 +97,10 @@ $card-height: 6.4rem;
   background-repeat: no-repeat;
   background-size: cover;
   transition: all ease 0.2s;
-  border: 3px solid white;
+  //border: 3px solid white;
+  &.dragged {
+    background-color: red;
+  }
   &.empty {
     border: 1px solid rgba(0, 0, 0, 0.1);
     cursor: auto;
@@ -108,18 +120,30 @@ $card-height: 6.4rem;
 
 .my-cards {
   display: flex;
-  justify-content: center;
   position: fixed;
   bottom: 0;
   width: 100%;
   overflow-y: auto;
   text-align: center;
-  background-color: white;
+  //background-color: white;
   border-top: 1px solid #eee;
-
+  padding-bottom: 0.6rem;
   & .card {
     &.interactive:hover {
       margin-top: -1rem;
     }
   }
+}
+
+.controls {
+  .ability {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.5rem;
+  }
+}
+
+.controlsDrop {
+  display: flex;
 }

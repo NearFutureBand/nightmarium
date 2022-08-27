@@ -31,6 +31,7 @@ class GameController {
       [MESSAGE_TYPE.TAKE_CARD]: this.onTakeCard,
       [MESSAGE_TYPE.PLAY_CARD]: this.onPlayCard,
       [MESSAGE_TYPE.SUBMIT_ABILITY]: this.onSubmitAbility,
+      [MESSAGE_TYPE.CANCEL_ABILITY]: this.onCancelAbility,
     };
   }
 
@@ -129,6 +130,16 @@ class GameController {
     } as ApplyAbilityParams);
     return {
       message: result || {
+        type: MESSAGE_TYPE.PLAY_CARD,
+      },
+      doBroadcast: true,
+    };
+  };
+
+  onCancelAbility: GameMessageHandler = () => {
+    this.game!.stopAbilities();
+    return {
+      message: {
         type: MESSAGE_TYPE.PLAY_CARD,
       },
       doBroadcast: true,

@@ -2,6 +2,10 @@ export enum MESSAGE_TYPE {
   HANDSHAKE = 'HANDSHAKE',
   AWAIT_ABILITY = 'AWAIT_ABILITY',
   START = 'START',
+  PLAY_CARD = 'PLAY_CARD',
+  TAKE_CARD = 'TAKE_CARD',
+  SUBMIT_ABILITY = 'SUBMIT_ABILITY',
+  CANCEL_ABILITY = 'CANCEL_ABILITY',
 }
 
 export enum ABILITY_TYPE {
@@ -19,7 +23,7 @@ export const BODYPARTS = {
   2: 'Голова',
 };
 
-export const ABILITIES = {
+export const ABILITIES: { [key: number]: string } = {
   0: 'Волк',
   1: 'Капля',
   2: 'Улыбка',
@@ -28,7 +32,7 @@ export const ABILITIES = {
   5: 'Зубы',
 };
 
-export const ABILITIES_DESCRIPTION = {
+export const ABILITIES_DESCRIPTION: { [key: number]: string } = {
   0: 'Откройте две карты из колоды и выложите их (без ограничения по легиону). Те карты, которые не можете выложить, сбросьте.',
   1: 'Возьмите на руку две карты из колоды',
   2: 'Выложите одну карту с руки без ограничения по легиону',

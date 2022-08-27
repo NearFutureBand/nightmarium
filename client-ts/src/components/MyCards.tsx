@@ -1,16 +1,15 @@
 import { FC } from 'react';
-import { Card } from '../types';
+import { useAppSelector } from '../app/hooks';
 import { CardView } from './CardView';
 
-type Props = {
-  cards: Card[];
-};
+type Props = {};
 
-export const MyCards: FC<Props> = ({ cards }) => {
+export const MyCards: FC<Props> = () => {
+  const cards = useAppSelector((state) => state.app.game!.me.cards);
   return (
     <div className="my-cards">
       {cards.map((card) => (
-        <CardView card={card} key={card.id} clickable />
+        <CardView card={card} key={card.id} />
       ))}
     </div>
   );

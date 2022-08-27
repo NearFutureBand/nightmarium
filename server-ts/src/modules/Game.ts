@@ -28,7 +28,7 @@ export default class Game {
   private actions: number;
   private idMap: { [playerId: string]: number }; // playerId -> index of player in players array
   // TODO make abilitiesState as separate class
-  private abilitiesState: AbilitiesState | null;
+  public abilitiesState: AbilitiesState | null;
 
   constructor() {
     this.cardsAvailable = CARDS;
@@ -173,7 +173,7 @@ export default class Game {
     ];
   };
 
-  onAbility = (): Message | undefined => {
+  onAbility = (): Message<{ ability: AbilityMessagePayload }> | undefined => {
     /** If abilitiesState doesn't exist the error will be thrown
      * So this.abilitiesState! can be used further
      */
@@ -188,11 +188,7 @@ export default class Game {
     }
 
     if (this.areAbilitiesCompelete()) {
-      this.resetAbilitiesMode();
-
-      if (this.actions === 0) {
-        this.setNextActivePlayer();
-      }
+      this.stopAbilities();
       return;
     }
 
@@ -212,7 +208,7 @@ export default class Game {
     }
     return {
       type: MESSAGE_TYPE.AWAIT_ABILITY,
-      ...payload,
+      ability: payload,
     };
   };
 
@@ -233,9 +229,10 @@ export default class Game {
     abilityType,
     cardId,
     monsterId,
-    targetPlayerId,
-    targetMonsterId,
-  }: ApplyAbilityParams): Message | undefined => {
+    playerId,
+  }: ApplyAbilityParams):
+    | Message<{ ability: AbilityMessagePayload }>
+    | undefined => {
     // currentAbility не может быть null здесь, так как карточки без способностей скипаются в onAbility
     const ability = this.getCurrentAbility()!;
 
@@ -249,14 +246,16 @@ export default class Game {
         break;
       }
       case ABILITIES.AXE: {
-        this.applyAxeAbility(targetPlayerId, targetMonsterId);
+        this.applyAxeAbility(playerId, monsterId);
         break;
       }
       case ABILITIES.BONES: {
-        this.applyBonesAbility(targetPlayerId, targetMonsterId);
+        this.applyBonesAbility(playerId, monsterId);
+        break;
       }
       case ABILITIES.TEETH: {
-        this.applyTeethAbility(targetMonsterId);
+        this.applyTeethAbility(monsterId);
+        break;
       }
     }
 
@@ -314,5 +313,13 @@ export default class Game {
     const targetMonster = player.getMosterById(targetMonsterId);
     const removedCard = targetMonster.removeTopBodyPart();
     this.cardsThrowedAway[removedCard.id] = removedCard;
+  };
+
+  stopAbilities = () => {
+    this.resetAbilitiesMode();
+
+    if (this.actions === 0) {
+      this.setNextActivePlayer();
+    }
   };
 }

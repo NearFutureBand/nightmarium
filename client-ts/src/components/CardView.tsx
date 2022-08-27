@@ -1,23 +1,78 @@
-import { FC, useCallback, useMemo, useState } from 'react';
+import { FC, useCallback, useMemo } from 'react';
 import classNames from 'classnames';
-import { Card } from '../types';
+import { Card, Monster, Player } from '../types';
 import { MONSTER_PART } from '../img';
-import { ABILITIES, BODYPARTS, COLORS } from '../constants';
+import { ABILITIES, ABILITY_TYPE, BODYPARTS, COLORS } from '../constants';
+import { useAppDispatch, useAppSelector } from '../app/hooks';
+import { selectIsActive, setDraggedCard, setSelectedCard } from '../slices/App';
 
 type Props = {
   card: Card;
-  monsterId?: number;
-  clickable?: boolean;
-  selected?: boolean;
+  monster?: Monster;
+  player?: Player;
+  isMe?: boolean;
 };
 
-export const CardView: FC<Props> = ({
-  card,
-  monsterId,
-  clickable = false,
-  selected = false,
-}) => {
-  const [_selected, setSelected] = useState(selected);
+export const CardWithImage: FC<Props> = ({ card, monster, player, isMe }) => {
+  const dispatch = useAppDispatch();
+  const selectedCard = useAppSelector((state) => state.app.selectedCard);
+  const draggedCard = useAppSelector((state) => state.app.draggedCard);
+  const abilityState = useAppSelector((state) => state.app.abilityState);
+
+  const isMyTurn = useAppSelector(selectIsActive(player?.id));
+
+  const isDragged = useMemo(() => {
+    return draggedCard?.id === card.id;
+  }, [card.id, draggedCard?.id]);
+
+  const isMyCardOnHand = useMemo(
+    () => player === undefined && monster === undefined,
+    [monster, player]
+  );
+
+  const clickable = useMemo(() => {
+    if (abilityState) {
+      const smileAbility = abilityState.abilityType === ABILITY_TYPE.SMILE;
+      const notMyHand = !isMyCardOnHand;
+      const isInMyMonster = isMe;
+      const dropAbility = abilityState.abilityType === ABILITY_TYPE.DROP;
+      const axeAbility = abilityState.abilityType === ABILITY_TYPE.AXE;
+      const teethAbility = abilityState.abilityType === ABILITY_TYPE.TEETH;
+      const bonesAbility = abilityState.abilityType === ABILITY_TYPE.BONES;
+
+      if (dropAbility || teethAbility || bonesAbility) return false;
+
+      if (smileAbility && notMyHand && isInMyMonster) return false;
+
+      if (axeAbility && (isInMyMonster || isMyCardOnHand)) return false;
+    }
+    return isMyCardOnHand || isMyTurn;
+  }, [abilityState, isMyCardOnHand, isMyTurn, isMe]);
+
+  const draggable = useMemo(() => {
+    return clickable;
+  }, [clickable]);
+
+  const selected = useMemo(() => {
+    const isCardOnHand = player === undefined && monster === undefined;
+
+    if (isCardOnHand && selectedCard?.cardId === card.id) {
+      return true;
+    }
+
+    return (
+      selectedCard?.cardId === card.id &&
+      selectedCard.monsterId === monster?.id &&
+      selectedCard.playerId === player?.id
+    );
+  }, [
+    card.id,
+    monster,
+    player,
+    selectedCard?.cardId,
+    selectedCard?.monsterId,
+    selectedCard?.playerId,
+  ]);
 
   const image = MONSTER_PART[card.id];
 
@@ -32,33 +87,56 @@ export const CardView: FC<Props> = ({
   }, [card.legion, image]);
 
   const handleClick = useCallback(() => {
-    setSelected((selected) => !selected);
-  }, []);
+    if (!clickable) return;
+    dispatch(
+      setSelectedCard({
+        cardId: card.id,
+        monsterId: monster?.id,
+        playerId: player?.id,
+      })
+    );
+  }, [card.id, clickable, dispatch, monster?.id, player?.id]);
+
+  const handleDragStart = useCallback(() => {
+    dispatch(setDraggedCard(card));
+  }, [card, dispatch]);
+
+  const handleDragEnd = useCallback(() => {
+    dispatch(setDraggedCard(null));
+  }, [dispatch]);
 
   return (
     <div
-      className={classNames('card', { clickable, selected: _selected })}
+      className={classNames('card', {
+        clickable,
+        selected,
+        dragged: isDragged,
+      })}
       style={style}
       onClick={handleClick}
-      draggable={clickable}
+      draggable={clickable || draggable}
+      onDragEnd={handleDragEnd}
+      onDragStart={handleDragStart}
     >
       {!image && (
         <>
           <div> id: {card.id}</div>
           <div>
-            {' '}
-            часть тела:{' '}
             {card.bodypart
               .map((bodypartIndex) => BODYPARTS[bodypartIndex])
-              .join(' | ')}{' '}
+              .join(' | ')}
           </div>
-          <div>
-            {' '}
-            способность: {card.ability ? ABILITIES[card.ability] : '-'}{' '}
-          </div>
-          <div> легион: {card.legion}</div>
+          <div>{card.ability ? ABILITIES[card.ability] : '-'} </div>
         </>
       )}
     </div>
   );
+};
+
+export function CardEmpty() {
+  return <div />;
+}
+
+export const CardView: FC<Props & { card: Card | undefined }> = (props) => {
+  return props.card ? <CardWithImage {...props} /> : <CardEmpty />;
 };

@@ -1,37 +1,22 @@
 import { FC } from 'react';
-import { Card, Game } from '../types';
-import { CardEmpty } from './CardEmpty';
-import { CardView } from './CardView';
-import { Monster } from './Monster';
+import { useAppSelector } from '../app/hooks';
+
+import { Controls } from './Controls';
 import { MyCards } from './MyCards';
+import { PlayerBoard } from './PlayerBoard';
 
-type Props = {
-  game: Game;
-};
+type Props = {};
 
-export const GamePanel: FC<Props> = ({ game }) => {
+export const GamePanel: FC<Props> = () => {
+  const game = useAppSelector((state) => state.app.game)!;
   return (
     <div className="gamepanel">
-      <div className="monsters">
-        {game.me.monsters.map((monster) => (
-          <Monster key={monster.id}>
-            {[0, 1, 2].map((bodypartIndex) => {
-              const card: Card | undefined = monster?.body[bodypartIndex];
-              return card ? (
-                <CardView
-                  key={bodypartIndex}
-                  card={card}
-                  monsterId={monster.id}
-                />
-              ) : (
-                <CardEmpty key={bodypartIndex} />
-              );
-            })}
-          </Monster>
-        ))}
-      </div>
-
-      <MyCards cards={game.me.cards} />
+      <Controls />
+      <PlayerBoard player={game.me} isMe />
+      {game.otherPlayers.map((player) => {
+        return <PlayerBoard player={player} key={player.id} isMe={false} />;
+      })}
+      <MyCards />
     </div>
   );
 };
