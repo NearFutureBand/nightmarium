@@ -9,7 +9,7 @@ export const MyCards: FC<Props> = () => {
   return (
     <div className="my-cards">
       {cards.map((card) => (
-        <CardView card={card} key={card.id} />
+        <CardView card={card} key={card.id} cardOnHand />
       ))}
     </div>
   );

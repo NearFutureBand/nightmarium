@@ -21,25 +21,33 @@ export type PlayerState<CardsType> = {
   monsters: Monster[];
 };
 
-export type AbilitiesState = {
+export type AbilityState = {
+  type: number | null;
+  index: number; // Индекс способности в монстре ( 0 - 3 )
+  done: boolean; // Выполнена способность или нет - в целом пока бесполезно
+  inprogress: boolean;
+  actions: number; // Сколько действий осталось внутри этой способности, нужно для сложных сп. таких как Волк
+  cards?: Card[]; // Карты, выдаваемые внутри способности. Будут храниться здесь, чтобы оперировать только индексами карт
+};
+
+export type AbilitiesMode = {
   playerId: string;
   monsterId: number;
-  abilities: ({ type: number; done: boolean; inprogress: boolean } | null)[];
-  currentAbilityIndex: number;
+  sequence: (number | null)[];
+  currentAbilityState: AbilityState;
 };
 
 export type GameState = {
-  cardsAvailable: CardsDatabase;
-  cardsThrowedAway: CardsDatabase;
+  cardsThrowedAway: CardsDatabase; // TODO тоже по-хорошему скрыть
   activePlayer?: PlayerState<number>;
   me?: PlayerState<Card[]>;
   otherPlayers: PlayerState<number>[];
   actions: number;
-  abilitiesState?: AbilitiesState;
+  abilitiesMode?: AbilitiesMode;
 };
 
 export type AbilityDropData = {
-  cards: Card[];
+  cardId: number;
 };
 
 export type AbilitySmileData = {

@@ -42,7 +42,16 @@ export default class Player {
     cards.forEach((card) => this.addCard(card));
   };
 
-  public placeCardToMonster = (cardId: number, monsterId: number): Monster => {
+  public placeCardToMonster = (card: Card, monsterId: number): Monster => {
+    const targetMonster = this.monsters[monsterId];
+    targetMonster.addCard(card);
+    return targetMonster;
+  };
+
+  public placeCardFromHandToMonster = (
+    cardId: number,
+    monsterId: number
+  ): Monster => {
     const targetMonster = this.monsters[monsterId];
     const cardIndex = this.findCardOnHandById(cardId);
     const card = this.cards[cardIndex];

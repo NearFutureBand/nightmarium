@@ -6,6 +6,8 @@ import { deSelectCard, deSelectMonster } from '../slices/App';
 import { AbilityState } from '../types';
 import { CardView } from './CardView';
 
+// TODO ну тут надо как-то экономить, ибо панели управления слишком схожи между собой
+
 const AbilitiesInterfaceMap = {
   0: null,
   1: ControlsDrop,
@@ -63,6 +65,7 @@ export const Controls: FC<Props> = () => {
         <footer className="ability">
           <div>cпособность: {ABILITIES[abilityState.abilityType]}</div>
           <small>{ABILITIES_DESCRIPTION[abilityState.abilityType]}</small>
+          {abilityState.abilityType === 0 && <ControlsWolf />}
           {abilityState.abilityType === 1 && <ControlsDrop />}
           {abilityState.abilityType === 2 && <ControlsSmile />}
           {abilityState.abilityType === 3 && <ControlsAxe />}
@@ -80,9 +83,9 @@ function ControlsDrop() {
   const sendMessage = useSendMessage();
 
   const handleSubmit = useCallback(() => {
-    sendMessage<AbilityState>({
+    sendMessage<{ abilityType: number }>({
       type: MESSAGE_TYPE.SUBMIT_ABILITY,
-      ...abilityState,
+      abilityType: abilityState.abilityType,
     });
   }, [abilityState, sendMessage]);
 
@@ -245,6 +248,62 @@ function ControlsSmile() {
       }
       <button onClick={handleSubmit}>Выложить</button>
       <button onClick={handleNotAble}>Не могу выполнить</button>
+    </div>
+  );
+}
+
+function ControlsWolf() {
+  const dispatch = useAppDispatch();
+  const abilityState = useAppSelector((state) => state.app.abilityState)!;
+  const selectedMonster = useAppSelector((state) => state.app.selectedMonster);
+  const selectedCard = useAppSelector((state) => state.app.selectedCard);
+
+  const sendMessage = useSendMessage();
+
+  const handleSubmit = useCallback(() => {
+    if (!selectedMonster?.monsterId || !selectedCard?.cardId) return;
+
+    sendMessage<{ cardId: number; monsterId: number; abilityType: number }>({
+      type: MESSAGE_TYPE.SUBMIT_ABILITY,
+      cardId: selectedCard.cardId,
+      monsterId: selectedMonster.monsterId,
+      abilityType: abilityState.abilityType,
+    });
+    dispatch(deSelectMonster());
+    dispatch(deSelectCard());
+  }, [
+    abilityState.abilityType,
+    dispatch,
+    selectedCard?.cardId,
+    selectedMonster?.monsterId,
+    sendMessage,
+  ]);
+
+  const handleThrowOff = useCallback(() => {
+    if (!selectedCard?.cardId) return;
+    sendMessage({
+      type: MESSAGE_TYPE.SUBMIT_ABILITY,
+      action_experimental: 'THROW OFF',
+      cardId: selectedCard.cardId,
+      abilityType: abilityState.abilityType,
+    });
+  }, [abilityState.abilityType, selectedCard?.cardId, sendMessage]);
+
+  return (
+    <div className="controlsDrop">
+      {abilityState.cards!.map((card) => (
+        <CardView card={card} key={card.id} cardInControls />
+      ))}
+      <div>
+        {
+          <span>
+            Карта {selectedCard?.cardId || '-'} в монстра{' '}
+            {selectedMonster ? selectedMonster?.monsterId + 1 : '-'}
+          </span>
+        }
+        <button onClick={handleSubmit}>Выложить</button>
+        <button onClick={handleThrowOff}>Сбросить картy</button>
+      </div>
     </div>
   );
 }

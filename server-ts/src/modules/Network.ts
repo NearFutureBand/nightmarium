@@ -127,7 +127,7 @@ class GameController {
     const { type, ...abilityParams } = message;
     const result = this.game!.applyAbility({
       ...abilityParams,
-    } as ApplyAbilityParams);
+    } as ApplyAbilityParams); // TODO make this type USEFUL
     return {
       message: result || {
         type: MESSAGE_TYPE.PLAY_CARD,

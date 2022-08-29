@@ -2,7 +2,8 @@ import { CARDS } from './Cards';
 import { randomInteger } from '../helpers';
 import { sortBy } from 'lodash';
 import {
-  AbilitiesState,
+  AbilitiesMode,
+  AbilityState,
   ApplyAbilityParams,
   Card,
   CardsDatabase,
@@ -18,7 +19,14 @@ type AbilityMessagePayload = {
   cards?: Card[];
   abilityNumber: number;
   abilityType: number;
+  actions: number;
 };
+
+type PossibleServerResponseMessage = Message<{
+  ability: AbilityMessagePayload;
+}> | void;
+
+type ApplyAbilityHandler<T = {}> = (params: T) => void;
 
 export default class Game {
   private cardsAvailable: CardsDatabase;
@@ -28,7 +36,12 @@ export default class Game {
   private actions: number;
   private idMap: { [playerId: string]: number }; // playerId -> index of player in players array
   // TODO make abilitiesState as separate class
-  public abilitiesState: AbilitiesState | null;
+  public abilitiesMode: AbilitiesMode | null;
+  private applyAbilityMap: {
+    [key: number]: (
+      params: ApplyAbilityParams
+    ) => PossibleServerResponseMessage;
+  };
 
   constructor() {
     this.cardsAvailable = CARDS;
@@ -37,7 +50,27 @@ export default class Game {
     this.activePlayerIndex = null;
     this.actions = 0;
     this.idMap = {};
-    this.abilitiesState = null;
+    this.abilitiesMode = null;
+
+    this.applyAbilityMap = {
+      [ABILITIES.WOLF]: ({ cardId, monsterId }) =>
+        this.applyWolfAbility({ cardId, monsterId }),
+      [ABILITIES.DROP]: () => this.applyDropAbility({}),
+      [ABILITIES.SMILE]: ({ cardId, monsterId }) =>
+        this.applySmileAbility({ cardId, monsterId }),
+      [ABILITIES.AXE]: (params) =>
+        this.applyAxeAbility({
+          targetMonsterId: params.monsterId,
+          targetPlayerId: params.playerId,
+        }),
+      [ABILITIES.BONES]: (params) =>
+        this.applyBonesAbility({
+          targetMonsterId: params.monsterId,
+          targetPlayerId: params.playerId,
+        }),
+      [ABILITIES.TEETH]: (params) =>
+        this.applyTeethAbility({ targetMonsterId: params.monsterId }),
+    };
   }
 
   giveDefaulCards = (): Card[] => {
@@ -78,7 +111,6 @@ export default class Game {
     }
 
     return {
-      cardsAvailable: this.cardsAvailable,
       cardsThrowedAway: this.cardsThrowedAway,
       activePlayer,
       me: requestPlayerId
@@ -126,9 +158,10 @@ export default class Game {
 
   activePlayerPutsCard = (cardId: number, monsterId: number) => {
     const activePlayer = this.getActivePlayer();
-
-    const targetMonster = activePlayer.placeCardToMonster(cardId, monsterId);
-
+    const targetMonster = activePlayer.placeCardFromHandToMonster(
+      cardId,
+      monsterId
+    );
     this.actions -= 1;
 
     if (targetMonster?.isDone()) {
@@ -139,77 +172,6 @@ export default class Game {
     if (this.actions === 0) {
       this.setNextActivePlayer();
     }
-  };
-
-  startAbilitiesMode = (playerId: string, targetMonster: Monster) => {
-    this.abilitiesState = {
-      playerId,
-      monsterId: targetMonster.id,
-      abilities: [...targetMonster.body].reverse().map((bodypart, index) => {
-        return bodypart.ability
-          ? {
-              type: bodypart.ability,
-              done: false,
-              inprogress: false,
-            }
-          : null;
-      }),
-      currentAbilityIndex: 0,
-    };
-  };
-
-  resetAbilitiesMode = () => {
-    this.abilitiesState = null;
-  };
-
-  areAbilitiesCompelete = () => {
-    return this.abilitiesState!.currentAbilityIndex >= 3;
-  };
-
-  getCurrentAbility = () => {
-    if (!this.abilitiesState) throw new Error('Not an ability mode');
-    return this.abilitiesState.abilities[
-      this.abilitiesState.currentAbilityIndex
-    ];
-  };
-
-  onAbility = (): Message<{ ability: AbilityMessagePayload }> | undefined => {
-    /** If abilitiesState doesn't exist the error will be thrown
-     * So this.abilitiesState! can be used further
-     */
-    const ability = this.getCurrentAbility();
-    console.log('current ability: ', ability);
-
-    if (ability === null) {
-      console.log('no ability');
-      this.abilitiesState!.currentAbilityIndex++;
-      // Skip a card without ability and activate the next ability
-      return this.onAbility();
-    }
-
-    if (this.areAbilitiesCompelete()) {
-      this.stopAbilities();
-      return;
-    }
-
-    ability.inprogress = true;
-
-    const payload: AbilityMessagePayload = {
-      abilityNumber: this.abilitiesState!.currentAbilityIndex,
-      abilityType: ability.type,
-    };
-
-    if (ability.type <= 1) {
-      // волк
-      // выдать две карты чтобы игрок сразу попытался их применить
-      // или
-      // взять две карты на руку
-      payload.cards = [this.giveCard(), this.giveCard()];
-    }
-    return {
-      type: MESSAGE_TYPE.AWAIT_ABILITY,
-      ability: payload,
-    };
   };
 
   forEachPlayer = (callback: (player: Player, index: number) => void) => {
@@ -223,65 +185,185 @@ export default class Game {
     }
   };
 
-  applyAbility = ({
-    cards,
-    abilityNumber,
-    abilityType,
-    cardId,
-    monsterId,
-    playerId,
-  }: ApplyAbilityParams):
-    | Message<{ ability: AbilityMessagePayload }>
-    | undefined => {
-    // currentAbility не может быть null здесь, так как карточки без способностей скипаются в onAbility
-    const ability = this.getCurrentAbility()!;
+  // Abilities mode methods
 
-    switch (abilityType) {
-      case ABILITIES.DROP: {
-        this.applyDropAbility(cards);
-        break;
-      }
-      case ABILITIES.SMILE: {
-        this.applySmileAbility(cardId, monsterId);
-        break;
-      }
-      case ABILITIES.AXE: {
-        this.applyAxeAbility(playerId, monsterId);
-        break;
-      }
-      case ABILITIES.BONES: {
-        this.applyBonesAbility(playerId, monsterId);
-        break;
-      }
-      case ABILITIES.TEETH: {
-        this.applyTeethAbility(monsterId);
-        break;
-      }
+  startAbilitiesMode = (playerId: string, targetMonster: Monster) => {
+    const sequence = [...targetMonster.body]
+      .reverse()
+      .map((bodypart) => bodypart.ability);
+    this.abilitiesMode = {
+      playerId,
+      monsterId: targetMonster.id,
+      sequence,
+      currentAbilityState: {
+        type: sequence[0],
+        index: 0,
+        done: false,
+        inprogress: false,
+        actions: this.getActionsNumberByAbilityType(sequence[0]),
+      },
+    };
+    console.log('started ability mode', this.abilitiesMode);
+  };
+
+  setNextAbility = () => {
+    const ability = this.getCurrentAbility();
+    const { sequence } = this.abilitiesMode!;
+    const nextIndex = ability.index + 1;
+
+    if (nextIndex === 3) {
+      this.stopAbilities();
+      return;
     }
 
-    ability!.done = true;
-    ability!.inprogress = false;
-    this.abilitiesState!.currentAbilityIndex++;
+    const nextAbilityType = sequence[nextIndex];
+    this.abilitiesMode!.currentAbilityState = {
+      type: nextAbilityType,
+      index: nextIndex,
+      done: false,
+      inprogress: false,
+      actions: this.getActionsNumberByAbilityType(nextAbilityType),
+    };
 
     return this.onAbility();
   };
 
-  applyWolfAbility = () => {};
-
-  applyDropAbility = (cards: Card[]) => {
-    const player = this.getActivePlayer();
-    player.addCards(cards);
+  getActionsNumberByAbilityType = (abilityType: number | null) => {
+    if (abilityType === 0) return 2;
+    return 1;
   };
 
-  applySmileAbility = (cardId: number, monsterId: number) => {
+  resetAbilitiesMode = () => {
+    this.abilitiesMode = null;
+  };
+
+  getCurrentAbility = () => {
+    if (!this.abilitiesMode) throw new Error('Not an ability mode');
+    return this.abilitiesMode.currentAbilityState;
+  };
+
+  onAbility = (): PossibleServerResponseMessage => {
+    /** If abilitiesMode doesn't exist the error will be thrown
+     * So this.abilitiesState! can be used further
+     */
+    const ability = this.getCurrentAbility();
+    console.log('current ability: ', ability);
+
+    if (ability.type === null) {
+      console.log('no ability');
+      return this.setNextAbility();
+    }
+
+    ability.inprogress = true;
+
+    const messagePayload: AbilityMessagePayload = {
+      abilityNumber: ability.index,
+      abilityType: ability.type,
+      actions: ability.actions,
+    };
+
+    if (ability.type <= 1) {
+      // карты выдаются для способностей волк (0) и капля (1)
+      const cards = [this.giveCard(), this.giveCard()];
+      ability.cards = cards;
+      messagePayload.cards = cards;
+    }
+    return {
+      type: MESSAGE_TYPE.AWAIT_ABILITY,
+      ability: messagePayload,
+    };
+  };
+
+  stopAbilities = () => {
+    this.resetAbilitiesMode();
+
+    if (this.actions === 0) {
+      this.setNextActivePlayer();
+    }
+  };
+
+  applyAbility = (
+    params: ApplyAbilityParams
+  ): PossibleServerResponseMessage => {
+    // currentAbility не может быть null здесь, так как карточки без способностей скипаются в onAbility
+    const ability = this.getCurrentAbility()!;
+
+    // ability.type не может быть null здесь, т.к. applyAbility обрабатывает ответ с фронта, а фронт выполняет только существующие способности
+    /** способности применяются здесь! */
+    this.applyAbilityMap[ability.type!](params);
+
+    ability.actions -= 1;
+
+    // Одношаговые способности попадают сюда
+    if (ability.actions === 0) {
+      ability.done = true;
+      ability.inprogress = false;
+
+      return this.setNextAbility();
+    }
+
+    // Если шаги еще остались, возвращаем стейт текущей способности
+    // Подразумевая что стейт способности был изменен одной из applyAbilityMap мутабельно
+    return {
+      type: MESSAGE_TYPE.AWAIT_ABILITY,
+      ability: {
+        cards: ability.cards,
+        abilityNumber: ability.index,
+        abilityType: ability.type!,
+        actions: ability.actions,
+      },
+    };
+  };
+
+  applyWolfAbility: ApplyAbilityHandler<{
+    cardId: number;
+    monsterId?: number;
+  }> = ({ cardId, monsterId }) => {
+    const ability = this.getCurrentAbility()!;
+    const abilityType = ability.type!;
+    const cards = ability.cards!;
+    const cardIndex = cards.findIndex((card) => card.id === cardId);
+
+    // TODO double check with `action_experimental` that it equals to "THROW_OFF"
+    if (!monsterId) {
+      const [thrownAwayCard] = cards.splice(cardIndex, 1);
+      // TODO method to throw cards away
+      this.cardsThrowedAway[thrownAwayCard.id] = thrownAwayCard;
+      return;
+    }
+
+    if (!cardIndex) {
+      throw new Error('ApplyWolfAbility: card is not found in ability state');
+    }
+
     const activePlayer = this.getActivePlayer();
-    activePlayer.placeCardToMonster(cardId, monsterId);
+    activePlayer.placeCardToMonster(cards[cardIndex], monsterId);
+    cards.splice(cardIndex, 1);
+    ability.cards = cards;
+  };
+
+  //TODO show by types that cards are defined here!
+  applyDropAbility: ApplyAbilityHandler = () => {
+    const ability = this.getCurrentAbility()!;
+    const player = this.getActivePlayer();
+    player.addCards(ability.cards!);
+  };
+
+  applySmileAbility: ApplyAbilityHandler<{
+    cardId: number;
+    monsterId: number;
+  }> = ({ cardId, monsterId }) => {
+    const activePlayer = this.getActivePlayer();
+    activePlayer.placeCardFromHandToMonster(cardId, monsterId);
   };
 
   /**
    * Забрать верхнюю карту чужого монстра на руку
    */
-  applyAxeAbility = (targetPlayerId: string, targetMonsterId: number) => {
+  applyAxeAbility: ApplyAbilityHandler<{
+    targetPlayerId: string;
+    targetMonsterId: number;
+  }> = ({ targetPlayerId, targetMonsterId }) => {
     const player = this.getActivePlayer();
     const targetPlayer = this.getPlayerById(targetPlayerId);
     const targetMonster = targetPlayer.getMosterById(targetMonsterId);
@@ -293,7 +375,10 @@ export default class Game {
   /**
    * кости, уничтожить недостроенного монстра целиком
    */
-  applyBonesAbility = (targetPlayerId: string, targetMonsterId: number) => {
+  applyBonesAbility: ApplyAbilityHandler<{
+    targetPlayerId: string;
+    targetMonsterId: number;
+  }> = ({ targetPlayerId, targetMonsterId }) => {
     const targetPlayer = this.getPlayerById(targetPlayerId);
     const targetMonster = targetPlayer.getMosterById(targetMonsterId);
 
@@ -308,18 +393,12 @@ export default class Game {
   /**
    * Выбросить верхнюю карту своего монстра, кроме текущего
    */
-  applyTeethAbility = (targetMonsterId: number) => {
+  applyTeethAbility: ApplyAbilityHandler<{ targetMonsterId: number }> = ({
+    targetMonsterId,
+  }) => {
     const player = this.getActivePlayer();
     const targetMonster = player.getMosterById(targetMonsterId);
     const removedCard = targetMonster.removeTopBodyPart();
     this.cardsThrowedAway[removedCard.id] = removedCard;
-  };
-
-  stopAbilities = () => {
-    this.resetAbilitiesMode();
-
-    if (this.actions === 0) {
-      this.setNextActivePlayer();
-    }
   };
 }
