@@ -1,13 +1,16 @@
 import { useCallback, useMemo } from 'react';
+import { toast } from 'react-toastify';
 import { useAppDispatch, useAppSelector } from './app/hooks';
 import { GamePanel } from './components';
-import { MESSAGE_TYPE } from './constants';
-import { SocketContext, useInitSocket, useSendMessage } from './hooks';
-import { setAbilityState, setGame, setPlayerId } from './slices/App';
+import { Loading } from './components/Loading';
+import { StartScreen } from './components/StartScreen';
+import { SocketContext, useInitSocket } from './hooks';
+import { setAbilityState, setGame, setPlayerId, setWinner } from './slices/App';
 import {
   MessageHandshake,
   MessageWithGame,
   MessageAwaitAbility,
+  MessageGameOver,
 } from './types';
 
 function App() {
@@ -19,22 +22,12 @@ function App() {
     [game?.activePlayer]
   );
 
-  const sendMessage = useSendMessage();
-
-  const startGame = useCallback(() => {
-    sendMessage({ type: MESSAGE_TYPE.START });
-  }, [sendMessage]);
-
   if (!playerId) {
-    return <div>Идёт обновление идентификатора игрока</div>;
+    return <Loading />;
   }
 
   if (!game || !isGameStarted) {
-    return (
-      <div className="App">
-        Привет, {playerId}. <button onClick={startGame}>Начать игру</button>
-      </div>
-    );
+    return <StartScreen playerId={playerId} />;
   }
 
   return <GamePanel />;
@@ -67,12 +60,31 @@ function SocketConnectionLayer() {
     [dispatch]
   );
 
+  const onGameOver = useCallback(
+    (message: MessageGameOver) => {
+      dispatch(setGame(message.game));
+      dispatch(setWinner(message.winner));
+    },
+    [dispatch]
+  );
+
+  const onPlayerConnected = useCallback(
+    (message: MessageWithGame) => {
+      dispatch(setGame(message.game));
+      toast('A new player connected');
+    },
+    [dispatch]
+  );
+
   const socket = useInitSocket({
     onHandshake,
+    onPlayerConnected,
     onGameStart: updateGame,
     onPlayCard: updateGame,
     onTakeCard: updateGame,
     onAwaitAbility: onAwaitAbility,
+    onGameOver,
+    onNameAccepted: updateGame,
   });
 
   return (

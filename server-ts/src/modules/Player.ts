@@ -67,4 +67,12 @@ export default class Player {
   public getMosterById = (monsterId: number) => {
     return this.monsters[monsterId];
   };
+
+  public getDoneMonstersCount = () => {
+    return this.monsters.reduce(
+      (doneMonsters, monster) =>
+        monster.isDone() ? doneMonsters + 1 : doneMonsters,
+      0
+    );
+  };
 }

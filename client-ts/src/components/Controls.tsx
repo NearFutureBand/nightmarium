@@ -58,8 +58,11 @@ export const Controls: FC<Props> = () => {
       {!abilityState ? (
         <main>
           <span>Действий осталось: {game.actions}</span>
-          <button onClick={handleTakeCard}>Взять карту</button>
-          <button onClick={handlePlaceCard}>Выложить карту</button>
+          <div>
+            <button onClick={handleTakeCard}>Взять карту</button>
+            <button onClick={handlePlaceCard}>Выложить карту</button>
+            <button onClick={() => {}}>Обменять карты</button>
+          </div>
         </main>
       ) : (
         <footer className="ability">

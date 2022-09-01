@@ -136,7 +136,7 @@ export const CardWithImage: FC<Props> = ({
               .map((bodypartIndex) => BODYPARTS[bodypartIndex])
               .join(' | ')}
           </div>
-          <div>{card.ability ? ABILITIES[card.ability] : '-'} </div>
+          <div>{card.ability !== null ? ABILITIES[card.ability] : '-'} </div>
         </>
       )}
     </div>

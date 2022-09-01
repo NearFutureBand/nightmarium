@@ -13,18 +13,32 @@ body {
 
 $card-width: 10rem;
 $card-height: 6.4rem;
+$container-width: $card-width * 5 + 8rem;
 
-.playerBoard {
-  padding: 1rem;
-  margin: 1rem 0;
-  & > header {
-    padding: 1rem;
+button {
+  padding: 0.5rem 1rem;
+  border: none;
+  background-color: white;
+  border-radius: 1rem;
+  cursor: pointer;
+  border: 2px solid #eee;
+  &:hover {
+    background-color: #eee;
   }
-  &.active {
-    border: 2px solid #eee;
-    border-radius: 1rem;
-    box-shadow: 1px 1px 10px #eee;
-  }
+}
+
+input {
+  border: none;
+  border-bottom: 2px solid #333;
+  outline: none;
+  font-size: inherit;
+}
+
+.start {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
 }
 
 .gamepanel {
@@ -34,6 +48,20 @@ $card-height: 6.4rem;
   flex-direction: column;
   align-items: center;
   margin-bottom: 10rem;
+  padding-top: 1rem;
+}
+
+.playerBoard {
+  padding: 1rem;
+  margin: 1rem 0;
+  & > header {
+    padding: 1rem 0.5rem;
+  }
+  &.active {
+    border: 2px solid #eee;
+    border-radius: 1rem;
+    box-shadow: 1px 1px 10px #eee;
+  }
 }
 
 .monsters {
@@ -125,7 +153,6 @@ $card-height: 6.4rem;
   width: 100%;
   overflow-y: auto;
   text-align: center;
-  //background-color: white;
   border-top: 1px solid #eee;
   padding-bottom: 0.6rem;
   & .card {
@@ -136,6 +163,21 @@ $card-height: 6.4rem;
 }
 
 .controls {
+  width: $container-width;
+  padding: 1rem;
+  border: 2px solid #eee;
+  border-radius: 1rem;
+  box-shadow: 1px 1px 10px #eee;
+  main {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    div {
+      button {
+        margin: 0 1rem;
+      }
+    }
+  }
   .ability {
     display: flex;
     flex-direction: column;

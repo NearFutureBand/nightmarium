@@ -59,6 +59,8 @@ export type MessageAwaitAbility = MessageWithGame &
     ability: AbilityState;
   }>;
 
+export type MessageGameOver = MessageWithGame & Message<{ winner: string }>;
+
 export type SelectedMonster = {
   playerId: string;
   monsterId: number;

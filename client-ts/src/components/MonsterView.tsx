@@ -85,7 +85,10 @@ export const MonsterView = ({
   const handleDrop = useCallback(() => {
     if (!droppable) return;
     if (!draggedCard) return;
-    if (abilityState?.abilityType === ABILITY_TYPE.SMILE) {
+    if (
+      abilityState?.abilityType === ABILITY_TYPE.SMILE ||
+      abilityState?.abilityType === ABILITY_TYPE.WOLF
+    ) {
       // TODO refactor
       sendMessage<{ cardId: number; monsterId: number; abilityType: number }>({
         type: MESSAGE_TYPE.SUBMIT_ABILITY,

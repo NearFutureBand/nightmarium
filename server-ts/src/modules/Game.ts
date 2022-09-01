@@ -28,6 +28,11 @@ type PossibleServerResponseMessage = Message<{
 
 type ApplyAbilityHandler<T = {}> = (params: T) => void;
 
+type PutCardReturnType =
+  | Message<{ winner: string }>
+  | PossibleServerResponseMessage
+  | undefined;
+
 export default class Game {
   private cardsAvailable: CardsDatabase;
   private cardsThrowedAway: CardsDatabase;
@@ -156,7 +161,10 @@ export default class Game {
     this.minusAction();
   };
 
-  activePlayerPutsCard = (cardId: number, monsterId: number) => {
+  activePlayerPutsCard = (
+    cardId: number,
+    monsterId: number
+  ): PutCardReturnType => {
     const activePlayer = this.getActivePlayer();
     const targetMonster = activePlayer.placeCardFromHandToMonster(
       cardId,
@@ -165,6 +173,13 @@ export default class Game {
     this.actions -= 1;
 
     if (targetMonster?.isDone()) {
+      const doneNumbers = activePlayer.getDoneMonstersCount();
+      if (doneNumbers === 5 && !targetMonster.hasTeethAbility()) {
+        return {
+          type: MESSAGE_TYPE.GAME_OVER,
+          winner: activePlayer.id,
+        };
+      }
       console.log(targetMonster.getBody());
       this.startAbilitiesMode(activePlayer.id, targetMonster);
       return this.onAbility();

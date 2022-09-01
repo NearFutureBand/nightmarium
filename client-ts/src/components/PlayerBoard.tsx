@@ -17,7 +17,7 @@ export const PlayerBoard: FC<Props> = ({ player, isMe = false }) => {
   return (
     <div className={classNames('playerBoard', { active: isActive })}>
       <header>
-        {player.id} {isMe && '( я )'}
+        {player.name || player.id} {isMe && '( я )'}
       </header>
       <div className="monsters">
         {player.monsters.map((monster) => (

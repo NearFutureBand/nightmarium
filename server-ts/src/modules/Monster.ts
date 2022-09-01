@@ -1,3 +1,4 @@
+import { ABILITIES } from '../constants';
 import { Card } from '../types';
 
 export default class Monster {
@@ -37,5 +38,9 @@ export default class Monster {
     const removedCards = [...this.body];
     this.body = [];
     return removedCards;
+  };
+
+  hasTeethAbility = (): boolean => {
+    return this.body.some((card) => card.ability === ABILITIES.TEETH);
   };
 }

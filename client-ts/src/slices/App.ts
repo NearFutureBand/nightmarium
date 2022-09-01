@@ -15,6 +15,7 @@ export interface AppState {
   abilityState: AbilityState | null;
   playerId: string | null;
   draggedCard: null | Card;
+  winnerId: string | null;
 }
 
 const initialState: AppState = {
@@ -24,6 +25,7 @@ const initialState: AppState = {
   abilityState: null,
   playerId: null,
   draggedCard: null,
+  winnerId: null,
 };
 
 export const appSlice = createSlice({
@@ -71,6 +73,9 @@ export const appSlice = createSlice({
     setDraggedCard: (state, action: PayloadAction<Card | null>) => {
       state.draggedCard = action.payload;
     },
+    setWinner: (state, action: PayloadAction<string | null>) => {
+      state.winnerId = action.payload;
+    },
   },
 });
 
@@ -88,6 +93,7 @@ export const {
   setAbilityState,
   setPlayerId,
   setDraggedCard,
+  setWinner,
 } = appSlice.actions;
 
 export default appSlice.reducer;

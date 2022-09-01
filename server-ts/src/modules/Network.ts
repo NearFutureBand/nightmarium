@@ -6,9 +6,9 @@ import Game from './Game';
 import Player from './Player';
 
 type GameMessageResponse = {
-  message?: Message;
-  doBroadcast?: boolean;
-  toSenderOnly?: boolean;
+  broadcast?: Message;
+  toSenderOnly?: Message;
+  toAllExceptSender?: Message;
 };
 type GameMessageHandler = (
   cliendId: string,
@@ -32,6 +32,7 @@ class GameController {
       [MESSAGE_TYPE.PLAY_CARD]: this.onPlayCard,
       [MESSAGE_TYPE.SUBMIT_ABILITY]: this.onSubmitAbility,
       [MESSAGE_TYPE.CANCEL_ABILITY]: this.onCancelAbility,
+      [MESSAGE_TYPE.SET_NAME]: this.onSetPlayerName,
     };
   }
 
@@ -69,33 +70,32 @@ class GameController {
     }
 
     return {
-      message: {
+      toSenderOnly: {
         type: MESSAGE_TYPE.HANDSHAKE,
         playerId,
         game: this.game!.getGameState(playerId),
       },
-      toSenderOnly: true,
+      toAllExceptSender: {
+        type: MESSAGE_TYPE.PLAYER_CONNECTED,
+      },
     };
   };
 
   onStart: GameMessageHandler = () => {
     this.game!.setNextActivePlayer();
-
     return {
-      message: {
+      broadcast: {
         type: MESSAGE_TYPE.START,
       },
-      doBroadcast: true,
     };
   };
 
   onTakeCard: GameMessageHandler = () => {
     this.game!.activePlayerTakesCard();
     return {
-      message: {
+      broadcast: {
         type: MESSAGE_TYPE.TAKE_CARD,
       },
-      doBroadcast: true,
     };
   };
 
@@ -109,10 +109,9 @@ class GameController {
         message.monsterId
       );
       return {
-        message: result || {
+        broadcast: result || {
           type: MESSAGE_TYPE.PLAY_CARD,
         },
-        doBroadcast: true,
       };
     } catch (error) {
       console.log(error);
@@ -129,20 +128,33 @@ class GameController {
       ...abilityParams,
     } as ApplyAbilityParams); // TODO make this type USEFUL
     return {
-      message: result || {
+      broadcast: result || {
         type: MESSAGE_TYPE.PLAY_CARD,
       },
-      doBroadcast: true,
     };
   };
 
   onCancelAbility: GameMessageHandler = () => {
     this.game!.stopAbilities();
     return {
-      message: {
+      broadcast: {
         type: MESSAGE_TYPE.PLAY_CARD,
       },
-      doBroadcast: true,
+    };
+  };
+
+  onSetPlayerName: GameMessageHandler = (
+    clientId,
+    message: Message<{ playerId: string; name: string }>
+  ) => {
+    const playerId = message.playerId;
+    const player = this.game?.getPlayerById(playerId);
+    player?.setName(message.name);
+    return {
+      broadcast: {
+        type: MESSAGE_TYPE.NAME_ACCEPTED,
+        game: this.game!.getGameState(playerId),
+      },
     };
   };
 }
@@ -193,11 +205,14 @@ export default class Network {
         message
       );
 
-      if (gameResponse.toSenderOnly && gameResponse.message) {
-        this.sendMessage(clientId, gameResponse.message);
+      if (gameResponse.toSenderOnly) {
+        this.sendMessage(clientId, gameResponse.toSenderOnly);
       }
-      if (gameResponse.doBroadcast && gameResponse.message) {
-        this.broadcast(gameResponse.message);
+      if (gameResponse.broadcast) {
+        this.broadcast(gameResponse.broadcast);
+      }
+      if (gameResponse.toAllExceptSender) {
+        this.broadcastExceptOne(gameResponse.toAllExceptSender, clientId);
       }
     } catch (error) {
       console.log(error);
@@ -220,13 +235,23 @@ export default class Network {
   };
 
   broadcast = (message: Message) => {
-    // TODO add gameState to payload
-    //  game: this.game!.getGameState(player.id),
     this.gameController.game?.forEachPlayer((player) => {
       this.sendMessage(this.gameController.playersMap[player.id], {
         ...message,
         game: this.gameController.game!.getGameState(player.id),
       });
+    });
+  };
+
+  broadcastExceptOne = (message: Message, exceptClientId: string) => {
+    this.gameController.game?.forEachPlayer((player) => {
+      const clientId = this.gameController.playersMap[player.id];
+      if (clientId !== exceptClientId) {
+        this.sendMessage(clientId, {
+          ...message,
+          game: this.gameController.game!.getGameState(player.id),
+        });
+      }
     });
   };
 
