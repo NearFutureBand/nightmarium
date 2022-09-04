@@ -10,6 +10,7 @@ import { HOST, MESSAGE_TYPE, PORT } from '../constants';
 import {
   Message,
   MessageAwaitAbility,
+  MessageAwaitLegion,
   MessageGameOver,
   MessageHandshake,
   MessageWithGame,
@@ -24,6 +25,7 @@ type Params = {
   onAwaitAbility: (message: MessageAwaitAbility) => void;
   onGameOver: (message: MessageGameOver) => void;
   onNameAccepted: (message: MessageWithGame) => void;
+  onAwaitLegionCard: (message: MessageAwaitLegion) => void;
 };
 
 export const useInitSocket = ({
@@ -34,6 +36,7 @@ export const useInitSocket = ({
   onAwaitAbility,
   onGameOver,
   onNameAccepted,
+  onAwaitLegionCard,
 }: Params) => {
   const [socket, setSocket] = useState<WebSocket | null>(null);
 
@@ -71,6 +74,9 @@ export const useInitSocket = ({
       [MESSAGE_TYPE.SET_NAME]: () => {},
       [MESSAGE_TYPE.NAME_ACCEPTED]: (m: Message) =>
         onNameAccepted(m as MessageWithGame),
+      [MESSAGE_TYPE.AWAIT_LEGION_CARD]: (m: Message) =>
+        onAwaitLegionCard(m as MessageAwaitLegion),
+      [MESSAGE_TYPE.THROW_LEGION_CARD]: () => {},
     };
   }, [
     _onHandshake,
@@ -80,6 +86,7 @@ export const useInitSocket = ({
     onAwaitAbility,
     onGameOver,
     onNameAccepted,
+    onAwaitLegionCard,
   ]);
 
   const onOpen = useCallback((socket: WebSocket) => {

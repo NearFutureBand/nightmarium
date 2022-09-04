@@ -4,6 +4,8 @@ import {
   AbilityState,
   Card,
   Game,
+  Legion,
+  LegionState,
   SelectedCard,
   SelectedMonster,
 } from '../types';
@@ -16,6 +18,7 @@ export interface AppState {
   playerId: string | null;
   draggedCard: null | Card;
   winnerId: string | null;
+  awaitingLegion: LegionState | null;
 }
 
 const initialState: AppState = {
@@ -26,6 +29,7 @@ const initialState: AppState = {
   playerId: null,
   draggedCard: null,
   winnerId: null,
+  awaitingLegion: null,
 };
 
 export const appSlice = createSlice({
@@ -76,6 +80,9 @@ export const appSlice = createSlice({
     setWinner: (state, action: PayloadAction<string | null>) => {
       state.winnerId = action.payload;
     },
+    setAwaitingLegion: (state, action: PayloadAction<LegionState | null>) => {
+      state.awaitingLegion = action.payload;
+    },
   },
 });
 
@@ -94,6 +101,7 @@ export const {
   setPlayerId,
   setDraggedCard,
   setWinner,
+  setAwaitingLegion,
 } = appSlice.actions;
 
 export default appSlice.reducer;

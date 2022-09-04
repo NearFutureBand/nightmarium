@@ -17,7 +17,9 @@ export default class Monster {
       (bodypartIndex) => bodypartIndex === this.body.length
     );
     if (!possibleToInstall)
-      throw new Error('This card is impossible to install');
+      throw new Error(
+        `This card is impossible to install. Card: ${card.toString()}`
+      );
     this.body.push(card);
   };
 
@@ -42,5 +44,13 @@ export default class Monster {
 
   hasTeethAbility = (): boolean => {
     return this.body.some((card) => card.ability === ABILITIES.TEETH);
+  };
+
+  isOfSameColor = (): Card['legion'] | undefined => {
+    let color = this.body[0].legion;
+    for (let i = 1; i < this.body.length; i++) {
+      if (color !== this.body[i].legion) return;
+    }
+    return color;
   };
 }

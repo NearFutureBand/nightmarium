@@ -5,12 +5,19 @@ import { GamePanel } from './components';
 import { Loading } from './components/Loading';
 import { StartScreen } from './components/StartScreen';
 import { SocketContext, useInitSocket } from './hooks';
-import { setAbilityState, setGame, setPlayerId, setWinner } from './slices/App';
+import {
+  setAbilityState,
+  setAwaitingLegion,
+  setGame,
+  setPlayerId,
+  setWinner,
+} from './slices/App';
 import {
   MessageHandshake,
   MessageWithGame,
   MessageAwaitAbility,
   MessageGameOver,
+  MessageAwaitLegion,
 } from './types';
 
 function App() {
@@ -40,6 +47,12 @@ function SocketConnectionLayer() {
     (message: MessageHandshake) => {
       dispatch(setPlayerId(message.playerId));
       dispatch(setGame(message.game));
+      if (message.ability) {
+        dispatch(setAbilityState(message.ability));
+      }
+      if (message.legion) {
+        dispatch(setAwaitingLegion(message.legion));
+      }
     },
     [dispatch]
   );
@@ -56,6 +69,7 @@ function SocketConnectionLayer() {
     (message: MessageAwaitAbility) => {
       dispatch(setGame(message.game));
       dispatch(setAbilityState(message.ability));
+      dispatch(setAwaitingLegion(null));
     },
     [dispatch]
   );
@@ -76,6 +90,15 @@ function SocketConnectionLayer() {
     [dispatch]
   );
 
+  const onAwaitLegionCard = useCallback(
+    (message: MessageAwaitLegion) => {
+      dispatch(setGame(message.game));
+      dispatch(setAwaitingLegion(message.legion));
+      //toast(`Full ${message.legion.legion} monster!`); // TODO it works stupid
+    },
+    [dispatch]
+  );
+
   const socket = useInitSocket({
     onHandshake,
     onPlayerConnected,
@@ -85,6 +108,7 @@ function SocketConnectionLayer() {
     onAwaitAbility: onAwaitAbility,
     onGameOver,
     onNameAccepted: updateGame,
+    onAwaitLegionCard,
   });
 
   return (

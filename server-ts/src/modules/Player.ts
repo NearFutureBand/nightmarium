@@ -53,26 +53,42 @@ export default class Player {
     monsterId: number
   ): Monster => {
     const targetMonster = this.monsters[monsterId];
-    const cardIndex = this.findCardOnHandById(cardId);
-    const card = this.cards[cardIndex];
+    const card = this.findCardOnHandById(cardId);
     targetMonster.addCard(card);
-    this.cards.splice(cardIndex, 1);
+    this.removeCardFromHand(cardId);
     return targetMonster;
   };
 
-  public findCardOnHandById = (cardId: number) => {
-    return this.cards.findIndex((card) => card.id === cardId);
+  public findCardIndexOnHandById = (cardId: number) => {
+    const cardIndex = this.cards.findIndex((card) => card.id === cardId);
+    if (cardIndex < 0) throw new Error(`card ${cardId} is not found on hand`);
+    return cardIndex;
+  };
+
+  public findCardOnHandById = (cardId: number): Card => {
+    const card = this.cards.find((card) => card.id === cardId);
+    if (!card) throw new Error(`card ${cardId} is not found on hand`);
+    return card;
   };
 
   public getMosterById = (monsterId: number) => {
     return this.monsters[monsterId];
   };
 
-  public getDoneMonstersCount = () => {
+  public howManyMonstersDone = () => {
     return this.monsters.reduce(
       (doneMonsters, monster) =>
         monster.isDone() ? doneMonsters + 1 : doneMonsters,
       0
     );
+  };
+
+  public howManyCards = () => {
+    return this.cards.length;
+  };
+
+  public removeCardFromHand = (cardId: number) => {
+    const cardIndex = this.findCardIndexOnHandById(cardId);
+    this.cards.splice(cardIndex, 1);
   };
 }

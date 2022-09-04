@@ -26,11 +26,12 @@ export const Controls: FC<Props> = () => {
   const selectedMonster = useAppSelector((state) => state.app.selectedMonster);
   const selectedCard = useAppSelector((state) => state.app.selectedCard);
   const abilityState = useAppSelector((state) => state.app.abilityState);
+  const legionState = useAppSelector((state) => state.app.awaitingLegion);
 
   const sendMessage = useSendMessage();
 
   const handlePlaceCard = useCallback(() => {
-    if (selectedCard?.cardId && selectedMonster?.monsterId) {
+    if (selectedCard?.cardId && selectedMonster?.monsterId !== undefined) {
       sendMessage<{ cardId: number; monsterId: number }>({
         type: MESSAGE_TYPE.PLAY_CARD,
         cardId: selectedCard.cardId,
@@ -51,6 +52,9 @@ export const Controls: FC<Props> = () => {
     return playerId === game.activePlayer?.id;
   }, [game.activePlayer?.id, playerId]);
 
+  if (legionState) {
+    return <ControlsLegionMode isMyTurn={isMyTurn} />;
+  }
   if (!isMyTurn) return null;
 
   return (
@@ -110,7 +114,8 @@ function ControlsBones() {
   const sendMessage = useSendMessage();
 
   const handleSubmit = useCallback(() => {
-    if (!selectedMonster?.monsterId || !selectedMonster.playerId) return;
+    if (selectedMonster?.monsterId === undefined || !selectedMonster.playerId)
+      return;
     sendMessage<AbilityState>({
       type: MESSAGE_TYPE.SUBMIT_ABILITY,
       ...abilityState,
@@ -146,7 +151,8 @@ function ControlsAxe() {
   const sendMessage = useSendMessage();
 
   const handleSubmit = useCallback(() => {
-    if (!selectedMonster?.monsterId || !selectedMonster.playerId) return;
+    if (selectedMonster?.monsterId === undefined || !selectedMonster.playerId)
+      return;
     sendMessage<AbilityState>({
       type: MESSAGE_TYPE.SUBMIT_ABILITY,
       ...abilityState,
@@ -182,8 +188,9 @@ function ControlsTeeth() {
   const sendMessage = useSendMessage();
 
   const handleSubmit = useCallback(() => {
-    if (!selectedMonster?.monsterId || !selectedMonster.playerId) return;
-    sendMessage<AbilityState>({
+    if (selectedMonster?.monsterId === undefined || !selectedMonster?.playerId)
+      return;
+    sendMessage({
       type: MESSAGE_TYPE.SUBMIT_ABILITY,
       ...abilityState,
       monsterId: selectedMonster.monsterId,
@@ -217,12 +224,13 @@ function ControlsSmile() {
   const sendMessage = useSendMessage();
 
   const handleSubmit = useCallback(() => {
-    if (!selectedMonster?.monsterId || !selectedCard?.cardId) return;
+    if (selectedMonster?.monsterId === undefined || !selectedCard?.cardId)
+      return;
 
     sendMessage<{ cardId: number; monsterId: number; abilityType: number }>({
       type: MESSAGE_TYPE.SUBMIT_ABILITY,
       cardId: selectedCard.cardId,
-      monsterId: selectedMonster.monsterId,
+      monsterId: selectedMonster!.monsterId,
       abilityType: abilityState.abilityType,
     });
     dispatch(deSelectMonster());
@@ -231,7 +239,7 @@ function ControlsSmile() {
     abilityState.abilityType,
     dispatch,
     selectedCard?.cardId,
-    selectedMonster?.monsterId,
+    selectedMonster,
     sendMessage,
   ]);
 
@@ -264,7 +272,8 @@ function ControlsWolf() {
   const sendMessage = useSendMessage();
 
   const handleSubmit = useCallback(() => {
-    if (!selectedMonster?.monsterId || !selectedCard?.cardId) return;
+    if (selectedMonster?.monsterId === undefined || !selectedCard?.cardId)
+      return;
 
     sendMessage<{ cardId: number; monsterId: number; abilityType: number }>({
       type: MESSAGE_TYPE.SUBMIT_ABILITY,
@@ -307,6 +316,43 @@ function ControlsWolf() {
         <button onClick={handleSubmit}>Выложить</button>
         <button onClick={handleThrowOff}>Сбросить картy</button>
       </div>
+    </div>
+  );
+}
+
+function ControlsLegionMode({ isMyTurn }: { isMyTurn: boolean }) {
+  const dispatch = useAppDispatch();
+  const legionState = useAppSelector((state) => state.app.awaitingLegion);
+  const selectedCard = useAppSelector((state) => state.app.selectedCard);
+  const playerId = useAppSelector((state) => state.app.playerId)!;
+
+  const sendMessage = useSendMessage();
+
+  const handleThrow = useCallback(() => {
+    if (!selectedCard?.cardId) return;
+
+    sendMessage<{ cardId: number; playerId: string }>({
+      type: MESSAGE_TYPE.THROW_LEGION_CARD,
+      cardId: selectedCard.cardId,
+      playerId: playerId!,
+    });
+    dispatch(deSelectCard());
+  }, [dispatch, playerId, selectedCard?.cardId, sendMessage]);
+
+  return (
+    <div className="controls">
+      {isMyTurn ||
+      legionState!.players[playerId].respondedCorrectly === true ? (
+        'Ожидается сброс карт от других игроков'
+      ) : (
+        <>
+          Сбросьте карту легиона {legionState?.legion} или две другие.
+          {selectedCard && <span> Выбрано: {selectedCard.cardId}</span>}
+          <button disabled={!Boolean(selectedCard)} onClick={handleThrow}>
+            Сбросить
+          </button>
+        </>
+      )}
     </div>
   );
 }

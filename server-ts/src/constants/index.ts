@@ -25,7 +25,10 @@ export enum MESSAGE_TYPE {
   GAME_OVER = 'GAME_OVER',
   SET_NAME = 'SET_NAME',
   NAME_ACCEPTED = 'NAME_ACCEPTED',
+  AWAIT_LEGION_CARD = 'AWAIT_LEGION_CARD',
+  THROW_LEGION_CARD = 'THROW_LEGION_CARD',
 }
 
-export const HOST = '192.168.100.5';
+// export const HOST = '192.168.100.5';
+export const HOST = 'localhost';
 export const PORT = 9000;

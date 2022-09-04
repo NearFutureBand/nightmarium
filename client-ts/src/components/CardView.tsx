@@ -27,6 +27,7 @@ export const CardWithImage: FC<Props> = ({
   const selectedCard = useAppSelector((state) => state.app.selectedCard);
   const draggedCard = useAppSelector((state) => state.app.draggedCard);
   const abilityState = useAppSelector((state) => state.app.abilityState);
+  const legionState = useAppSelector((state) => state.app.awaitingLegion);
 
   const isMyTurn = useAppSelector(selectIsActive(player?.id));
 
@@ -52,12 +53,15 @@ export const CardWithImage: FC<Props> = ({
       if (wolfAbility && (isInMyMonster || cardOnHand)) return false;
     }
 
+    // Выбор карты, когда кто-то другой собрал одноцветного монстра
+    if (legionState && !cardOnHand && !isMyTurn) return false;
+
     if (cardOnHand) return true;
     if (!abilityState && isMyTurn && !cardOnHand) return false;
     if (!abilityState && !isMyTurn) return false;
 
     return true;
-  }, [abilityState, cardOnHand, isMyTurn, isMe]);
+  }, [abilityState, legionState, cardOnHand, isMyTurn, isMe]);
 
   const draggable = useMemo(() => {
     return clickable;

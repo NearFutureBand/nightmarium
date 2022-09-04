@@ -22,6 +22,7 @@ export const MonsterView = ({
   const draggedCard = useAppSelector((state) => state.app.draggedCard);
   const selectedMonster = useAppSelector((state) => state.app.selectedMonster);
   const abilityState = useAppSelector((state) => state.app.abilityState);
+  const legionState = useAppSelector((state) => state.app.awaitingLegion);
 
   const isActive = useAppSelector(selectIsActive(player.id));
 
@@ -44,10 +45,12 @@ export const MonsterView = ({
       if (smileAbility && !isMe) return false;
     }
 
+    if (legionState) return false;
+
     if (!abilityState && (!isMe || !isActive)) return false;
 
     return true;
-  }, [abilityState, isActive, isMe]);
+  }, [abilityState, isActive, isMe, legionState]);
 
   const droppable = useMemo(() => {
     return clickable;

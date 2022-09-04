@@ -2,22 +2,34 @@ import { MESSAGE_TYPE, ABILITY_TYPE } from './constants';
 
 export type BodypartIndex = 0 | 1 | 2;
 
+export type Legion = 'blue' | 'red' | 'orange' | 'green';
+
 export type Card = {
   ability: ABILITY_TYPE | null;
   bodypart: BodypartIndex[];
   id: number;
-  legion: 'blue' | 'red' | 'orange' | 'green';
+  legion: Legion;
 };
 
 export type CardMap = { [cardId: string]: Card };
 
-// TODO make generic
 export type AbilityState = {
+  cards?: Card[];
   abilityNumber: number;
   abilityType: number;
-  cards?: Card[];
-  monsterId?: number;
-  playerId: string;
+  actions: number;
+};
+
+export type LegionState = {
+  legion: Legion;
+  players: {
+    [playerId: string]: {
+      playerId: string;
+      howManyCardsHas: number; // сколько карт у игрока есть ( не может отдать больше этого количества)
+      gaveCards: number;
+      respondedCorrectly: boolean;
+    };
+  };
 };
 
 export type Monster = {
@@ -52,6 +64,8 @@ export type MessageWithGame = Message<{ game: Game }>;
 export type MessageHandshake = MessageWithGame &
   Message<{
     playerId: string;
+    ability?: AbilityState;
+    legion?: LegionState;
   }>;
 
 export type MessageAwaitAbility = MessageWithGame &
@@ -60,6 +74,9 @@ export type MessageAwaitAbility = MessageWithGame &
   }>;
 
 export type MessageGameOver = MessageWithGame & Message<{ winner: string }>;
+
+export type MessageAwaitLegion = MessageWithGame &
+  Message<{ legion: LegionState }>;
 
 export type SelectedMonster = {
   playerId: string;

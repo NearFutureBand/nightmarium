@@ -1,10 +1,12 @@
 import { MESSAGE_TYPE } from '../constants';
 import Monster from '../modules/Monster';
 
+export type Legion = 'red' | 'orange' | 'blue' | 'green';
+
 export type Card = {
   id: number;
   ability: number | null;
-  legion: string;
+  legion: Legion;
   bodypart: number[];
 };
 
@@ -66,3 +68,44 @@ export type ApplyAbilityParams = {
 } & AbilityDropData &
   AbilitySmileData &
   AbilityAxeData;
+
+export type AbilityMessagePayload = {
+  cards?: Card[];
+  abilityNumber: number;
+  abilityType: number;
+  actions: number;
+};
+
+export type LegionPlayerState = {
+  playerId: string;
+  howManyCardsHas: number; // сколько карт у игрока есть ( не может отдать больше этого количества)
+  gaveCards: number;
+  respondedCorrectly: boolean;
+};
+
+export type LegionMessagePayload = {
+  legion: Legion;
+  players: { [playerId: string]: LegionPlayerState };
+};
+
+export type PossibleServerResponseMessage = Message<{
+  ability: AbilityMessagePayload;
+}> | void;
+
+export type AbiltityMessageOrUndefined =
+  | Message<{
+      ability: AbilityMessagePayload;
+    }>
+  | undefined;
+
+export type PutCardReturnType =
+  | Message<{ winner: string }>
+  | Message<{ legion: LegionMessagePayload }>
+  | Message<{
+      ability: AbilityMessagePayload;
+    }>
+  | undefined;
+
+export type ApplyAbilityHandler<T = {}> = (
+  params: T
+) => PutCardReturnType | void;

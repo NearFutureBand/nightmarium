@@ -1,7 +1,13 @@
 import { WebSocketServer, WebSocket, RawData } from 'ws';
 import { HOST, PORT, MESSAGE_TYPE } from '../constants';
 import { generateCryptoId } from '../helpers';
-import { ApplyAbilityParams, Message } from '../types';
+import {
+  ApplyAbilityParams,
+  Message,
+  GameState,
+  AbilityMessagePayload,
+  Legion,
+} from '../types';
 import Game from './Game';
 import Player from './Player';
 
@@ -33,6 +39,7 @@ class GameController {
       [MESSAGE_TYPE.SUBMIT_ABILITY]: this.onSubmitAbility,
       [MESSAGE_TYPE.CANCEL_ABILITY]: this.onCancelAbility,
       [MESSAGE_TYPE.SET_NAME]: this.onSetPlayerName,
+      [MESSAGE_TYPE.THROW_LEGION_CARD]: this.onThrowLegionCard,
     };
   }
 
@@ -60,24 +67,41 @@ class GameController {
     message: Message<{ playerId: string }>
   ) => {
     let playerId = message.playerId;
+    let playerAlreadyExists = false;
 
     if (playerId && playerId in this.playersMap) {
       this.playersMap[playerId] = clientId;
+      playerAlreadyExists = true;
     } else {
       playerId = generateCryptoId();
       this.game!.addPlayer(new Player(playerId, this.game!.giveDefaulCards()));
       this.playersMap[playerId] = clientId;
     }
 
+    const messageToSender: Message<{
+      playerId: string;
+      game: GameState;
+      ability?: AbilityMessagePayload;
+      legion?: Legion;
+    }> = {
+      type: MESSAGE_TYPE.HANDSHAKE,
+      playerId,
+      game: this.game!.getGameState(playerId),
+      ability:
+        this.game!.abilitiesMode?.getMessagePayloadFromCurrentState() ||
+        undefined,
+      legion: this.game!.legionMode?.currentLegion || undefined,
+    };
+
+    const messageToAllExceptSender = playerAlreadyExists
+      ? undefined
+      : {
+          type: MESSAGE_TYPE.PLAYER_CONNECTED,
+        };
+
     return {
-      toSenderOnly: {
-        type: MESSAGE_TYPE.HANDSHAKE,
-        playerId,
-        game: this.game!.getGameState(playerId),
-      },
-      toAllExceptSender: {
-        type: MESSAGE_TYPE.PLAYER_CONNECTED,
-      },
+      toSenderOnly: messageToSender,
+      toAllExceptSender: messageToAllExceptSender,
     };
   };
 
@@ -135,7 +159,7 @@ class GameController {
   };
 
   onCancelAbility: GameMessageHandler = () => {
-    this.game!.stopAbilities();
+    this.game!.stopAbilitiesMode();
     return {
       broadcast: {
         type: MESSAGE_TYPE.PLAY_CARD,
@@ -155,6 +179,19 @@ class GameController {
         type: MESSAGE_TYPE.NAME_ACCEPTED,
         game: this.game!.getGameState(playerId),
       },
+    };
+  };
+
+  onThrowLegionCard: GameMessageHandler = (
+    clientId,
+    message: Message<{ cardId: number; playerId: string }>
+  ) => {
+    const result = this.game!.playerThrowsLegionCard(
+      message.playerId,
+      message.cardId
+    );
+    return {
+      broadcast: result,
     };
   };
 }
