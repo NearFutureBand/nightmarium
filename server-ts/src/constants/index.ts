@@ -29,6 +29,6 @@ export enum MESSAGE_TYPE {
   THROW_LEGION_CARD = 'THROW_LEGION_CARD',
 }
 
-// export const HOST = '192.168.100.5';
-export const HOST = 'localhost';
+export const HOST = '192.168.100.5';
+//export const HOST = 'localhost';
 export const PORT = 9000;
