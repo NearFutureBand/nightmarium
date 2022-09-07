@@ -4,7 +4,6 @@ import {
   AbilityState,
   Card,
   Game,
-  Legion,
   LegionState,
   SelectedCard,
   SelectedMonster,

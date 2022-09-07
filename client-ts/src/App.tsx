@@ -1,9 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import { toast } from 'react-toastify';
 import { useAppDispatch, useAppSelector } from './app/hooks';
-import { GamePanel } from './components';
-import { Loading } from './components/Loading';
-import { StartScreen } from './components/StartScreen';
+import { Connection, GamePanel, Loading, StartScreen } from './components';
 import { SocketContext, useInitSocket } from './hooks';
 import {
   setAbilityState,
@@ -42,6 +40,7 @@ function App() {
 
 function SocketConnectionLayer() {
   const dispatch = useAppDispatch();
+  const isConnected = useAppSelector((state) => state.network.isConnected);
 
   const onHandshake = useCallback(
     (message: MessageHandshake) => {
@@ -113,7 +112,7 @@ function SocketConnectionLayer() {
 
   return (
     <SocketContext.Provider value={socket}>
-      <App />
+      {isConnected ? <App /> : <Connection />}
     </SocketContext.Provider>
   );
 }
