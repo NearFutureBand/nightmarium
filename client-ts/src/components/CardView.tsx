@@ -5,6 +5,7 @@ import { MONSTER_PART } from '../img';
 import { ABILITIES, ABILITY_TYPE, BODYPARTS, COLORS } from '../constants';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { selectIsActive, setDraggedCard, setSelectedCard } from '../slices/App';
+import { isCardInSelection } from '../helpers';
 
 type Props = {
   card: Card;
@@ -24,7 +25,7 @@ export const CardWithImage: FC<Props> = ({
   cardInControls = false, // TODO apply this prop
 }) => {
   const dispatch = useAppDispatch();
-  const selectedCard = useAppSelector((state) => state.app.selectedCard);
+  const selectedCards = useAppSelector((state) => state.app.selectedCards);
   const draggedCard = useAppSelector((state) => state.app.draggedCard);
   const abilityState = useAppSelector((state) => state.app.abilityState);
   const legionState = useAppSelector((state) => state.app.awaitingLegion);
@@ -68,25 +69,11 @@ export const CardWithImage: FC<Props> = ({
   }, [clickable]);
 
   const selected = useMemo(() => {
-    const isCardOnHand = player === undefined && monster === undefined;
-
-    if (isCardOnHand && selectedCard?.cardId === card.id) {
-      return true;
-    }
-
-    return (
-      selectedCard?.cardId === card.id &&
-      selectedCard.monsterId === monster?.id &&
-      selectedCard.playerId === player?.id
+    return isCardInSelection(
+      { cardId: card.id, monsterId: monster?.id, playerId: player?.id },
+      selectedCards
     );
-  }, [
-    card.id,
-    monster,
-    player,
-    selectedCard?.cardId,
-    selectedCard?.monsterId,
-    selectedCard?.playerId,
-  ]);
+  }, [card.id, monster, player, selectedCards]);
 
   const image = MONSTER_PART[card.id];
 
@@ -100,16 +87,20 @@ export const CardWithImage: FC<Props> = ({
     };
   }, [card.legion, image]);
 
-  const handleClick = useCallback(() => {
-    if (!clickable) return;
-    dispatch(
-      setSelectedCard({
-        cardId: card.id,
-        monsterId: monster?.id,
-        playerId: player?.id,
-      })
-    );
-  }, [card.id, clickable, dispatch, monster?.id, player?.id]);
+  const handleClick: React.MouseEventHandler<HTMLDivElement> = useCallback(
+    (event) => {
+      if (!clickable) return;
+      dispatch(
+        setSelectedCard({
+          cardId: card.id,
+          monsterId: monster?.id,
+          playerId: player?.id,
+          shiftPressed: event.shiftKey,
+        })
+      );
+    },
+    [card.id, clickable, dispatch, monster?.id, player?.id]
+  );
 
   const handleDragStart = useCallback(() => {
     dispatch(setDraggedCard(card));

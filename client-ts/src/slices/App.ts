@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../app/store';
+import { getCardIndexInSelection } from '../helpers';
 import {
   AbilityState,
   Card,
@@ -11,7 +12,7 @@ import {
 
 export interface AppState {
   selectedMonster: SelectedMonster | null;
-  selectedCard: SelectedCard | null;
+  selectedCards: SelectedCard[];
   game: Game | null;
   abilityState: AbilityState | null;
   playerId: string | null;
@@ -21,7 +22,7 @@ export interface AppState {
 }
 
 const initialState: AppState = {
-  selectedCard: null,
+  selectedCards: [],
   selectedMonster: null,
   game: null,
   abilityState: null,
@@ -49,20 +50,44 @@ export const appSlice = createSlice({
     deSelectMonster: (state) => {
       state.selectedMonster = null;
     },
-    setSelectedCard: (state, action: PayloadAction<SelectedCard>) => {
-      const { monsterId, playerId, cardId } = action.payload;
+    setSelectedCard: (
+      state,
+      action: PayloadAction<SelectedCard & { shiftPressed: boolean }>
+    ) => {
+      const { monsterId, playerId, cardId, shiftPressed } = action.payload;
+
+      const cardIndexIfSelected = getCardIndexInSelection(
+        { cardId, monsterId, playerId },
+        state.selectedCards
+      );
+      const isCardAlreadySelected = cardIndexIfSelected >= 0;
+
       if (
-        state.selectedCard?.monsterId === monsterId &&
-        state.selectedCard?.cardId === cardId &&
-        state.selectedCard?.playerId === playerId
+        isCardAlreadySelected &&
+        !shiftPressed &&
+        state.selectedCards.length === 1
       ) {
-        state.selectedCard = null;
-        return;
+        state.selectedCards = [];
       }
-      state.selectedCard = { monsterId, cardId, playerId };
+      if (
+        isCardAlreadySelected &&
+        !shiftPressed &&
+        state.selectedCards.length > 1
+      ) {
+        state.selectedCards = [{ monsterId, cardId, playerId }];
+      }
+      if (isCardAlreadySelected && shiftPressed) {
+        state.selectedCards.splice(cardIndexIfSelected, 1);
+      }
+      if (!isCardAlreadySelected && shiftPressed) {
+        state.selectedCards.push({ monsterId, cardId, playerId });
+      }
+      if (!isCardAlreadySelected && !shiftPressed) {
+        state.selectedCards = [{ monsterId, cardId, playerId }];
+      }
     },
     deSelectCard: (state) => {
-      state.selectedCard = null;
+      state.selectedCards = [];
     },
     setGame: (state, action: PayloadAction<Game>) => {
       state.game = action.payload;
