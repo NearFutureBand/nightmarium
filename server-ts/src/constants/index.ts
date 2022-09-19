@@ -31,4 +31,5 @@ export enum MESSAGE_TYPE {
 
 export const HOST = '192.168.100.5';
 //export const HOST = 'localhost';
+//export const HOST = undefined;
 export const PORT = 9000;
