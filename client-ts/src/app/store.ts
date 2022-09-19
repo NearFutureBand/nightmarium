@@ -1,9 +1,11 @@
 import { configureStore, ThunkAction, Action } from '@reduxjs/toolkit';
 import appReducer from '../slices/App';
+import networkReducer from '../slices/Network';
 
 export const store = configureStore({
   reducer: {
     app: appReducer,
+    network: networkReducer,
   },
 });
 

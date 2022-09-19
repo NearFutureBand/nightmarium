@@ -6,7 +6,10 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { HOST, MESSAGE_TYPE, PORT } from '../constants';
+import { toast } from 'react-toastify';
+import { useAppDispatch } from '../app/hooks';
+import { MESSAGE_TYPE } from '../constants';
+import { setIsConnected, setNetworkLoading } from '../slices/Network';
 import {
   Message,
   MessageAwaitAbility,
@@ -38,6 +41,7 @@ export const useInitSocket = ({
   onNameAccepted,
   onAwaitLegionCard,
 }: Params) => {
+  const dispatch = useAppDispatch();
   const [socket, setSocket] = useState<WebSocket | null>(null);
 
   const _onHandshake = useCallback(
@@ -89,11 +93,18 @@ export const useInitSocket = ({
     onAwaitLegionCard,
   ]);
 
-  const onOpen = useCallback((socket: WebSocket) => {
-    const playerId = localStorage.getItem('playerId');
-    console.log('CLIENT: connected', playerId);
-    socket.send(JSON.stringify({ type: 'HANDSHAKE', playerId }));
-  }, []);
+  const onOpen = useCallback(
+    (socket: WebSocket) => {
+      dispatch(setNetworkLoading(false));
+      dispatch(setIsConnected(true));
+      const playerId = localStorage.getItem('playerId');
+      console.log('CLIENT: connected', playerId);
+      socket.send(JSON.stringify({ type: 'HANDSHAKE', playerId }));
+      saveServerAddress({ url: socket.url });
+      toast(`Connected successfully to ${socket.url}`);
+    },
+    [dispatch]
+  );
 
   const onMessage = useCallback(
     (event: MessageEvent<any>) => {
@@ -104,31 +115,63 @@ export const useInitSocket = ({
     [messageHandlersMap]
   );
 
-  useEffect(() => {
-    const _socket = new WebSocket(`ws://${HOST}:${PORT}`);
-    _socket.onopen = () => onOpen(_socket);
-    _socket.onmessage = onMessage;
-    setSocket(_socket);
+  const onError = useCallback(
+    (event: Event) => {
+      console.log('websocket error', event);
+      if ((event.target as WebSocket).readyState === 3) {
+        console.log('websocket connection failed');
+        dispatch(setNetworkLoading(false));
+        clearServerAddress();
+        toast('Connection failed');
+      }
+    },
+    [dispatch]
+  );
 
+  const connect = useCallback(
+    (host: string, port: number) => {
+      const _socket = new WebSocket(`ws://${host}:${port}`);
+      _socket.onopen = () => onOpen(_socket);
+      _socket.onmessage = onMessage;
+      _socket.onerror = onError;
+      setSocket(_socket);
+    },
+    [onError, onMessage, onOpen]
+  );
+
+  const disconnect = useCallback(() => {
+    console.log('CLIENT disconnecting');
+    socket?.close();
+    setSocket(null);
+    clearServerAddress();
+    dispatch(setIsConnected(false));
+    toast('Disconnected from server');
+  }, [dispatch, socket]);
+
+  useEffect(() => {
+    const { host, port } = getSavedServerAddress();
+    if (host && port) {
+      console.log('fount autosaved host and port, connecting');
+      dispatch(setNetworkLoading(true));
+      connect(host, parseInt(port));
+    }
     return () => {
-      console.log('CLIENT disconnecting');
-      _socket.close(); // WTF ??
-      socket?.close();
-      setSocket(null);
+      disconnect();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return socket;
+  return { socket, connect, disconnect };
 };
 
-export const SocketContext =
-  createContext<ReturnType<typeof useInitSocket>>(null);
+export const SocketContext = createContext<ReturnType<
+  typeof useInitSocket
+> | null>(null);
 
-export const useSocket = () => useContext(SocketContext);
+export const useSocket = () => useContext(SocketContext)!;
 
 export const useSendMessage = () => {
-  const socket = useSocket();
+  const { socket } = useSocket();
 
   const sendMessage = <MessagePayloadT>(message: Message<MessagePayloadT>) => {
     try {
@@ -140,3 +183,52 @@ export const useSendMessage = () => {
 
   return sendMessage;
 };
+
+// helpers
+
+function getSavedServerAddress(): { host?: string; port?: string } {
+  const host = localStorage.getItem('host');
+  const port = localStorage.getItem('port');
+  return { host: host || undefined, port: port || undefined };
+}
+
+function saveServerAddress({
+  port,
+  host,
+  url,
+}: {
+  port?: string | number;
+  host?: string;
+  url?: string;
+}) {
+  let _port = port;
+  let _host = host;
+  if (url) {
+    const { host, port } = getHostAndPortFromAddress(url);
+    _port = port;
+    _host = host;
+  }
+
+  if (!_port || !_host) {
+    console.log('port or host has no value: ', { _port, _host });
+    return;
+  }
+  localStorage.setItem('port', `${_port}`);
+  localStorage.setItem('host', _host);
+}
+
+function clearServerAddress() {
+  localStorage.removeItem('port');
+  localStorage.removeItem('host');
+}
+
+function getHostAndPortFromAddress(url: string): {
+  host: string;
+  port: string;
+} {
+  const result = url.match(/\/\/(([0-9]{1,3}.){3}[0-9]{1,3}):([0-9]{2,10})\//);
+  if (!result) {
+    throw new Error(`unable to find host and port from given url: ${url}`);
+  }
+  return { host: result[1], port: result[3] };
+}

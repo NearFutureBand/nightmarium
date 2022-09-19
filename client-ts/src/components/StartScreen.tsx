@@ -1,7 +1,7 @@
 import { FC, KeyboardEventHandler, useCallback, useState } from 'react';
 import { useAppSelector } from '../app/hooks';
 import { MESSAGE_TYPE } from '../constants';
-import { useSendMessage } from '../hooks';
+import { useSendMessage, useSocket } from '../hooks';
 
 type Props = {
   playerId: string;
@@ -9,6 +9,7 @@ type Props = {
 
 export const StartScreen: FC<Props> = ({ playerId }) => {
   const game = useAppSelector((state) => state.app.game);
+  const { disconnect } = useSocket();
   const sendMessage = useSendMessage();
   const [name, setName] = useState('');
 
@@ -30,7 +31,7 @@ export const StartScreen: FC<Props> = ({ playerId }) => {
   return (
     <div className="start">
       <div className="App">
-        <h1>Добро пожаловать в Кошмариум.</h1>
+        <h1>Уже почти можно начинать</h1>
         {playerName ? (
           `Привет, ${playerName}`
         ) : (
@@ -46,6 +47,7 @@ export const StartScreen: FC<Props> = ({ playerId }) => {
         )}
         . Игроков: {game!.otherPlayers.length + 1}{' '}
         <button onClick={startGame}>Начать игру</button>
+        <button onClick={disconnect}>Отключиться</button>
       </div>
     </div>
   );
