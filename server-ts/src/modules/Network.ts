@@ -204,7 +204,7 @@ export default class Network {
   private gameController: GameController;
 
   constructor() {
-    this.host = HOST || 'localhost';
+    this.host = HOST || '0.0.0.0';
     this.port = PORT || 9000;
     this.wsServer = null;
     this.clientsMap = {};
@@ -218,6 +218,7 @@ export default class Network {
   launchServer = () => {
     if (!this.wsServer) {
       this.wsServer = new WebSocketServer({ host: this.host, port: this.port });
+      console.log(' ======= Server started ====== ');
       this.wsServer.on('connection', this.onConnection);
     }
     this.gameController.startGame();

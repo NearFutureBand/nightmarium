@@ -64,6 +64,18 @@ export const CardWithImage: FC<Props> = ({
     return true;
   }, [abilityState, legionState, cardOnHand, isMyTurn, isMe]);
 
+  const multiSelectAllowed = useMemo(() => {
+    if (legionState && cardOnHand && !isMyTurn) return true;
+    if (
+      abilityState &&
+      abilityState.abilityType === ABILITY_TYPE.WOLF &&
+      cardInControls
+    )
+      return true;
+
+    return false;
+  }, [abilityState, cardInControls, cardOnHand, isMyTurn, legionState]);
+
   const draggable = useMemo(() => {
     return clickable;
   }, [clickable]);
@@ -95,11 +107,11 @@ export const CardWithImage: FC<Props> = ({
           cardId: card.id,
           monsterId: monster?.id,
           playerId: player?.id,
-          shiftPressed: event.shiftKey,
+          shiftPressed: multiSelectAllowed ? event.shiftKey : false,
         })
       );
     },
-    [card.id, clickable, dispatch, monster?.id, player?.id]
+    [card.id, clickable, dispatch, monster?.id, multiSelectAllowed, player?.id]
   );
 
   const handleDragStart = useCallback(() => {

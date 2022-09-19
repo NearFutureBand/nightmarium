@@ -39,7 +39,7 @@ export const Controls: FC<Props> = () => {
     if (isCardSelected && selectedMonster?.monsterId !== undefined) {
       sendMessage<{ cardId: number; monsterId: number }>({
         type: MESSAGE_TYPE.PLAY_CARD,
-        cardId: selectedCards[0].cardId,
+        cardId: selectedCards[0]?.cardId, // TODO
         monsterId: selectedMonster.monsterId,
       });
       dispatch(deSelectMonster());
@@ -244,7 +244,7 @@ function ControlsSmile() {
 
     sendMessage<{ cardId: number; monsterId: number; abilityType: number }>({
       type: MESSAGE_TYPE.SUBMIT_ABILITY,
-      cardId: selectedCards[0].cardId, // TODO
+      cardId: selectedCards[0]?.cardId, // TODO
       monsterId: selectedMonster!.monsterId,
       abilityType: abilityState.abilityType,
     });
@@ -269,7 +269,7 @@ function ControlsSmile() {
     <div className="controlsDrop">
       {
         <span>
-          Карта {selectedCards[0].cardId || '-'} в монстра{' '}
+          Карта {selectedCards[0]?.cardId || '-'} в монстра{' '}
           {selectedMonster ? selectedMonster?.monsterId + 1 : '-'}
         </span>
       }
@@ -297,7 +297,7 @@ function ControlsWolf() {
 
     sendMessage<{ cardId: number; monsterId: number; abilityType: number }>({
       type: MESSAGE_TYPE.SUBMIT_ABILITY,
-      cardId: selectedCards[0].cardId, // TODO
+      cardId: selectedCards[0]?.cardId, // TODO
       monsterId: selectedMonster.monsterId,
       abilityType: abilityState.abilityType,
     });
@@ -317,7 +317,7 @@ function ControlsWolf() {
     sendMessage({
       type: MESSAGE_TYPE.SUBMIT_ABILITY,
       action_experimental: 'THROW OFF',
-      cardId: selectedCards[0].cardId, // TODO
+      cardId: selectedCards[0]?.cardId, // TODO
       abilityType: abilityState.abilityType,
     });
   }, [abilityState.abilityType, isCardSelected, selectedCards, sendMessage]);
@@ -330,7 +330,7 @@ function ControlsWolf() {
       <div>
         {
           <span>
-            Карта {selectedCards[0].cardId || '-'} в монстра{' '}
+            Карта {selectedCards[0]?.cardId || '-'} в монстра{' '}
             {selectedMonster ? selectedMonster?.monsterId + 1 : '-'}
           </span>
         }
@@ -359,7 +359,7 @@ function ControlsLegionMode({ isMyTurn }: { isMyTurn: boolean }) {
 
     sendMessage<{ cardId: number; playerId: string }>({
       type: MESSAGE_TYPE.THROW_LEGION_CARD,
-      cardId: selectedCards[0].cardId, // TODO
+      cardId: selectedCards[0]?.cardId, // TODO
       playerId: playerId!,
     });
     dispatch(deSelectCard());
@@ -373,7 +373,7 @@ function ControlsLegionMode({ isMyTurn }: { isMyTurn: boolean }) {
       ) : (
         <>
           Сбросьте карту легиона {legionState?.legion} или две другие.
-          {isCardSelected && <span> Выбрано: {selectedCards[0].cardId}</span>}
+          {isCardSelected && <span> Выбрано: {selectedCards[0]?.cardId}</span>}
           <button disabled={!Boolean(isCardSelected)} onClick={handleThrow}>
             Сбросить
           </button>
