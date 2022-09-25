@@ -217,24 +217,27 @@ export class LegionMode {
     };
   };
 
-  acceptAndCheckPlayerCard = (playerId: string, card: Card) => {
+  acceptAndCheckPlayerCard = (playerId: string, cards: Card[]) => {
     const playerState = this.otherPlayersResponses[playerId];
 
-    // if only one card in total -> accept any card;
+    // if user has only one card in total -> accept any card;
     if (playerState?.howManyCardsHas === 1) {
       playerState.respondedCorrectly = true;
       playerState.gaveCards = 1;
       return;
     }
 
-    playerState.gaveCards += 1;
-
-    if (
-      (playerState.gaveCards === 1 && card.legion === this.currentLegion) ||
-      playerState.gaveCards === 2
-    ) {
+    // Одна карта прислана - ожидаем что она подходящего легиона
+    if (cards.length === 1 && cards[0].legion === this.currentLegion) {
       playerState.respondedCorrectly = true;
     }
+
+    // Две карты - засчитываем
+    if (cards.length === 2) {
+      playerState.respondedCorrectly = true;
+    }
+
+    playerState.gaveCards = cards.length;
   };
 
   areAllPlayersResponded = () => {

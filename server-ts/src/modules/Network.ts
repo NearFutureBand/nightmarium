@@ -184,11 +184,11 @@ class GameController {
 
   onThrowLegionCard: GameMessageHandler = (
     clientId,
-    message: Message<{ cardId: number; playerId: string }>
+    message: Message<{ cardIds: number[]; playerId: string }>
   ) => {
     const result = this.game!.playerThrowsLegionCard(
       message.playerId,
-      message.cardId
+      message.cardIds
     );
     return {
       broadcast: result,

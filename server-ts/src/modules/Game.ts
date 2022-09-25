@@ -21,7 +21,7 @@ import { AbilitiesMode, ApplyAbilityMap, LegionMode } from './Modes';
 
 export default class Game {
   private cardsAvailable: CardsDatabase;
-  private cardsThrowedAway: CardsDatabase;
+  private cardsThrownAway: CardsDatabase;
   private _players: Player[];
   private activePlayerIndex: number | null;
   private actions: number;
@@ -33,7 +33,7 @@ export default class Game {
 
   constructor() {
     this.cardsAvailable = CARDS;
-    this.cardsThrowedAway = {};
+    this.cardsThrownAway = {};
     this._players = [];
     this.activePlayerIndex = null;
     this.actions = 0;
@@ -100,7 +100,6 @@ export default class Game {
     }
 
     return {
-      cardsThrowedAway: this.cardsThrowedAway,
       activePlayer,
       me: requestPlayerId
         ? (this.getPlayerById(requestPlayerId).getPlayerState(
@@ -195,7 +194,7 @@ export default class Game {
       const monstersDone = player.howManyMonstersDone();
       const monsterHasTeethAbility = targetMonster.hasTeethAbility();
 
-      // VICTORY case
+      // ПОБЕДА одного из игроков
       if (monstersDone === 5 && !monsterHasTeethAbility) {
         return {
           type: MESSAGE_TYPE.GAME_OVER,
@@ -204,7 +203,7 @@ export default class Game {
       }
 
       const monsterLegion = targetMonster.isOfSameColor();
-      // Monster of one color case
+      // Собран монстр одного цвета
       if (monsterLegion) {
         this.startLegionMode(player.id, targetMonster.id, monsterLegion);
         return {
@@ -227,6 +226,14 @@ export default class Game {
     if (this.actions === 0) {
       this.setNextActivePlayer();
     }
+  };
+
+  throwCardAway = (card: Card) => {
+    this.cardsThrownAway[card.id] = card;
+  };
+
+  throwCardsAway = (cards: Card[]) => {
+    cards.forEach((card) => this.throwCardAway(card));
   };
 
   // Abilities mode methods
@@ -269,7 +276,7 @@ export default class Game {
     if (!monsterId) {
       const [thrownAwayCard] = cards.splice(cardIndex, 1);
       // TODO method to throw cards away
-      this.cardsThrowedAway[thrownAwayCard.id] = thrownAwayCard;
+      this.throwCardAway(thrownAwayCard);
       return;
     }
 
@@ -330,12 +337,11 @@ export default class Game {
     const targetPlayer = this.getPlayerById(targetPlayerId);
     const targetMonster = targetPlayer.getMosterById(targetMonsterId);
 
-    // check if it's unfinished
+    // проверка действительно ли монстр завершен ( но это также будет првоерено и на фронте)
 
+    // TODO реально ли это объединить в один метод, чтобы сразу карты убитого монстра попадали в cardsThrownAway
     const removedCards = targetMonster.kill();
-    removedCards.forEach((card) => {
-      this.cardsThrowedAway[card.id] = card;
-    });
+    this.throwCardsAway(removedCards);
   };
 
   /**
@@ -347,7 +353,7 @@ export default class Game {
     const player = this.getActivePlayer();
     const targetMonster = player.getMosterById(targetMonsterId);
     const removedCard = targetMonster.removeTopBodyPart();
-    this.cardsThrowedAway[removedCard.id] = removedCard;
+    this.throwCardAway(removedCard);
   };
 
   // Legion mode methods
@@ -365,12 +371,13 @@ export default class Game {
     this.legionMode = null;
   };
 
-  playerThrowsLegionCard = (playerId: string, cardId: number) => {
+  playerThrowsLegionCard = (playerId: string, cardIds: number[]) => {
     const player = this.getPlayerById(playerId);
-    const card = player.findCardOnHandById(cardId);
+    const cards = cardIds.map((cardId) => player.findCardOnHandById(cardId));
 
-    this.legionMode?.acceptAndCheckPlayerCard(playerId, card);
-    player.removeCardFromHand(cardId);
+    this.legionMode?.acceptAndCheckPlayerCard(playerId, cards);
+    player.removeCardsFromHand(cardIds);
+    // TODO put removed cards to the cardsThrownAway!!!!
 
     // If all responded correctly - launch abilityMode
     if (this.legionMode!.areAllPlayersResponded()) {

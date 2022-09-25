@@ -91,4 +91,8 @@ export default class Player {
     const cardIndex = this.findCardIndexOnHandById(cardId);
     this.cards.splice(cardIndex, 1);
   };
+
+  public removeCardsFromHand = (cardIds: number[]) => {
+    cardIds.forEach((cardId) => this.removeCardFromHand(cardId));
+  };
 }

@@ -40,7 +40,6 @@ export type AbilitiesMode = {
 };
 
 export type GameState = {
-  cardsThrowedAway: CardsDatabase; // TODO тоже по-хорошему скрыть
   activePlayer?: PlayerState<number>;
   me?: PlayerState<Card[]>;
   otherPlayers: PlayerState<number>[];
