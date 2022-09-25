@@ -44,6 +44,7 @@ export type GameState = {
   me?: PlayerState<Card[]>;
   otherPlayers: PlayerState<number>[];
   actions: number;
+  lastAction: string | null;
   abilitiesMode?: AbilitiesMode;
 };
 

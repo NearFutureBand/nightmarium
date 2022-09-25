@@ -4,7 +4,12 @@ import { Card, Monster, Player } from '../types';
 import { MONSTER_PART } from '../img';
 import { ABILITIES, ABILITY_TYPE, BODYPARTS, COLORS } from '../constants';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
-import { selectIsActive, setDraggedCard, setSelectedCard } from '../slices/App';
+import {
+  selectAvailableBodyPartsToInstall,
+  selectIsActive,
+  setDraggedCard,
+  setSelectedCard,
+} from '../slices/App';
 import { isCardInSelection } from '../helpers';
 
 type Props = {
@@ -14,6 +19,15 @@ type Props = {
   isMe?: boolean;
   cardOnHand?: boolean;
   cardInControls?: boolean;
+};
+
+const hasMatchingPlaceToBeInstalled = (
+  card: Card,
+  availableBodyparts: Set<number>
+): boolean => {
+  return card.bodypart.some((bodypartIndex) =>
+    availableBodyparts.has(bodypartIndex)
+  );
 };
 
 export const CardWithImage: FC<Props> = ({
@@ -29,14 +43,37 @@ export const CardWithImage: FC<Props> = ({
   const draggedCard = useAppSelector((state) => state.app.draggedCard);
   const abilityState = useAppSelector((state) => state.app.abilityState);
   const legionState = useAppSelector((state) => state.app.awaitingLegion);
+  const availableBodyparts = useAppSelector(selectAvailableBodyPartsToInstall);
 
   const isMyTurn = useAppSelector(selectIsActive(player?.id));
+
+  const disabled = useMemo(() => {
+    // Для карты нет доступного места в любом монстре
+    if (
+      isMyTurn &&
+      cardOnHand &&
+      !hasMatchingPlaceToBeInstalled(card, availableBodyparts)
+    ) {
+      return true;
+    }
+
+    // Уже был один ход картой определенного легиона - блокируем остальные легионы
+    // TODO это условие нужно проверять ровно перед тем как устанавливать карту в монстра
+    // if (isMyTurn && lastAction?.match(/PLAY_CARD/)) {
+    //   const lastPlayedLegion = lastAction.split(':')[1] as Legion;
+
+    //   return lastPlayedLegion !== card.legion;
+    // }
+
+    return false;
+  }, [availableBodyparts, card, cardOnHand, isMyTurn]);
 
   const isDragged = useMemo(() => {
     return draggedCard?.id === card.id;
   }, [card.id, draggedCard?.id]);
 
   const clickable = useMemo(() => {
+    if (disabled) return false;
     if (abilityState) {
       const smileAbility = abilityState.abilityType === ABILITY_TYPE.SMILE;
       const notMyHand = !cardOnHand;
@@ -62,7 +99,7 @@ export const CardWithImage: FC<Props> = ({
     if (!abilityState && !isMyTurn) return false;
 
     return true;
-  }, [abilityState, legionState, cardOnHand, isMyTurn, isMe]);
+  }, [disabled, abilityState, legionState, cardOnHand, isMyTurn, isMe]);
 
   const multiSelectAllowed = useMemo(() => {
     if (legionState && cardOnHand && !isMyTurn) return true;
@@ -128,6 +165,7 @@ export const CardWithImage: FC<Props> = ({
         clickable,
         selected,
         dragged: isDragged,
+        disabled,
       })}
       style={style}
       onClick={handleClick}

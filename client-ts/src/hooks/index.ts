@@ -101,7 +101,7 @@ export const useInitSocket = ({
       console.log('CLIENT: connected', playerId);
       socket.send(JSON.stringify({ type: 'HANDSHAKE', playerId }));
       saveServerAddress({ url: socket.url });
-      toast(`Connected successfully to ${socket.url}`);
+      toast(`Успешно подключен к ${socket.url}`);
     },
     [dispatch]
   );
@@ -122,7 +122,7 @@ export const useInitSocket = ({
         console.log('websocket connection failed');
         dispatch(setNetworkLoading(false));
         clearServerAddress();
-        toast('Connection failed');
+        toast('Подключение неуспешно');
       }
     },
     [dispatch]
@@ -145,13 +145,13 @@ export const useInitSocket = ({
     setSocket(null);
     clearServerAddress();
     dispatch(setIsConnected(false));
-    toast('Disconnected from server');
+    toast('Отключен от сервера');
   }, [dispatch, socket]);
 
   useEffect(() => {
     const { host, port } = getSavedServerAddress();
     if (host && port) {
-      console.log('fount autosaved host and port, connecting');
+      console.log('found autosaved host and port, connecting');
       dispatch(setNetworkLoading(true));
       connect(host, parseInt(port));
     }

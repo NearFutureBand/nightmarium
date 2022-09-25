@@ -84,7 +84,7 @@ function SocketConnectionLayer() {
   const onPlayerConnected = useCallback(
     (message: MessageWithGame) => {
       dispatch(setGame(message.game));
-      toast('A new player connected');
+      toast('Подключился еще один игрок');
     },
     [dispatch]
   );

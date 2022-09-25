@@ -15,7 +15,7 @@ import {
   PutCardReturnType,
 } from '../types';
 import Player from './Player';
-import { ABILITIES, MESSAGE_TYPE } from '../constants';
+import { ABILITIES, GAME_ACTIONS, MESSAGE_TYPE } from '../constants';
 import Monster from './Monster';
 import { AbilitiesMode, ApplyAbilityMap, LegionMode } from './Modes';
 
@@ -25,6 +25,7 @@ export default class Game {
   private _players: Player[];
   private activePlayerIndex: number | null;
   private actions: number;
+  private lastAction: string | null;
   private idMap: { [playerId: string]: number }; // playerId -> index of player in players array
   public abilitiesMode: AbilitiesMode | null;
   public legionMode: LegionMode | null;
@@ -37,6 +38,7 @@ export default class Game {
     this._players = [];
     this.activePlayerIndex = null;
     this.actions = 0;
+    this.lastAction = null;
     this.idMap = {};
     this.abilitiesMode = null;
     this.legionMode = null;
@@ -113,6 +115,7 @@ export default class Game {
         'id'
       ),
       actions: this.actions,
+      lastAction: this.lastAction,
     };
   };
 
@@ -125,6 +128,7 @@ export default class Game {
         ? 0
         : this.activePlayerIndex + 1;
     this.actions = 2;
+    this.lastAction = null;
   }
 
   getActivePlayer = () => {
@@ -141,6 +145,7 @@ export default class Game {
     const activePlayer = this.getActivePlayer();
     const card = this.giveCard();
     activePlayer?.addCard(card);
+    this.lastAction = GAME_ACTIONS.TAKE_CARD;
     this.minusAction();
   };
 
@@ -188,6 +193,9 @@ export default class Game {
     const targetMonster = card
       ? player.placeCardToMonster(card, monsterId)
       : player.placeCardFromHandToMonster(cardId!, monsterId);
+    this.lastAction = GAME_ACTIONS.PLAY_CARD(
+      targetMonster.body[targetMonster.body.length - 1].legion
+    );
 
     if (targetMonster.isDone()) {
       console.log('monster is done', targetMonster.getBody());
@@ -204,7 +212,7 @@ export default class Game {
 
       const monsterLegion = targetMonster.isOfSameColor();
       // Собран монстр одного цвета
-      if (monsterLegion) {
+      if (monsterLegion && this.players.length > 1) {
         this.startLegionMode(player.id, targetMonster.id, monsterLegion);
         return {
           type: MESSAGE_TYPE.AWAIT_LEGION_CARD,

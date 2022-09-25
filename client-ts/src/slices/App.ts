@@ -115,6 +115,26 @@ export const selectIsActive = (playerId?: string) => (state: RootState) => {
   return playerId === game?.activePlayer?.id;
 };
 
+export const selectAvailableBodyPartsToInstall = (
+  state: RootState
+): Set<number> => {
+  const game = state.app.game!;
+  // рассчитываем только в свой ход
+  if (game.activePlayer?.id !== state.app.playerId) {
+    return new Set<number>();
+  }
+
+  const availableBodyparts = new Set<number>();
+  game.activePlayer!.monsters.forEach((monster) => {
+    availableBodyparts.add(monster.body.length);
+  });
+  return availableBodyparts;
+};
+
+export const selectLastAction = (state: RootState) => {
+  return state.app.game!.lastAction;
+};
+
 export const {
   setSelectedMonster,
   deSelectMonster,

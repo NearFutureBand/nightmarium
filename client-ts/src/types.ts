@@ -47,6 +47,7 @@ export type Player<CardsType = number | Card[]> = {
 
 export type Game = {
   actions: number;
+  lastAction: string | null;
   cardsAvailable: CardMap;
   cardsThrownAway: CardMap;
   playerId: string;

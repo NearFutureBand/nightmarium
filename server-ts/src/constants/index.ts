@@ -1,3 +1,5 @@
+import { Legion } from '../types';
+
 export enum ABILITIES {
   'WOLF',
   'DROP',
@@ -12,6 +14,12 @@ export enum BODYPARTS {
   'TORSO' = 'Туловище',
   'HEAD' = 'Голова',
 }
+
+export const GAME_ACTIONS = {
+  PLAY_CARD: (legion: Legion) => `PLAY_CARD:${legion}`,
+  CHANGE_CARDS: 'CHANGE_CARDS',
+  TAKE_CARD: 'TAKE_CARD',
+};
 
 export enum MESSAGE_TYPE {
   HANDSHAKE = 'HANDSHAKE',

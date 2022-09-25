@@ -76,7 +76,9 @@ export const Controls: FC<Props> = () => {
           <div>
             <button onClick={handleTakeCard}>Взять карту</button>
             <button onClick={handlePlaceCard}>Выложить карту</button>
-            <button onClick={() => {}}>Обменять карты</button>
+            <button disabled={selectedCards.length < 2} onClick={() => {}}>
+              Обменять карты
+            </button>
           </div>
         </main>
       ) : (
@@ -348,7 +350,7 @@ function ControlsLegionMode({ isMyTurn }: { isMyTurn: boolean }) {
   const playerId = useAppSelector((state) => state.app.playerId)!;
 
   const isCardSelected = useMemo(
-    () => selectedCards.length === 0,
+    () => selectedCards.length !== 0,
     [selectedCards.length]
   );
 
@@ -357,9 +359,9 @@ function ControlsLegionMode({ isMyTurn }: { isMyTurn: boolean }) {
   const handleThrow = useCallback(() => {
     if (!isCardSelected) return;
 
-    sendMessage<{ cardId: number; playerId: string }>({
+    sendMessage<{ cardIds: number[]; playerId: string }>({
       type: MESSAGE_TYPE.THROW_LEGION_CARD,
-      cardId: selectedCards[0]?.cardId, // TODO
+      cardIds: selectedCards.map((selectedCards) => selectedCards.cardId),
       playerId: playerId!,
     });
     dispatch(deSelectCard());
@@ -373,7 +375,15 @@ function ControlsLegionMode({ isMyTurn }: { isMyTurn: boolean }) {
       ) : (
         <>
           Сбросьте карту легиона {legionState?.legion} или две другие.
-          {isCardSelected && <span> Выбрано: {selectedCards[0]?.cardId}</span>}
+          {isCardSelected && (
+            <span>
+              {' '}
+              Выбрано:{' '}
+              {selectedCards
+                .map((selectedCards) => selectedCards.cardId)
+                .join(', ')}
+            </span>
+          )}
           <button disabled={!Boolean(isCardSelected)} onClick={handleThrow}>
             Сбросить
           </button>

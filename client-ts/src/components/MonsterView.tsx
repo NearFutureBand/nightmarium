@@ -1,10 +1,15 @@
 import classNames from 'classnames';
 import { PropsWithChildren, useCallback, useMemo, useState } from 'react';
+import { toast } from 'react-toastify';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { ABILITY_TYPE, MESSAGE_TYPE } from '../constants';
 import { useSendMessage } from '../hooks';
-import { selectIsActive, setSelectedMonster } from '../slices/App';
-import { Monster, Player } from '../types';
+import {
+  selectIsActive,
+  selectLastAction,
+  setSelectedMonster,
+} from '../slices/App';
+import { Legion, Monster, Player } from '../types';
 
 type Props = {
   monster: Monster;
@@ -23,6 +28,7 @@ export const MonsterView = ({
   const selectedMonster = useAppSelector((state) => state.app.selectedMonster);
   const abilityState = useAppSelector((state) => state.app.abilityState);
   const legionState = useAppSelector((state) => state.app.awaitingLegion);
+  const lastAction = useAppSelector(selectLastAction);
 
   const isActive = useAppSelector(selectIsActive(player.id));
 
@@ -88,6 +94,19 @@ export const MonsterView = ({
   const handleDrop = useCallback(() => {
     if (!droppable) return;
     if (!draggedCard) return;
+
+    // Если есть ограничение на легион внутри хода
+    if (lastAction?.match(/PLAY_CARD/)) {
+      const lastPlayedLegion = lastAction.split(':')[1] as Legion;
+      if (lastPlayedLegion !== draggedCard.legion) {
+        toast(`Можно поставить только карту легиона ${lastPlayedLegion}`, {
+          type: 'error',
+        });
+        setDraggedOver(false);
+        return;
+      }
+    }
+
     if (
       abilityState?.abilityType === ABILITY_TYPE.SMILE ||
       abilityState?.abilityType === ABILITY_TYPE.WOLF
@@ -112,6 +131,7 @@ export const MonsterView = ({
     abilityState?.abilityType,
     draggedCard,
     droppable,
+    lastAction,
     monster.id,
     sendMessage,
   ]);
