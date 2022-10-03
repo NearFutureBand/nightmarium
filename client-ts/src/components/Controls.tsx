@@ -1,8 +1,10 @@
 import { FC, useCallback, useMemo } from 'react';
+import { toast } from 'react-toastify';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { ABILITIES, ABILITIES_DESCRIPTION, MESSAGE_TYPE } from '../constants';
+import { validateCardToMonster } from '../helpers';
 import { useSendMessage } from '../hooks';
-import { deSelectCard, deSelectMonster } from '../slices/App';
+import { deSelectCard, deSelectMonster, selectLastAction } from '../slices/App';
 import { AbilityState } from '../types';
 import { CardView } from './CardView';
 
@@ -27,37 +29,50 @@ export const Controls: FC<Props> = () => {
   const selectedCards = useAppSelector((state) => state.app.selectedCards);
   const abilityState = useAppSelector((state) => state.app.abilityState);
   const legionState = useAppSelector((state) => state.app.awaitingLegion);
-
-  const isCardSelected = useMemo(
-    () => selectedCards.length === 0,
-    [selectedCards.length]
-  );
+  const lastAction = useAppSelector(selectLastAction);
+  const winnerId = useAppSelector((state) => state.app.winnerId);
 
   const sendMessage = useSendMessage();
 
   const handlePlaceCard = useCallback(() => {
-    if (isCardSelected && selectedMonster?.monsterId !== undefined) {
-      sendMessage<{ cardId: number; monsterId: number }>({
-        type: MESSAGE_TYPE.PLAY_CARD,
-        cardId: selectedCards[0]?.cardId, // TODO
-        monsterId: selectedMonster.monsterId,
-      });
+    if (selectedCards.length !== 1) return;
+    if (!selectedMonster?.monsterId) return;
+
+    const validationError = validateCardToMonster({
+      selectedCard: selectedCards[0],
+      selectedMonster,
+      lastAction,
+      abilityState,
+    });
+    if (validationError) {
+      toast(validationError, { type: 'error' });
       dispatch(deSelectMonster());
       dispatch(deSelectCard());
+      return;
     }
-  }, [
-    dispatch,
-    isCardSelected,
-    selectedCards,
-    selectedMonster?.monsterId,
-    sendMessage,
-  ]);
+
+    sendMessage<{ cardId: number; monsterId: number }>({
+      type: MESSAGE_TYPE.PLAY_CARD,
+      cardId: selectedCards[0]?.cardId, // TODO
+      monsterId: selectedMonster.monsterId,
+    });
+    dispatch(deSelectMonster());
+    dispatch(deSelectCard());
+  }, [abilityState, dispatch, lastAction, selectedCards, selectedMonster, sendMessage]);
 
   const handleTakeCard = useCallback(() => {
     sendMessage({
       type: MESSAGE_TYPE.TAKE_CARD,
     });
   }, [sendMessage]);
+
+  const handleChangeCards = useCallback(() => {
+    sendMessage<{ cardIds: number[] }>({
+      type: MESSAGE_TYPE.CHANGE_CARDS,
+      cardIds: selectedCards.map((card) => card.cardId),
+    });
+    dispatch(deSelectCard());
+  }, [dispatch, selectedCards, sendMessage]);
 
   const isMyTurn = useMemo(() => {
     return playerId === game.activePlayer?.id;
@@ -68,6 +83,16 @@ export const Controls: FC<Props> = () => {
   }
   if (!isMyTurn) return null;
 
+  // TODO отрефакторить
+  if (winnerId) {
+    // TODO возможно эта кнопка будет появляться спустя 10 секунд
+    return (
+      <div className="controls">
+        <button onClick={handleTakeCard}>Вернуться на главную</button>
+      </div>
+    );
+  }
+
   return (
     <div className="controls">
       {!abilityState ? (
@@ -76,7 +101,9 @@ export const Controls: FC<Props> = () => {
           <div>
             <button onClick={handleTakeCard}>Взять карту</button>
             <button onClick={handlePlaceCard}>Выложить карту</button>
-            <button onClick={() => {}}>Обменять карты</button>
+            <button disabled={selectedCards.length < 2} onClick={handleChangeCards}>
+              Обменять карты
+            </button>
           </div>
         </main>
       ) : (
@@ -95,6 +122,60 @@ export const Controls: FC<Props> = () => {
   );
 };
 
+function ControlsWolf() {
+  const dispatch = useAppDispatch();
+  const abilityState = useAppSelector((state) => state.app.abilityState)!;
+  const selectedMonster = useAppSelector((state) => state.app.selectedMonster);
+  const selectedCards = useAppSelector((state) => state.app.selectedCards);
+
+  const sendMessage = useSendMessage();
+
+  const handleSubmit = useCallback(() => {
+    // Функция не вызовется, если selectedMonster не существует, поэтому можно восклицательный. Также selectedCards
+    // гарантированно будет иметь только один элемент. Все эти условия находятся в disabled проперти кнопки
+    sendMessage<{ cardIds: number[]; monsterId: number; abilityType: number }>({
+      type: MESSAGE_TYPE.SUBMIT_ABILITY,
+      abilityType: abilityState.abilityType,
+      cardIds: [selectedCards[0].cardId],
+      monsterId: selectedMonster!.monsterId,
+    });
+    dispatch(deSelectMonster());
+    dispatch(deSelectCard());
+  }, [abilityState.abilityType, dispatch, selectedCards, selectedMonster, sendMessage]);
+
+  const handleThrowOff = useCallback(() => {
+    sendMessage({
+      type: MESSAGE_TYPE.SUBMIT_ABILITY,
+      abilityType: abilityState.abilityType,
+      action_experimental: 'THROW OFF',
+      cardIds: selectedCards,
+    });
+  }, [abilityState.abilityType, selectedCards, sendMessage]);
+
+  const isSubmitBlocked = useMemo(() => {
+    return selectedMonster?.monsterId === undefined || selectedCards.length !== 1;
+  }, [selectedCards.length, selectedMonster?.monsterId]);
+
+  return (
+    <div className="controlsDrop">
+      {abilityState.cards!.map((card) => (
+        <CardView card={card} key={card.id} cardInControls />
+      ))}
+      <div>
+        <span>
+          Карта {selectedCards[0]?.cardId || '-'} в монстра {selectedMonster ? selectedMonster?.monsterId + 1 : '-'}
+        </span>
+        <button onClick={handleSubmit} disabled={isSubmitBlocked}>
+          Выложить
+        </button>
+        <button onClick={handleThrowOff} disabled={selectedCards.length === 0}>
+          Сбросить карт{selectedCards.length === 1 ? 'у' : 'ы'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function ControlsDrop() {
   const abilityState = useAppSelector((state) => state.app.abilityState)!;
 
@@ -109,31 +190,34 @@ function ControlsDrop() {
 
   return (
     <div className="controlsDrop">
-      {abilityState.cards!.map((card) => (
-        <CardView card={card} key={card.id} />
-      ))}
+      <div className="cards">
+        {abilityState.cards!.map((card) => (
+          <CardView card={card} key={card.id} />
+        ))}
+      </div>
       <button onClick={handleSubmit}>Забрать</button>
     </div>
   );
 }
 
-function ControlsBones() {
+function ControlsSmile() {
   const dispatch = useAppDispatch();
   const abilityState = useAppSelector((state) => state.app.abilityState)!;
   const selectedMonster = useAppSelector((state) => state.app.selectedMonster);
+  const selectedCards = useAppSelector((state) => state.app.selectedCards);
 
   const sendMessage = useSendMessage();
 
   const handleSubmit = useCallback(() => {
-    if (selectedMonster?.monsterId === undefined || !selectedMonster.playerId)
-      return;
-    sendMessage<AbilityState>({
+    sendMessage<{ cardId: number; monsterId: number; abilityType: number }>({
       type: MESSAGE_TYPE.SUBMIT_ABILITY,
-      ...abilityState,
-      ...selectedMonster,
+      abilityType: abilityState.abilityType,
+      cardId: selectedCards[0].cardId,
+      monsterId: selectedMonster!.monsterId,
     });
     dispatch(deSelectMonster());
-  }, [abilityState, dispatch, selectedMonster, sendMessage]);
+    dispatch(deSelectCard());
+  }, [abilityState.abilityType, dispatch, selectedCards, selectedMonster, sendMessage]);
 
   const handleNotAble = useCallback(() => {
     sendMessage({
@@ -143,12 +227,14 @@ function ControlsBones() {
 
   return (
     <div className="controlsDrop">
-      {selectedMonster && (
+      {(selectedCards.length > 1 || selectedMonster) && (
         <span>
-          {selectedMonster.playerId}: {selectedMonster.monsterId + 1}-й монстр
+          Карта {selectedCards[0]?.cardId || '-'} в монстра {selectedMonster ? selectedMonster?.monsterId + 1 : '-'}
         </span>
       )}
-      <button onClick={handleSubmit}>Убить</button>
+      <button onClick={handleSubmit} disabled={selectedMonster?.monsterId === undefined || selectedCards.length !== 1}>
+        Выложить
+      </button>
       <button onClick={handleNotAble}>Не могу выполнить</button>
     </div>
   );
@@ -162,12 +248,12 @@ function ControlsAxe() {
   const sendMessage = useSendMessage();
 
   const handleSubmit = useCallback(() => {
-    if (selectedMonster?.monsterId === undefined || !selectedMonster.playerId)
-      return;
-    sendMessage<AbilityState>({
+    // пре-условие стоит в кнопке
+    sendMessage<{ targetPlayerId: string; targetMonsterId: number; abilityType: number }>({
       type: MESSAGE_TYPE.SUBMIT_ABILITY,
-      ...abilityState,
-      ...selectedMonster,
+      abilityType: abilityState.abilityType,
+      targetPlayerId: selectedMonster!.playerId,
+      targetMonsterId: selectedMonster!.monsterId,
     });
     dispatch(deSelectMonster());
   }, [abilityState, dispatch, selectedMonster, sendMessage]);
@@ -185,13 +271,15 @@ function ControlsAxe() {
           {selectedMonster.playerId}: {selectedMonster.monsterId + 1}-й монстр
         </span>
       )}
-      <button onClick={handleSubmit}>Забрать</button>
+      <button onClick={handleSubmit} disabled={selectedMonster?.monsterId === undefined || !selectedMonster.playerId}>
+        Забрать
+      </button>
       <button onClick={handleNotAble}>Не могу выполнить</button>
     </div>
   );
 }
 
-function ControlsTeeth() {
+function ControlsBones() {
   const dispatch = useAppDispatch();
   const abilityState = useAppSelector((state) => state.app.abilityState)!;
   const selectedMonster = useAppSelector((state) => state.app.selectedMonster);
@@ -199,12 +287,12 @@ function ControlsTeeth() {
   const sendMessage = useSendMessage();
 
   const handleSubmit = useCallback(() => {
-    if (selectedMonster?.monsterId === undefined || !selectedMonster?.playerId)
-      return;
-    sendMessage({
+    // пре-условие стоит в кнопке
+    sendMessage<{ targetPlayerId: string; targetMonsterId: number; abilityType: number }>({
       type: MESSAGE_TYPE.SUBMIT_ABILITY,
-      ...abilityState,
-      monsterId: selectedMonster.monsterId,
+      abilityType: abilityState.abilityType,
+      targetPlayerId: selectedMonster!.playerId,
+      targetMonsterId: selectedMonster!.monsterId,
     });
     dispatch(deSelectMonster());
   }, [abilityState, dispatch, selectedMonster, sendMessage]);
@@ -218,46 +306,34 @@ function ControlsTeeth() {
   return (
     <div className="controlsDrop">
       {selectedMonster && (
-        <span>Верхняя карта монстра {selectedMonster.monsterId + 1}</span>
+        <span>
+          {selectedMonster.playerId}: {selectedMonster.monsterId + 1}-й монстр
+        </span>
       )}
-      <button onClick={handleSubmit}>Убрать</button>
+      <button onClick={handleSubmit} disabled={selectedMonster?.monsterId === undefined || !selectedMonster.playerId}>
+        Убить
+      </button>
       <button onClick={handleNotAble}>Не могу выполнить</button>
     </div>
   );
 }
 
-function ControlsSmile() {
+function ControlsTeeth() {
   const dispatch = useAppDispatch();
   const abilityState = useAppSelector((state) => state.app.abilityState)!;
   const selectedMonster = useAppSelector((state) => state.app.selectedMonster);
-  const selectedCards = useAppSelector((state) => state.app.selectedCards);
-
-  const isCardSelected = useMemo(
-    () => selectedCards.length === 0,
-    [selectedCards.length]
-  );
 
   const sendMessage = useSendMessage();
 
   const handleSubmit = useCallback(() => {
-    if (selectedMonster?.monsterId === undefined || !isCardSelected) return;
-
-    sendMessage<{ cardId: number; monsterId: number; abilityType: number }>({
+    // пре-условие стоит в кнопке
+    sendMessage<{ targetMonsterId: number; abilityType: number }>({
       type: MESSAGE_TYPE.SUBMIT_ABILITY,
-      cardId: selectedCards[0]?.cardId, // TODO
-      monsterId: selectedMonster!.monsterId,
       abilityType: abilityState.abilityType,
+      targetMonsterId: selectedMonster!.monsterId,
     });
     dispatch(deSelectMonster());
-    dispatch(deSelectCard());
-  }, [
-    abilityState.abilityType,
-    dispatch,
-    isCardSelected,
-    selectedCards,
-    selectedMonster,
-    sendMessage,
-  ]);
+  }, [abilityState, dispatch, selectedMonster, sendMessage]);
 
   const handleNotAble = useCallback(() => {
     sendMessage({
@@ -267,76 +343,11 @@ function ControlsSmile() {
 
   return (
     <div className="controlsDrop">
-      {
-        <span>
-          Карта {selectedCards[0]?.cardId || '-'} в монстра{' '}
-          {selectedMonster ? selectedMonster?.monsterId + 1 : '-'}
-        </span>
-      }
-      <button onClick={handleSubmit}>Выложить</button>
+      {selectedMonster && <span>Верхняя карта монстра {selectedMonster.monsterId + 1}</span>}
+      <button onClick={handleSubmit} disabled={selectedMonster?.monsterId === undefined || !selectedMonster?.playerId}>
+        Убрать
+      </button>
       <button onClick={handleNotAble}>Не могу выполнить</button>
-    </div>
-  );
-}
-
-function ControlsWolf() {
-  const dispatch = useAppDispatch();
-  const abilityState = useAppSelector((state) => state.app.abilityState)!;
-  const selectedMonster = useAppSelector((state) => state.app.selectedMonster);
-  const selectedCards = useAppSelector((state) => state.app.selectedCards);
-
-  const isCardSelected = useMemo(
-    () => selectedCards.length === 0,
-    [selectedCards.length]
-  );
-
-  const sendMessage = useSendMessage();
-
-  const handleSubmit = useCallback(() => {
-    if (selectedMonster?.monsterId === undefined || !isCardSelected) return;
-
-    sendMessage<{ cardId: number; monsterId: number; abilityType: number }>({
-      type: MESSAGE_TYPE.SUBMIT_ABILITY,
-      cardId: selectedCards[0]?.cardId, // TODO
-      monsterId: selectedMonster.monsterId,
-      abilityType: abilityState.abilityType,
-    });
-    dispatch(deSelectMonster());
-    dispatch(deSelectCard());
-  }, [
-    abilityState.abilityType,
-    dispatch,
-    isCardSelected,
-    selectedCards,
-    selectedMonster?.monsterId,
-    sendMessage,
-  ]);
-
-  const handleThrowOff = useCallback(() => {
-    if (!isCardSelected) return;
-    sendMessage({
-      type: MESSAGE_TYPE.SUBMIT_ABILITY,
-      action_experimental: 'THROW OFF',
-      cardId: selectedCards[0]?.cardId, // TODO
-      abilityType: abilityState.abilityType,
-    });
-  }, [abilityState.abilityType, isCardSelected, selectedCards, sendMessage]);
-
-  return (
-    <div className="controlsDrop">
-      {abilityState.cards!.map((card) => (
-        <CardView card={card} key={card.id} cardInControls />
-      ))}
-      <div>
-        {
-          <span>
-            Карта {selectedCards[0]?.cardId || '-'} в монстра{' '}
-            {selectedMonster ? selectedMonster?.monsterId + 1 : '-'}
-          </span>
-        }
-        <button onClick={handleSubmit}>Выложить</button>
-        <button onClick={handleThrowOff}>Сбросить картy</button>
-      </div>
     </div>
   );
 }
@@ -347,19 +358,16 @@ function ControlsLegionMode({ isMyTurn }: { isMyTurn: boolean }) {
   const selectedCards = useAppSelector((state) => state.app.selectedCards);
   const playerId = useAppSelector((state) => state.app.playerId)!;
 
-  const isCardSelected = useMemo(
-    () => selectedCards.length === 0,
-    [selectedCards.length]
-  );
+  const isCardSelected = useMemo(() => selectedCards.length !== 0, [selectedCards.length]);
 
   const sendMessage = useSendMessage();
 
   const handleThrow = useCallback(() => {
     if (!isCardSelected) return;
 
-    sendMessage<{ cardId: number; playerId: string }>({
+    sendMessage<{ cardIds: number[]; playerId: string }>({
       type: MESSAGE_TYPE.THROW_LEGION_CARD,
-      cardId: selectedCards[0]?.cardId, // TODO
+      cardIds: selectedCards.map((selectedCards) => selectedCards.cardId),
       playerId: playerId!,
     });
     dispatch(deSelectCard());
@@ -367,13 +375,12 @@ function ControlsLegionMode({ isMyTurn }: { isMyTurn: boolean }) {
 
   return (
     <div className="controls">
-      {isMyTurn ||
-      legionState!.players[playerId].respondedCorrectly === true ? (
+      {isMyTurn || legionState!.players[playerId].respondedCorrectly === true ? (
         'Ожидается сброс карт от других игроков'
       ) : (
         <>
           Сбросьте карту легиона {legionState?.legion} или две другие.
-          {isCardSelected && <span> Выбрано: {selectedCards[0]?.cardId}</span>}
+          {isCardSelected && <span> Выбрано: {selectedCards.map((selectedCards) => selectedCards.cardId).join(', ')}</span>}
           <button disabled={!Boolean(isCardSelected)} onClick={handleThrow}>
             Сбросить
           </button>

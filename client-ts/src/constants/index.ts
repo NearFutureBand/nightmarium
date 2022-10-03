@@ -12,6 +12,7 @@ export enum MESSAGE_TYPE {
   NAME_ACCEPTED = 'NAME_ACCEPTED',
   AWAIT_LEGION_CARD = 'AWAIT_LEGION_CARD',
   THROW_LEGION_CARD = 'THROW_LEGION_CARD',
+  CHANGE_CARDS = 'CHANGE_CARDS',
 }
 
 export enum ABILITY_TYPE {
@@ -23,7 +24,7 @@ export enum ABILITY_TYPE {
   TEETH,
 }
 
-export const BODYPARTS = {
+export const BODYPARTS: { [key: number]: string } = {
   0: 'Ноги',
   1: 'Туловище',
   2: 'Голова',

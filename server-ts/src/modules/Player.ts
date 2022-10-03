@@ -48,10 +48,7 @@ export default class Player {
     return targetMonster;
   };
 
-  public placeCardFromHandToMonster = (
-    cardId: number,
-    monsterId: number
-  ): Monster => {
+  public placeCardFromHandToMonster = (cardId: number, monsterId: number): Monster => {
     const targetMonster = this.monsters[monsterId];
     const card = this.findCardOnHandById(cardId);
     targetMonster.addCard(card);
@@ -76,19 +73,20 @@ export default class Player {
   };
 
   public howManyMonstersDone = () => {
-    return this.monsters.reduce(
-      (doneMonsters, monster) =>
-        monster.isDone() ? doneMonsters + 1 : doneMonsters,
-      0
-    );
+    return this.monsters.reduce((doneMonsters, monster) => (monster.isDone() ? doneMonsters + 1 : doneMonsters), 0);
   };
 
   public howManyCards = () => {
     return this.cards.length;
   };
 
-  public removeCardFromHand = (cardId: number) => {
+  public removeCardFromHand = (cardId: number): Card => {
     const cardIndex = this.findCardIndexOnHandById(cardId);
-    this.cards.splice(cardIndex, 1);
+    const [removedCard] = this.cards.splice(cardIndex, 1);
+    return removedCard;
+  };
+
+  public removeCardsFromHand = (cardIds: number[]): Card[] => {
+    return cardIds.map((cardId) => this.removeCardFromHand(cardId));
   };
 }

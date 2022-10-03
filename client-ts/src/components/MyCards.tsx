@@ -5,11 +5,13 @@ import { CardView } from './CardView';
 type Props = {};
 
 export const MyCards: FC<Props> = () => {
-  const cards = useAppSelector((state) => state.app.game!.me.cards);
+  const me = useAppSelector((state) => state.app.game!.me);
+  const myCards = me.cards;
+
   return (
     <div className="my-cards">
-      {cards.map((card) => (
-        <CardView card={card} key={card.id} cardOnHand />
+      {myCards.map((card) => (
+        <CardView card={card} key={card.id} cardOnHand player={me} />
       ))}
     </div>
   );

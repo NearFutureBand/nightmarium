@@ -1,8 +1,6 @@
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -79,6 +77,10 @@ input {
     border-radius: 1rem;
     box-shadow: 1px 1px 10px #eee;
   }
+  &.winner {
+    border: none;
+    box-shadow: 1px 1px 30px cyan;
+  }
 }
 
 .monsters {
@@ -126,6 +128,9 @@ input {
   //   }
   //   //border: 3px solid white;
   // }
+  &.full {
+    border: none;
+  }
 }
 
 .card {
@@ -154,12 +159,12 @@ input {
     border: 3px solid rgb(11, 236, 228);
     box-shadow: 0px 0px 5px rgba(11, 236, 228, 1);
   }
+  &.clickable {
+    cursor: pointer;
+  }
   &.disabled {
     opacity: 0.5;
     cursor: auto;
-  }
-  &.clickable {
-    cursor: pointer;
   }
 }
 
@@ -200,11 +205,20 @@ input {
     flex-direction: column;
     align-items: center;
     padding: 0.5rem;
+    small {
+      margin-bottom: 1rem;
+    }
   }
 }
 
 .controlsDrop {
   display: flex;
+  align-items: center;
+  .cards {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+  }
 }
 
 .loading {

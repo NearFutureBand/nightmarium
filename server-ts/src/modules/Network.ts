@@ -1,13 +1,7 @@
 import { WebSocketServer, WebSocket, RawData } from 'ws';
 import { HOST, PORT, MESSAGE_TYPE } from '../constants';
 import { generateCryptoId } from '../helpers';
-import {
-  ApplyAbilityParams,
-  Message,
-  GameState,
-  AbilityMessagePayload,
-  Legion,
-} from '../types';
+import { ApplyAbilityParams, Message, GameState, AbilityMessagePayload, Legion } from '../types';
 import Game from './Game';
 import Player from './Player';
 
@@ -16,10 +10,7 @@ type GameMessageResponse = {
   toSenderOnly?: Message;
   toAllExceptSender?: Message;
 };
-type GameMessageHandler = (
-  cliendId: string,
-  message: Message<any>
-) => GameMessageResponse;
+type GameMessageHandler = (cliendId: string, message: Message<any>) => GameMessageResponse;
 
 class GameController {
   public game: Game | null;
@@ -40,6 +31,7 @@ class GameController {
       [MESSAGE_TYPE.CANCEL_ABILITY]: this.onCancelAbility,
       [MESSAGE_TYPE.SET_NAME]: this.onSetPlayerName,
       [MESSAGE_TYPE.THROW_LEGION_CARD]: this.onThrowLegionCard,
+      [MESSAGE_TYPE.CHANGE_CARDS]: this.onChangeCards,
     };
   }
 
@@ -50,10 +42,7 @@ class GameController {
     return undefined;
   };
 
-  public onMessage = (
-    message: Message,
-    cliendId: string
-  ): Message | undefined => {
+  public onMessage = (message: Message, cliendId: string): Message | undefined => {
     console.log(message);
     return message;
   };
@@ -62,10 +51,11 @@ class GameController {
     this.game = new Game();
   };
 
-  onHandshake: GameMessageHandler = (
-    clientId: string,
-    message: Message<{ playerId: string }>
-  ) => {
+  endGame = () => {
+    this.game = null;
+  };
+
+  onHandshake: GameMessageHandler = (clientId: string, message: Message<{ playerId: string }>) => {
     let playerId = message.playerId;
     let playerAlreadyExists = false;
 
@@ -87,9 +77,7 @@ class GameController {
       type: MESSAGE_TYPE.HANDSHAKE,
       playerId,
       game: this.game!.getGameState(playerId),
-      ability:
-        this.game!.abilitiesMode?.getMessagePayloadFromCurrentState() ||
-        undefined,
+      ability: this.game!.abilitiesMode?.getMessagePayloadFromCurrentState() || undefined,
       legion: this.game!.legionMode?.currentLegion || undefined,
     };
 
@@ -123,15 +111,9 @@ class GameController {
     };
   };
 
-  onPlayCard: GameMessageHandler = (
-    clientId,
-    message: Message<{ cardId: number; monsterId: number }>
-  ) => {
+  onPlayCard: GameMessageHandler = (clientId, message: Message<{ cardId: number; monsterId: number }>) => {
     try {
-      const result = this.game!.activePlayerPutsCard(
-        message.cardId,
-        message.monsterId
-      );
+      const result = this.game!.activePlayerPutsCard(message.cardId, message.monsterId);
       return {
         broadcast: result || {
           type: MESSAGE_TYPE.PLAY_CARD,
@@ -143,10 +125,7 @@ class GameController {
     }
   };
 
-  onSubmitAbility = (
-    cliendId: string,
-    message: Message
-  ): GameMessageResponse => {
+  onSubmitAbility = (cliendId: string, message: Message): GameMessageResponse => {
     const { type, ...abilityParams } = message;
     const result = this.game!.applyAbility({
       ...abilityParams,
@@ -167,33 +146,37 @@ class GameController {
     };
   };
 
-  onSetPlayerName: GameMessageHandler = (
-    clientId,
-    message: Message<{ playerId: string; name: string }>
-  ) => {
+  onSetPlayerName: GameMessageHandler = (clientId, message: Message<{ playerId: string; name: string }>) => {
     const playerId = message.playerId;
     const player = this.game?.getPlayerById(playerId);
     player?.setName(message.name);
     return {
       broadcast: {
         type: MESSAGE_TYPE.NAME_ACCEPTED,
-        game: this.game!.getGameState(playerId),
+        // game: this.game!.getGameState(playerId),// TODO зачем это здесь?
       },
     };
   };
 
-  onThrowLegionCard: GameMessageHandler = (
-    clientId,
-    message: Message<{ cardId: number; playerId: string }>
-  ) => {
-    const result = this.game!.playerThrowsLegionCard(
-      message.playerId,
-      message.cardId
-    );
+  onThrowLegionCard: GameMessageHandler = (clientId, message: Message<{ cardIds: number[]; playerId: string }>) => {
+    const result = this.game!.playerThrowsLegionCard(message.playerId, message.cardIds);
     return {
       broadcast: result,
     };
   };
+
+  onChangeCards: GameMessageHandler = (clientId, message: Message<{ cardIds: number[] }>) => {
+    this.game!.activePlayerExchangesCards(message.cardIds);
+    return {
+      broadcast: {
+        type: MESSAGE_TYPE.CHANGE_CARDS,
+      },
+    };
+  };
+
+  // onLeaveGame: GameMessageHandler = (clientId, message: Message) => {
+  //   // remove player, activePlayer
+  // }
 }
 
 export default class Network {
@@ -238,10 +221,7 @@ export default class Network {
     console.log('==>', clientId, message);
 
     try {
-      const gameResponse = this.gameController.messageActionsMap[message.type](
-        clientId,
-        message
-      );
+      const gameResponse = this.gameController.messageActionsMap[message.type](clientId, message);
 
       if (gameResponse.toSenderOnly) {
         this.sendMessage(clientId, gameResponse.toSenderOnly);
