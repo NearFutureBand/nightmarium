@@ -47,9 +47,7 @@ export class AbilitiesMode {
     stopAbilitiesMode: () => void;
     applyAbilityMap: ApplyAbilityMap;
   }) {
-    const sequence = [...targetMonster.body]
-      .reverse()
-      .map((bodypart) => bodypart.ability);
+    const sequence = [...targetMonster.body].reverse().map((bodypart) => bodypart.ability);
 
     this.playerId = playerId;
     this.monsterId = targetMonster.id;
@@ -132,6 +130,7 @@ export class AbilitiesMode {
     const applyAbilityResult = this.applyAbilityMap[ability.type!](params);
 
     // applyAbility может вернуть новое сообщение
+    // например, при выполнении способности волк/улыбка собирается другой монстр и теперь он должен стать активным
     if (applyAbilityResult) {
       return applyAbilityResult;
     }
@@ -242,8 +241,7 @@ export class LegionMode {
 
   areAllPlayersResponded = () => {
     for (const playerId in this.otherPlayersResponses) {
-      if (!this.otherPlayersResponses[playerId].respondedCorrectly)
-        return false;
+      if (!this.otherPlayersResponses[playerId].respondedCorrectly) return false;
     }
     return true;
   };

@@ -17,22 +17,12 @@ export const Connection: FC<Props> = () => {
 
   return (
     <div className="page pageConnection">
-      <h1>Добро пожаловать в Кошмариум.</h1>
+      <h1>Выберите подключение</h1>
       <div>
         <button onClick={handleConnect}>Подключиться</button> к серверу
-        <input
-          type="text"
-          placeholder="HOST"
-          value={host}
-          onChange={(event) => setHost(event.target.value)}
-        />
+        <input type="text" placeholder="HOST" value={host} onChange={(event) => setHost(event.target.value)} />
         :
-        <input
-          type="text"
-          placeholder="PORT"
-          value={port}
-          onChange={(event) => setPort(event.target.value)}
-        />
+        <input type="text" placeholder="PORT" value={port} onChange={(event) => setPort(event.target.value)} />
       </div>
     </div>
   );

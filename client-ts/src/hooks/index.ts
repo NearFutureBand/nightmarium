@@ -1,23 +1,9 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useAppDispatch } from '../app/hooks';
 import { MESSAGE_TYPE } from '../constants';
 import { setIsConnected, setNetworkLoading } from '../slices/Network';
-import {
-  Message,
-  MessageAwaitAbility,
-  MessageAwaitLegion,
-  MessageGameOver,
-  MessageHandshake,
-  MessageWithGame,
-} from '../types';
+import { Message, MessageAwaitAbility, MessageAwaitLegion, MessageGameOver, MessageHandshake, MessageWithGame } from '../types';
 
 type Params = {
   onHandshake: (message: MessageHandshake) => void;
@@ -29,6 +15,7 @@ type Params = {
   onGameOver: (message: MessageGameOver) => void;
   onNameAccepted: (message: MessageWithGame) => void;
   onAwaitLegionCard: (message: MessageAwaitLegion) => void;
+  onChangeCards: (message: MessageWithGame) => void;
 };
 
 export const useInitSocket = ({
@@ -40,6 +27,7 @@ export const useInitSocket = ({
   onGameOver,
   onNameAccepted,
   onAwaitLegionCard,
+  onChangeCards,
 }: Params) => {
   const dispatch = useAppDispatch();
   const [socket, setSocket] = useState<WebSocket | null>(null);
@@ -60,38 +48,22 @@ export const useInitSocket = ({
 
   const messageHandlersMap = useMemo(() => {
     return {
-      [MESSAGE_TYPE.HANDSHAKE]: (m: Message) =>
-        _onHandshake(m as MessageHandshake),
-      [MESSAGE_TYPE.PLAYER_CONNECTED]: (m: Message) =>
-        onPlayerConnected(m as MessageWithGame),
+      [MESSAGE_TYPE.HANDSHAKE]: (m: Message) => _onHandshake(m as MessageHandshake),
+      [MESSAGE_TYPE.PLAYER_CONNECTED]: (m: Message) => onPlayerConnected(m as MessageWithGame),
       [MESSAGE_TYPE.START]: (m: Message) => _onGameStart(m as MessageWithGame),
-      [MESSAGE_TYPE.PLAY_CARD]: (m: Message) =>
-        onPlayCard(m as MessageWithGame),
-      [MESSAGE_TYPE.TAKE_CARD]: (m: Message) =>
-        onPlayCard(m as MessageWithGame),
-      [MESSAGE_TYPE.AWAIT_ABILITY]: (m: Message) =>
-        onAwaitAbility(m as MessageAwaitAbility),
+      [MESSAGE_TYPE.PLAY_CARD]: (m: Message) => onPlayCard(m as MessageWithGame),
+      [MESSAGE_TYPE.TAKE_CARD]: (m: Message) => onPlayCard(m as MessageWithGame),
+      [MESSAGE_TYPE.AWAIT_ABILITY]: (m: Message) => onAwaitAbility(m as MessageAwaitAbility),
       [MESSAGE_TYPE.SUBMIT_ABILITY]: () => {},
       [MESSAGE_TYPE.CANCEL_ABILITY]: () => {},
-      [MESSAGE_TYPE.GAME_OVER]: (m: Message) =>
-        onGameOver(m as MessageGameOver),
+      [MESSAGE_TYPE.GAME_OVER]: (m: Message) => onGameOver(m as MessageGameOver),
       [MESSAGE_TYPE.SET_NAME]: () => {},
-      [MESSAGE_TYPE.NAME_ACCEPTED]: (m: Message) =>
-        onNameAccepted(m as MessageWithGame),
-      [MESSAGE_TYPE.AWAIT_LEGION_CARD]: (m: Message) =>
-        onAwaitLegionCard(m as MessageAwaitLegion),
+      [MESSAGE_TYPE.NAME_ACCEPTED]: (m: Message) => onNameAccepted(m as MessageWithGame),
+      [MESSAGE_TYPE.AWAIT_LEGION_CARD]: (m: Message) => onAwaitLegionCard(m as MessageAwaitLegion),
       [MESSAGE_TYPE.THROW_LEGION_CARD]: () => {},
+      [MESSAGE_TYPE.CHANGE_CARDS]: (m: Message) => onChangeCards(m as MessageWithGame),
     };
-  }, [
-    _onHandshake,
-    onPlayerConnected,
-    _onGameStart,
-    onPlayCard,
-    onAwaitAbility,
-    onGameOver,
-    onNameAccepted,
-    onAwaitLegionCard,
-  ]);
+  }, [onChangeCards, _onHandshake, onPlayerConnected, _onGameStart, onPlayCard, onAwaitAbility, onGameOver, onNameAccepted, onAwaitLegionCard]);
 
   const onOpen = useCallback(
     (socket: WebSocket) => {
@@ -101,7 +73,7 @@ export const useInitSocket = ({
       console.log('CLIENT: connected', playerId);
       socket.send(JSON.stringify({ type: 'HANDSHAKE', playerId }));
       saveServerAddress({ url: socket.url });
-      toast(`Успешно подключен к ${socket.url}`);
+      toast(`Успешно подключен к  ${socket.url}`);
     },
     [dispatch]
   );
@@ -122,7 +94,7 @@ export const useInitSocket = ({
         console.log('websocket connection failed');
         dispatch(setNetworkLoading(false));
         clearServerAddress();
-        toast('Подключение неуспешно');
+        toast('Не удалось подключиться');
       }
     },
     [dispatch]
@@ -164,9 +136,7 @@ export const useInitSocket = ({
   return { socket, connect, disconnect };
 };
 
-export const SocketContext = createContext<ReturnType<
-  typeof useInitSocket
-> | null>(null);
+export const SocketContext = createContext<ReturnType<typeof useInitSocket> | null>(null);
 
 export const useSocket = () => useContext(SocketContext)!;
 
@@ -192,15 +162,7 @@ function getSavedServerAddress(): { host?: string; port?: string } {
   return { host: host || undefined, port: port || undefined };
 }
 
-function saveServerAddress({
-  port,
-  host,
-  url,
-}: {
-  port?: string | number;
-  host?: string;
-  url?: string;
-}) {
+function saveServerAddress({ port, host, url }: { port?: string | number; host?: string; url?: string }) {
   let _port = port;
   let _host = host;
   if (url) {

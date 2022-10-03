@@ -76,16 +76,27 @@ export type MessageAwaitAbility = MessageWithGame &
 
 export type MessageGameOver = MessageWithGame & Message<{ winner: string }>;
 
-export type MessageAwaitLegion = MessageWithGame &
-  Message<{ legion: LegionState }>;
+export type MessageAwaitLegion = MessageWithGame & Message<{ legion: LegionState }>;
 
-export type SelectedMonster = {
+// DEVNOTE на случай если надо отедльно показывать какие карты пришли взамен
+// export type MessageChangeCards = MessageWithGame & Message<{ cards: Card[] }>;
+
+export type SelectedMonsterShort = {
   playerId: string;
   monsterId: number;
 };
 
-export type SelectedCard = {
+export type SelectedMonster = SelectedMonsterShort & {
+  monsterBodyLength: number;
+};
+
+export type SelectedCardShort = {
   playerId?: string;
   monsterId?: number;
   cardId: number;
+};
+
+export type SelectedCard = SelectedCardShort & {
+  cardBodypart: number[];
+  legion: Legion;
 };

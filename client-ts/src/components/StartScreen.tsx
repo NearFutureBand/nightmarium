@@ -31,22 +31,15 @@ export const StartScreen: FC<Props> = ({ playerId }) => {
   return (
     <div className="start">
       <div className="App">
-        <h1>Уже почти можно начинать</h1>
+        <h1>Добро пожаловать в Кошмариум.</h1>
         {playerName ? (
           `Привет, ${playerName}`
         ) : (
           <>
-            Представьтесь, пожалуйста:{' '}
-            <input
-              type="text"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              onKeyDown={onNameEnter}
-            />
+            Представьтесь, пожалуйста: <input type="text" value={name} onChange={(event) => setName(event.target.value)} onKeyDown={onNameEnter} />
           </>
         )}
-        . Игроков: {game!.otherPlayers.length + 1}{' '}
-        <button onClick={startGame}>Начать игру</button>
+        . Игроков: {game!.otherPlayers.length + 1} <button onClick={startGame}>Начать игру</button>
         <button onClick={disconnect}>Отключиться</button>
       </div>
     </div>

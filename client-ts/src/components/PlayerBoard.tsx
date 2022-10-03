@@ -13,31 +13,19 @@ type Props = {
 
 export const PlayerBoard: FC<Props> = ({ player, isMe = false }) => {
   const isActive = useAppSelector(selectIsActive(player.id));
+  const winnerId = useAppSelector((state) => state.app.winnerId);
 
   return (
-    <div className={classNames('playerBoard', { active: isActive })}>
+    <div className={classNames('playerBoard', { active: isActive, winner: winnerId === player.id })}>
       <header>
-        {player.name} {player.id} {isMe && '( я )'}
+        {player.name} {player.id} {isMe && '( я )'} {!isMe && `Карт: ${player.cards}`}
       </header>
       <div className="monsters">
         {player.monsters.map((monster) => (
-          <MonsterView
-            key={monster.id}
-            monster={monster}
-            player={player}
-            isMe={isMe}
-          >
+          <MonsterView key={monster.id} monster={monster} player={player} isMe={isMe}>
             {[0, 1, 2].map((bodypartIndex) => {
               const card: Card | undefined = monster?.body[bodypartIndex];
-              return (
-                <CardView
-                  card={card}
-                  key={bodypartIndex}
-                  monster={monster}
-                  player={player}
-                  isMe={isMe}
-                />
-              );
+              return <CardView card={card} key={bodypartIndex} monster={monster} player={player} isMe={isMe} />;
             })}
           </MonsterView>
         ))}

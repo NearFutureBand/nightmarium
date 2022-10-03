@@ -37,7 +37,7 @@ export const appSlice = createSlice({
   initialState,
   reducers: {
     setSelectedMonster: (state, action: PayloadAction<SelectedMonster>) => {
-      const { monsterId, playerId } = action.payload;
+      const { monsterId, playerId, monsterBodyLength } = action.payload;
       if (
         state.selectedMonster?.monsterId === monsterId &&
         state.selectedMonster?.playerId === playerId
@@ -45,7 +45,7 @@ export const appSlice = createSlice({
         state.selectedMonster = null;
         return;
       }
-      state.selectedMonster = { monsterId, playerId };
+      state.selectedMonster = { monsterId, playerId, monsterBodyLength };
     },
     deSelectMonster: (state) => {
       state.selectedMonster = null;
@@ -54,7 +54,14 @@ export const appSlice = createSlice({
       state,
       action: PayloadAction<SelectedCard & { shiftPressed: boolean }>
     ) => {
-      const { monsterId, playerId, cardId, shiftPressed } = action.payload;
+      const {
+        monsterId,
+        playerId,
+        cardId,
+        shiftPressed,
+        cardBodypart,
+        legion,
+      } = action.payload;
 
       const cardIndexIfSelected = getCardIndexInSelection(
         { cardId, monsterId, playerId },
@@ -74,16 +81,26 @@ export const appSlice = createSlice({
         !shiftPressed &&
         state.selectedCards.length > 1
       ) {
-        state.selectedCards = [{ monsterId, cardId, playerId }];
+        state.selectedCards = [
+          { monsterId, cardId, playerId, cardBodypart, legion },
+        ];
       }
       if (isCardAlreadySelected && shiftPressed) {
         state.selectedCards.splice(cardIndexIfSelected, 1);
       }
       if (!isCardAlreadySelected && shiftPressed) {
-        state.selectedCards.push({ monsterId, cardId, playerId });
+        state.selectedCards.push({
+          monsterId,
+          cardId,
+          playerId,
+          cardBodypart,
+          legion,
+        });
       }
       if (!isCardAlreadySelected && !shiftPressed) {
-        state.selectedCards = [{ monsterId, cardId, playerId }];
+        state.selectedCards = [
+          { monsterId, cardId, playerId, cardBodypart, legion },
+        ];
       }
     },
     deSelectCard: (state) => {

@@ -3,35 +3,21 @@ import { toast } from 'react-toastify';
 import { useAppDispatch, useAppSelector } from './app/hooks';
 import { Connection, GamePanel, Loading, StartScreen } from './components';
 import { SocketContext, useInitSocket } from './hooks';
-import {
-  setAbilityState,
-  setAwaitingLegion,
-  setGame,
-  setPlayerId,
-  setWinner,
-} from './slices/App';
-import {
-  MessageHandshake,
-  MessageWithGame,
-  MessageAwaitAbility,
-  MessageGameOver,
-  MessageAwaitLegion,
-} from './types';
+import { setAbilityState, setAwaitingLegion, setGame, setPlayerId, setWinner } from './slices/App';
+import { MessageHandshake, MessageWithGame, MessageAwaitAbility, MessageGameOver, MessageAwaitLegion } from './types';
 
 function App() {
   const game = useAppSelector((state) => state.app.game);
   const playerId = useAppSelector((state) => state.app.playerId);
+  const winnerId = useAppSelector((state) => state.app.winnerId);
 
-  const isGameStarted = useMemo(
-    () => Boolean(game?.activePlayer),
-    [game?.activePlayer]
-  );
+  const noActivePlayer = useMemo(() => !Boolean(game?.activePlayer), [game?.activePlayer]);
 
   if (!playerId) {
     return <Loading />;
   }
 
-  if (!game || !isGameStarted) {
+  if (!game || (noActivePlayer && !winnerId)) {
     return <StartScreen playerId={playerId} />;
   }
 
@@ -77,6 +63,7 @@ function SocketConnectionLayer() {
     (message: MessageGameOver) => {
       dispatch(setGame(message.game));
       dispatch(setWinner(message.winner));
+      dispatch(setAbilityState(null));
     },
     [dispatch]
   );
@@ -108,13 +95,10 @@ function SocketConnectionLayer() {
     onGameOver,
     onNameAccepted: updateGame,
     onAwaitLegionCard,
+    onChangeCards: updateGame,
   });
 
-  return (
-    <SocketContext.Provider value={socket}>
-      {isConnected ? <App /> : <Connection />}
-    </SocketContext.Provider>
-  );
+  return <SocketContext.Provider value={socket}>{isConnected ? <App /> : <Connection />}</SocketContext.Provider>;
 }
 
 export default SocketConnectionLayer;
