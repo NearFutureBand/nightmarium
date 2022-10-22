@@ -1,7 +1,7 @@
 import { FC, useCallback, useMemo } from 'react';
 import { toast } from 'react-toastify';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
-import { ABILITIES, ABILITIES_DESCRIPTION, MESSAGE_TYPE } from '../constants';
+import { ABILITIES, ABILITIES_DESCRIPTION, ABILITY_TYPE, MESSAGE_TYPE } from '../constants';
 import { validateCardToMonster } from '../helpers';
 import { useSendMessage } from '../hooks';
 import { deSelectCard, deSelectMonster, selectGameId, selectLastAction } from '../slices/App';
@@ -157,11 +157,11 @@ function ControlsWolf() {
   }, [abilityState.abilityType, dispatch, gameId, selectedCards, selectedMonster, sendMessage]);
 
   const handleThrowOff = useCallback(() => {
-    sendMessage({
+    sendMessage<{ abilityType: ABILITY_TYPE; action_experimental?: string; cardIds: number[]; gameId: string }>({
       type: MESSAGE_TYPE.SUBMIT_ABILITY,
       abilityType: abilityState.abilityType,
       action_experimental: 'THROW OFF',
-      cardIds: selectedCards,
+      cardIds: selectedCards.map((c) => c.cardId),
       gameId,
     });
   }, [abilityState.abilityType, gameId, selectedCards, sendMessage]);

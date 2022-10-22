@@ -299,7 +299,7 @@ export default class Game {
 
     // TODO double check with `action_experimental` that it equals to "THROW_OFF"
     // Если monsterId не передан, значит игрок нажал на кнопку сбросить карту (карты)
-    if (!monsterId) {
+    if (monsterId === undefined) {
       cardIds.forEach((cardId) => {
         const cardIndex = findCardIndex(cardId);
         const [thrownAwayCard] = abilityCards.splice(cardIndex, 1);
