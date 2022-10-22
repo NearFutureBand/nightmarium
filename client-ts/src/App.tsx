@@ -1,25 +1,28 @@
 import { useCallback, useMemo } from 'react';
 import { toast } from 'react-toastify';
 import { useAppDispatch, useAppSelector } from './app/hooks';
-import { Connection, GamePanel, Loading, StartScreen } from './components';
+import { Connection, GamePanel, Loading, LoadingScreen, StartScreen } from './components';
 import { SocketContext, useInitSocket } from './hooks';
-import { setAbilityState, setAwaitingLegion, setGame, setPlayerId, setWinner } from './slices/App';
-import { MessageHandshake, MessageWithGame, MessageAwaitAbility, MessageGameOver, MessageAwaitLegion } from './types';
+import { selectAmIReadyToPlay, selectPlayerId, setAbilityState, setAwaitingLegion, setGame, setMe, setOtherPlayers } from './slices/App';
+import { MessageHandshake, MessageWithGame, MessageAwaitAbility, MessageAwaitLegion, User, Message, MessagePlayerConnected } from './types';
 
-function App() {
+function Router() {
   const game = useAppSelector((state) => state.app.game);
-  const playerId = useAppSelector((state) => state.app.playerId);
-  const winnerId = useAppSelector((state) => state.app.winnerId);
+  const playerId = useAppSelector(selectPlayerId);
+  const winnerId = game?.winnerId;
+  const imReadyToPlay = useAppSelector(selectAmIReadyToPlay);
 
   const noActivePlayer = useMemo(() => !Boolean(game?.activePlayer), [game?.activePlayer]);
 
   if (!playerId) {
-    return <Loading />;
+    return <Loading fullscreen />;
   }
 
-  if (!game || (noActivePlayer && !winnerId)) {
-    return <StartScreen playerId={playerId} />;
+  if (!imReadyToPlay) {
+    return <StartScreen />;
   }
+
+  if (noActivePlayer && imReadyToPlay && !winnerId) return <LoadingScreen />;
 
   return <GamePanel />;
 }
@@ -30,7 +33,8 @@ function SocketConnectionLayer() {
 
   const onHandshake = useCallback(
     (message: MessageHandshake) => {
-      dispatch(setPlayerId(message.playerId));
+      dispatch(setMe(message.me));
+      dispatch(setOtherPlayers(message.otherPlayers));
       dispatch(setGame(message.game));
       if (message.ability) {
         dispatch(setAbilityState(message.ability));
@@ -42,9 +46,18 @@ function SocketConnectionLayer() {
     [dispatch]
   );
 
+  const onNameAccepted = useCallback(
+    (message: Message<{ me: User }>) => {
+      dispatch(setMe(message.me));
+    },
+    [dispatch]
+  );
+
   const updateGame = useCallback(
     (message: MessageWithGame) => {
       dispatch(setGame(message.game));
+      dispatch(setMe(message.me));
+      dispatch(setOtherPlayers(message.otherPlayers));
       dispatch(setAbilityState(null));
     },
     [dispatch]
@@ -59,18 +72,9 @@ function SocketConnectionLayer() {
     [dispatch]
   );
 
-  const onGameOver = useCallback(
-    (message: MessageGameOver) => {
-      dispatch(setGame(message.game));
-      dispatch(setWinner(message.winner));
-      dispatch(setAbilityState(null));
-    },
-    [dispatch]
-  );
-
   const onPlayerConnected = useCallback(
-    (message: MessageWithGame) => {
-      dispatch(setGame(message.game));
+    (message: MessagePlayerConnected) => {
+      dispatch(setOtherPlayers(message.otherPlayers));
       toast('Подключился еще один игрок');
     },
     [dispatch]
@@ -92,13 +96,15 @@ function SocketConnectionLayer() {
     onPlayCard: updateGame,
     onTakeCard: updateGame,
     onAwaitAbility: onAwaitAbility,
-    onGameOver,
-    onNameAccepted: updateGame,
+    onGameOver: updateGame,
+    onNameAccepted,
     onAwaitLegionCard,
     onChangeCards: updateGame,
+    onReadyToPlay: updateGame,
+    onLeaveGame: updateGame,
   });
 
-  return <SocketContext.Provider value={socket}>{isConnected ? <App /> : <Connection />}</SocketContext.Provider>;
+  return <SocketContext.Provider value={socket}>{isConnected ? <Router /> : <Connection />}</SocketContext.Provider>;
 }
 
 export default SocketConnectionLayer;

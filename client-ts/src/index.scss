@@ -57,6 +57,22 @@ input {
   height: 100vh;
 }
 
+.loadingScreen {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  .main {
+    display: flex;
+    gap: 2rem;
+  }
+  .hint {
+    margin: 2rem 0rem;
+    width: 60%;
+  }
+}
+
 .gamepanel {
   width: 100%;
   display: flex;
@@ -257,4 +273,13 @@ input {
       transform: rotate(360deg);
     }
   }
+}
+
+.fullscreen-spinner {
+  position: fixed;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }

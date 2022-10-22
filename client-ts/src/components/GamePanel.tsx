@@ -24,6 +24,6 @@ export const GamePanel: FC<Props> = () => {
 };
 
 function WinnerBanner() {
-  const winnerId = useAppSelector((state) => state.app.winnerId);
+  const winnerId = useAppSelector((state) => state.app.game?.winnerId);
   return winnerId ? <h1>Победитель: {winnerId}</h1> : null;
 }

@@ -5,7 +5,6 @@ import { ABILITIES, ABILITIES_DESCRIPTION, MESSAGE_TYPE } from '../constants';
 import { validateCardToMonster } from '../helpers';
 import { useSendMessage } from '../hooks';
 import { deSelectCard, deSelectMonster, selectLastAction } from '../slices/App';
-import { AbilityState } from '../types';
 import { CardView } from './CardView';
 
 // TODO ну тут надо как-то экономить, ибо панели управления слишком схожи между собой
@@ -20,17 +19,17 @@ const AbilitiesInterfaceMap = {
 };
 
 type Props = {};
-
+// TODO тут все пересмотреть на основе новых данных
 export const Controls: FC<Props> = () => {
   const dispatch = useAppDispatch();
   const game = useAppSelector((state) => state.app.game)!;
-  const playerId = useAppSelector((state) => state.app.playerId);
+  const playerId = useAppSelector((state) => state.app.me?.id);
   const selectedMonster = useAppSelector((state) => state.app.selectedMonster);
   const selectedCards = useAppSelector((state) => state.app.selectedCards);
   const abilityState = useAppSelector((state) => state.app.abilityState);
   const legionState = useAppSelector((state) => state.app.awaitingLegion);
   const lastAction = useAppSelector(selectLastAction);
-  const winnerId = useAppSelector((state) => state.app.winnerId);
+  const winnerId = useAppSelector((state) => state.app.game?.winnerId);
 
   const sendMessage = useSendMessage();
 
@@ -74,6 +73,14 @@ export const Controls: FC<Props> = () => {
     dispatch(deSelectCard());
   }, [dispatch, selectedCards, sendMessage]);
 
+  const handleLeaveGame = useCallback(() => {
+    sendMessage<{ playerId: string; gameId: string }>({
+      type: MESSAGE_TYPE.LEAVE_GAME,
+      playerId: playerId!,
+      gameId: game.id,
+    });
+  }, [game.id, playerId, sendMessage]);
+
   const isMyTurn = useMemo(() => {
     return playerId === game.activePlayer?.id;
   }, [game.activePlayer?.id, playerId]);
@@ -81,17 +88,18 @@ export const Controls: FC<Props> = () => {
   if (legionState) {
     return <ControlsLegionMode isMyTurn={isMyTurn} />;
   }
-  if (!isMyTurn) return null;
 
   // TODO отрефакторить
   if (winnerId) {
     // TODO возможно эта кнопка будет появляться спустя 10 секунд
     return (
       <div className="controls">
-        <button onClick={handleTakeCard}>Вернуться на главную</button>
+        <button onClick={handleLeaveGame}>Выйти из игры</button>
       </div>
     );
   }
+
+  if (!isMyTurn) return null;
 
   return (
     <div className="controls">
@@ -356,7 +364,7 @@ function ControlsLegionMode({ isMyTurn }: { isMyTurn: boolean }) {
   const dispatch = useAppDispatch();
   const legionState = useAppSelector((state) => state.app.awaitingLegion);
   const selectedCards = useAppSelector((state) => state.app.selectedCards);
-  const playerId = useAppSelector((state) => state.app.playerId)!;
+  const playerId = useAppSelector((state) => state.app.me?.id)!;
 
   const isCardSelected = useMemo(() => selectedCards.length !== 0, [selectedCards.length]);
 

@@ -159,7 +159,7 @@ function useCardStatus({
   legionState: LegionState | null;
 }) {
   const availableBodyparts = useAppSelector(selectAvailableBodyPartsToInstall);
-  const winnerId = useAppSelector((state) => state.app.winnerId);
+  const winnerId = useAppSelector((state) => state.app.game?.winnerId);
 
   const disabled = useMemo(() => {
     // Для карты нет доступного места в любом монстре

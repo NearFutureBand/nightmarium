@@ -1,23 +1,16 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../app/store';
 import { getCardIndexInSelection } from '../helpers';
-import {
-  AbilityState,
-  Card,
-  Game,
-  LegionState,
-  SelectedCard,
-  SelectedMonster,
-} from '../types';
+import { AbilityState, Card, Game, LegionState, SelectedCard, SelectedMonster, User } from '../types';
 
 export interface AppState {
   selectedMonster: SelectedMonster | null;
   selectedCards: SelectedCard[];
   game: Game | null;
   abilityState: AbilityState | null;
-  playerId: string | null;
+  me?: User;
+  otherPlayers: User[];
   draggedCard: null | Card;
-  winnerId: string | null;
   awaitingLegion: LegionState | null;
 }
 
@@ -26,9 +19,9 @@ const initialState: AppState = {
   selectedMonster: null,
   game: null,
   abilityState: null,
-  playerId: null,
+  me: undefined,
+  otherPlayers: [],
   draggedCard: null,
-  winnerId: null,
   awaitingLegion: null,
 };
 
@@ -38,10 +31,7 @@ export const appSlice = createSlice({
   reducers: {
     setSelectedMonster: (state, action: PayloadAction<SelectedMonster>) => {
       const { monsterId, playerId, monsterBodyLength } = action.payload;
-      if (
-        state.selectedMonster?.monsterId === monsterId &&
-        state.selectedMonster?.playerId === playerId
-      ) {
+      if (state.selectedMonster?.monsterId === monsterId && state.selectedMonster?.playerId === playerId) {
         state.selectedMonster = null;
         return;
       }
@@ -50,40 +40,17 @@ export const appSlice = createSlice({
     deSelectMonster: (state) => {
       state.selectedMonster = null;
     },
-    setSelectedCard: (
-      state,
-      action: PayloadAction<SelectedCard & { shiftPressed: boolean }>
-    ) => {
-      const {
-        monsterId,
-        playerId,
-        cardId,
-        shiftPressed,
-        cardBodypart,
-        legion,
-      } = action.payload;
+    setSelectedCard: (state, action: PayloadAction<SelectedCard & { shiftPressed: boolean }>) => {
+      const { monsterId, playerId, cardId, shiftPressed, cardBodypart, legion } = action.payload;
 
-      const cardIndexIfSelected = getCardIndexInSelection(
-        { cardId, monsterId, playerId },
-        state.selectedCards
-      );
+      const cardIndexIfSelected = getCardIndexInSelection({ cardId, monsterId, playerId }, state.selectedCards);
       const isCardAlreadySelected = cardIndexIfSelected >= 0;
 
-      if (
-        isCardAlreadySelected &&
-        !shiftPressed &&
-        state.selectedCards.length === 1
-      ) {
+      if (isCardAlreadySelected && !shiftPressed && state.selectedCards.length === 1) {
         state.selectedCards = [];
       }
-      if (
-        isCardAlreadySelected &&
-        !shiftPressed &&
-        state.selectedCards.length > 1
-      ) {
-        state.selectedCards = [
-          { monsterId, cardId, playerId, cardBodypart, legion },
-        ];
+      if (isCardAlreadySelected && !shiftPressed && state.selectedCards.length > 1) {
+        state.selectedCards = [{ monsterId, cardId, playerId, cardBodypart, legion }];
       }
       if (isCardAlreadySelected && shiftPressed) {
         state.selectedCards.splice(cardIndexIfSelected, 1);
@@ -98,9 +65,7 @@ export const appSlice = createSlice({
         });
       }
       if (!isCardAlreadySelected && !shiftPressed) {
-        state.selectedCards = [
-          { monsterId, cardId, playerId, cardBodypart, legion },
-        ];
+        state.selectedCards = [{ monsterId, cardId, playerId, cardBodypart, legion }];
       }
     },
     deSelectCard: (state) => {
@@ -112,14 +77,14 @@ export const appSlice = createSlice({
     setAbilityState: (state, action: PayloadAction<AbilityState | null>) => {
       state.abilityState = action.payload;
     },
-    setPlayerId: (state, action: PayloadAction<string | null>) => {
-      state.playerId = action.payload;
+    setMe: (state, action: PayloadAction<User | undefined>) => {
+      state.me = action.payload;
+    },
+    setOtherPlayers: (state, action: PayloadAction<User[]>) => {
+      state.otherPlayers = action.payload;
     },
     setDraggedCard: (state, action: PayloadAction<Card | null>) => {
       state.draggedCard = action.payload;
-    },
-    setWinner: (state, action: PayloadAction<string | null>) => {
-      state.winnerId = action.payload;
     },
     setAwaitingLegion: (state, action: PayloadAction<LegionState | null>) => {
       state.awaitingLegion = action.payload;
@@ -127,17 +92,19 @@ export const appSlice = createSlice({
   },
 });
 
+export const selectPlayerId = (state: RootState) => {
+  return state.app.me?.id;
+};
+
 export const selectIsActive = (playerId?: string) => (state: RootState) => {
   const game = state.app.game;
   return playerId === game?.activePlayer?.id;
 };
 
-export const selectAvailableBodyPartsToInstall = (
-  state: RootState
-): Set<number> => {
+export const selectAvailableBodyPartsToInstall = (state: RootState): Set<number> => {
   const game = state.app.game!;
   // рассчитываем только в свой ход
-  if (game.activePlayer?.id !== state.app.playerId) {
+  if (game.activePlayer?.id !== state.app.me?.id) {
     return new Set<number>();
   }
 
@@ -152,6 +119,16 @@ export const selectLastAction = (state: RootState) => {
   return state.app.game!.lastAction;
 };
 
+export const selectAmIReadyToPlay = (state: RootState) => {
+  return Boolean(state.app.me?.readyToPlay);
+};
+
+export const selectHowManyReadyToPlay = (state: RootState) => {
+  const iAmReadyToPlay = selectAmIReadyToPlay(state);
+  // TODO тут для расчета готовых играть- готов играть если readyToPlay === true и gameId существует
+  return state.app.otherPlayers.reduce((count, player) => (player.readyToPlay ? count + 1 : count), 0) + (iAmReadyToPlay ? 1 : 0);
+};
+
 export const {
   setSelectedMonster,
   deSelectMonster,
@@ -159,9 +136,9 @@ export const {
   deSelectCard,
   setGame,
   setAbilityState,
-  setPlayerId,
+  setMe,
+  setOtherPlayers,
   setDraggedCard,
-  setWinner,
   setAwaitingLegion,
 } = appSlice.actions;
 

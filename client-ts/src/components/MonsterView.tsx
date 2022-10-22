@@ -6,7 +6,7 @@ import { ABILITY_TYPE, MESSAGE_TYPE } from '../constants';
 import { validateCardToMonster } from '../helpers';
 import { useSendMessage } from '../hooks';
 import { selectIsActive, selectLastAction, setDraggedCard, setSelectedMonster } from '../slices/App';
-import { AbilityState, Legion, Monster, Player } from '../types';
+import { AbilityState, Monster, Player } from '../types';
 
 type Props = {
   monster: Monster;
@@ -20,6 +20,7 @@ export const MonsterView = ({ children, monster, player, isMe = false }: PropsWi
   const selectedMonster = useAppSelector((state) => state.app.selectedMonster);
   const abilityState = useAppSelector((state) => state.app.abilityState);
   const lastAction = useAppSelector(selectLastAction);
+  const gameId = useAppSelector((state) => state.app.me?.gameId);
 
   const sendMessage = useSendMessage();
 
@@ -58,14 +59,15 @@ export const MonsterView = ({ children, monster, player, isMe = false }: PropsWi
 
   const sendMessageWithPayload = useCallback(
     (payload: any) => {
-      sendMessage<{ cardId: number; monsterId: number }>({
+      sendMessage<{ cardId: number; monsterId: number; gameId: string }>({
         cardId: draggedCard!.id,
         monsterId: monster.id,
+        gameId,
         ...payload,
       });
       setDraggedOver(false);
     },
-    [draggedCard, monster.id, sendMessage]
+    [draggedCard, gameId, monster.id, sendMessage]
   );
 
   const handleDrop = useCallback(() => {
@@ -125,7 +127,7 @@ export const MonsterView = ({ children, monster, player, isMe = false }: PropsWi
 function useIsClickable({ player, abilityState, isMe }: { player: Player; abilityState: AbilityState | null; isMe: boolean }) {
   const isActive = useAppSelector(selectIsActive(player.id));
   const legionState = useAppSelector((state) => state.app.awaitingLegion);
-  const winnerId = useAppSelector((state) => state.app.winnerId);
+  const winnerId = useAppSelector((state) => state.app.game?.winnerId);
 
   const clickable = useMemo(() => {
     if (winnerId) return false;
