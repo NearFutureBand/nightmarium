@@ -129,6 +129,10 @@ export const selectHowManyReadyToPlay = (state: RootState) => {
   return state.app.otherPlayers.reduce((count, player) => (player.readyToPlay ? count + 1 : count), 0) + (iAmReadyToPlay ? 1 : 0);
 };
 
+export const selectGameId = (state: RootState) => {
+  return state.app.game?.id;
+};
+
 export const {
   setSelectedMonster,
   deSelectMonster,

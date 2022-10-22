@@ -162,7 +162,8 @@ export default class Game {
   activePlayerPutsCard = (cardId: number, monsterId: number): PutCardReturnType => {
     const activePlayer = this.getActivePlayer();
 
-    return this.gameOver(activePlayer.id);
+    // TODO for endgame test purposes
+    // return this.gameOver(activePlayer.id);
 
     // TODO test it and put this function to the smile and wolf ability handler
     // TODO combine this bit with actions decrement more clear

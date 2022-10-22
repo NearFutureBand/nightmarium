@@ -2,9 +2,12 @@ import { useCallback, useMemo } from 'react';
 import { toast } from 'react-toastify';
 import { useAppDispatch, useAppSelector } from './app/hooks';
 import { Connection, GamePanel, Loading, LoadingScreen, StartScreen } from './components';
+import { generateRandomBackground } from './helpers';
 import { SocketContext, useInitSocket } from './hooks';
 import { selectAmIReadyToPlay, selectPlayerId, setAbilityState, setAwaitingLegion, setGame, setMe, setOtherPlayers } from './slices/App';
 import { MessageHandshake, MessageWithGame, MessageAwaitAbility, MessageAwaitLegion, User, Message, MessagePlayerConnected } from './types';
+
+const backgroundColor = generateRandomBackground();
 
 function Router() {
   const game = useAppSelector((state) => state.app.game);
@@ -104,7 +107,11 @@ function SocketConnectionLayer() {
     onLeaveGame: updateGame,
   });
 
-  return <SocketContext.Provider value={socket}>{isConnected ? <Router /> : <Connection />}</SocketContext.Provider>;
+  return (
+    <main className="main-page" style={{ backgroundColor }}>
+      <SocketContext.Provider value={socket}>{isConnected ? <Router /> : <Connection />}</SocketContext.Provider>
+    </main>
+  );
 }
 
 export default SocketConnectionLayer;

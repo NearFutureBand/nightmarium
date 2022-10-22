@@ -165,8 +165,9 @@ export default class GameController {
     };
   };
 
-  onTakeCard: GameMessageHandler = () => {
-    this.game!.activePlayerTakesCard();
+  onTakeCard: GameMessageHandler<{ gameId: string }> = (cliendId, message) => {
+    const game = this.getGameById(message.gameId)!;
+    game.activePlayerTakesCard();
     return {
       broadcast: {
         type: MESSAGE_TYPE.TAKE_CARD,
@@ -188,9 +189,10 @@ export default class GameController {
     }
   };
 
-  onSubmitAbility = (cliendId: string, message: Message): GameMessageResponse => {
-    const { type, ...abilityParams } = message;
-    const result = this.game!.applyAbility({
+  onSubmitAbility = (cliendId: string, message: Message<any>): GameMessageResponse => {
+    const { type, gameId, ...abilityParams } = message;
+    const game = this.getGameById(gameId);
+    const result = game!.applyAbility({
       ...abilityParams,
     } as ApplyAbilityParams); // TODO make this type USEFUL
     return {
@@ -200,8 +202,9 @@ export default class GameController {
     };
   };
 
-  onCancelAbility: GameMessageHandler = () => {
-    this.game!.stopAbilitiesMode();
+  onCancelAbility: GameMessageHandler<{ gameId: string }> = (cliendId, message) => {
+    const game = this.getGameById(message.gameId)!;
+    game.stopAbilitiesMode();
     return {
       broadcast: {
         type: MESSAGE_TYPE.PLAY_CARD,
@@ -224,15 +227,17 @@ export default class GameController {
     };
   };
 
-  onThrowLegionCard: GameMessageHandler<{ cardIds: number[]; playerId: string }> = (clientId, message) => {
-    const result = this.game!.playerThrowsLegionCard(message.playerId, message.cardIds);
+  onThrowLegionCard: GameMessageHandler<{ cardIds: number[]; playerId: string; gameId: string }> = (clientId, message) => {
+    const game = this.getGameById(message.gameId)!;
+    const result = game.playerThrowsLegionCard(message.playerId, message.cardIds);
     return {
       broadcast: result,
     };
   };
 
-  onChangeCards: GameMessageHandler<{ cardIds: number[] }> = (clientId, message) => {
-    this.game!.activePlayerExchangesCards(message.cardIds);
+  onChangeCards: GameMessageHandler<{ cardIds: number[]; gameId: string }> = (clientId, message) => {
+    const game = this.getGameById(message.gameId)!;
+    game.activePlayerExchangesCards(message.cardIds);
     return {
       broadcast: {
         type: MESSAGE_TYPE.CHANGE_CARDS,
