@@ -60,14 +60,13 @@ export const MonsterView = ({ children, monster, player, isMe = false }: PropsWi
   const sendMessageWithPayload = useCallback(
     (payload: any) => {
       sendMessage<{ cardId: number; monsterId: number; gameId: string }>({
-        cardId: draggedCard!.id,
         monsterId: monster.id,
         gameId,
         ...payload,
       });
       setDraggedOver(false);
     },
-    [draggedCard, gameId, monster.id, sendMessage]
+    [gameId, monster.id, sendMessage]
   );
 
   const handleDrop = useCallback(() => {
@@ -95,18 +94,27 @@ export const MonsterView = ({ children, monster, player, isMe = false }: PropsWi
       return;
     }
 
-    const wolfOrSmileAbility = abilityState?.abilityType === ABILITY_TYPE.SMILE || abilityState?.abilityType === ABILITY_TYPE.WOLF;
-
-    if (wolfOrSmileAbility) {
+    if (abilityState?.abilityType === ABILITY_TYPE.WOLF) {
       sendMessageWithPayload({
         type: MESSAGE_TYPE.SUBMIT_ABILITY,
         abilityType: abilityState.abilityType,
+        cardIds: [draggedCard.id],
+      });
+      return;
+    }
+
+    if (abilityState?.abilityType === ABILITY_TYPE.SMILE) {
+      sendMessageWithPayload({
+        type: MESSAGE_TYPE.SUBMIT_ABILITY,
+        abilityType: abilityState.abilityType,
+        cardId: draggedCard.id,
       });
       return;
     }
 
     sendMessageWithPayload({
       type: MESSAGE_TYPE.PLAY_CARD,
+      cardId: draggedCard.id,
     });
   }, [abilityState, dispatch, draggedCard, droppable, lastAction, monster.body.length, monster.id, player.id, sendMessageWithPayload]);
 

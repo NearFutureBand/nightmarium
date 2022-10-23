@@ -188,7 +188,10 @@ export default class Game {
 
   placeCardToMonster = ({ player, cardId, monsterId, card }: { player: Player; cardId?: number; monsterId: number; card?: Card }): PutCardReturnType => {
     const targetMonster = card ? player.placeCardToMonster(card, monsterId) : player.placeCardFromHandToMonster(cardId!, monsterId);
-    this.lastAction = GAME_ACTIONS.PLAY_CARD(targetMonster.body[targetMonster.body.length - 1].legion);
+    // Не запоминать последний ход, если находимся в режиме способности
+    if (!this.abilitiesMode) {
+      this.lastAction = GAME_ACTIONS.PLAY_CARD(targetMonster.body[targetMonster.body.length - 1].legion);
+    }
 
     if (targetMonster.isDone()) {
       console.log('monster is done', targetMonster.getBody());
@@ -271,7 +274,13 @@ export default class Game {
   };
 
   stopAbilitiesMode = () => {
+    const activePlayer = this.getActivePlayer();
+    const monstersDone = activePlayer.howManyMonstersDone();
     this.abilitiesMode = null;
+
+    if (monstersDone === 5) {
+      return this.gameOver(activePlayer.id);
+    }
 
     if (this.actions === 0) {
       this.setNextActivePlayer();

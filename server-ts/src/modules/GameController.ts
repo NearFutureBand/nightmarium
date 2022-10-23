@@ -54,9 +54,6 @@ export default class GameController {
     const gameId = `${randomFloat()}`;
     const game = new Game(gameId);
     this.games[gameId] = game;
-
-    // TODO tmp
-    // this.game = game;
     return gameId;
   };
 
@@ -204,9 +201,10 @@ export default class GameController {
 
   onCancelAbility: GameMessageHandler<{ gameId: string }> = (cliendId, message) => {
     const game = this.getGameById(message.gameId)!;
-    game.stopAbilitiesMode();
+    const result = game.stopAbilitiesMode();
+
     return {
-      broadcast: {
+      broadcast: result || {
         type: MESSAGE_TYPE.PLAY_CARD,
       },
     };
@@ -216,10 +214,6 @@ export default class GameController {
     const player = this.users[message.playerId];
     player?.setName(message.name);
     return {
-      // broadcast: {
-      //   type: MESSAGE_TYPE.NAME_ACCEPTED,
-      //   // game: this.game!.getGameState(playerId),// TODO зачем это здесь?
-      // },
       toSenderOnly: {
         type: MESSAGE_TYPE.NAME_ACCEPTED,
         me: player,

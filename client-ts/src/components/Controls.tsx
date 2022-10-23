@@ -109,6 +109,7 @@ export const Controls: FC<Props> = () => {
       {!abilityState ? (
         <main>
           <span>Действий осталось: {game.actions}</span>
+          {lastAction && <span> {lastAction}</span>}
           <div>
             <button onClick={handleTakeCard}>Взять карту</button>
             <button onClick={handlePlaceCard}>Выложить карту</button>

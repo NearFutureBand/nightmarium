@@ -115,6 +115,7 @@ main.main-page {
   align-items: center;
   transition: all ease 0.2s;
   &.selected {
+    background-color: rgba(11, 236, 228, 0.5);
     border: 1px solid rgb(11, 236, 228);
   }
   // & .card {
@@ -135,7 +136,8 @@ main.main-page {
     }
   }
   &.draggedOver {
-    border: 1px solid rgb(215, 102, 102);
+    background-color: rgba(11, 236, 228, 0.5);
+    border: 1px solid rgb(11, 236, 228);
   }
   // &.inprogress {
   //   .card {
@@ -163,9 +165,6 @@ main.main-page {
   background-size: cover;
   transition: all ease 0.2s;
   //border: 3px solid white;
-  &.dragged {
-    background-color: red;
-  }
   &.empty {
     border: 1px solid rgba(0, 0, 0, 0.1);
     cursor: auto;
