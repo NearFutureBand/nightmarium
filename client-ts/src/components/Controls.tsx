@@ -9,13 +9,13 @@ import { CardView } from './CardView';
 
 // TODO ну тут надо как-то экономить, ибо панели управления слишком схожи между собой
 
-const AbilitiesInterfaceMap = {
-  0: null,
-  1: ControlsDrop,
-  2: null,
-  3: null,
-  4: null,
-  5: null,
+const AbilitiesInterfaceMap: { [key: number]: JSX.Element } = {
+  0: <ControlsWolf />,
+  1: <ControlsDrop />,
+  2: <ControlsSmile />,
+  3: <ControlsAxe />,
+  4: <ControlsBones />,
+  5: <ControlsTeeth />,
 };
 
 type Props = {};
@@ -24,57 +24,11 @@ export const Controls: FC<Props> = () => {
   const dispatch = useAppDispatch();
   const game = useAppSelector((state) => state.app.game)!;
   const playerId = useAppSelector((state) => state.app.me?.id);
-  const selectedMonster = useAppSelector((state) => state.app.selectedMonster);
-  const selectedCards = useAppSelector((state) => state.app.selectedCards);
+
   const abilityState = useAppSelector((state) => state.app.abilityState);
   const legionState = useAppSelector((state) => state.app.awaitingLegion);
-  const lastAction = useAppSelector(selectLastAction);
-  const winnerId = useAppSelector((state) => state.app.game?.winnerId);
 
   const sendMessage = useSendMessage();
-
-  const handlePlaceCard = useCallback(() => {
-    if (selectedCards.length !== 1) return;
-    if (!selectedMonster?.monsterId) return;
-
-    const validationError = validateCardToMonster({
-      selectedCard: selectedCards[0],
-      selectedMonster,
-      lastAction,
-      abilityState,
-    });
-    if (validationError) {
-      toast(validationError, { type: 'error' });
-      dispatch(deSelectMonster());
-      dispatch(deSelectCard());
-      return;
-    }
-
-    sendMessage<{ cardId: number; monsterId: number; gameId: string }>({
-      type: MESSAGE_TYPE.PLAY_CARD,
-      cardId: selectedCards[0]?.cardId, // TODO
-      monsterId: selectedMonster.monsterId,
-      gameId: game.id,
-    });
-    dispatch(deSelectMonster());
-    dispatch(deSelectCard());
-  }, [abilityState, dispatch, game.id, lastAction, selectedCards, selectedMonster, sendMessage]);
-
-  const handleTakeCard = useCallback(() => {
-    sendMessage({
-      type: MESSAGE_TYPE.TAKE_CARD,
-      gameId: game.id,
-    });
-  }, [game.id, sendMessage]);
-
-  const handleChangeCards = useCallback(() => {
-    sendMessage<{ cardIds: number[]; gameId: string }>({
-      type: MESSAGE_TYPE.CHANGE_CARDS,
-      cardIds: selectedCards.map((card) => card.cardId),
-      gameId: game.id,
-    });
-    dispatch(deSelectCard());
-  }, [dispatch, game.id, selectedCards, sendMessage]);
 
   const handleLeaveGame = useCallback(() => {
     sendMessage<{ playerId: string; gameId: string }>({
@@ -92,47 +46,94 @@ export const Controls: FC<Props> = () => {
     return <ControlsLegionMode isMyTurn={isMyTurn} />;
   }
 
-  // TODO отрефакторить
-  if (winnerId) {
-    // TODO возможно эта кнопка будет появляться спустя 10 секунд
-    return (
-      <div className="controls">
-        <button onClick={handleLeaveGame}>Выйти из игры</button>
-      </div>
-    );
-  }
-
   if (!isMyTurn) return null;
 
   return (
     <div className="controls">
+      <ControlsIfGameIsOver handleLeaveGame={handleLeaveGame} />
       {!abilityState ? (
-        <main>
-          <span>Действий осталось: {game.actions}</span>
-          {lastAction && <span> {lastAction}</span>}
-          <div>
-            <button onClick={handleTakeCard}>Взять карту</button>
-            <button onClick={handlePlaceCard}>Выложить карту</button>
-            <button disabled={selectedCards.length < 2} onClick={handleChangeCards}>
-              Обменять карты
-            </button>
-          </div>
-        </main>
+        <ControlsGameMode />
       ) : (
         <footer className="ability">
           <div>cпособность: {ABILITIES[abilityState.abilityType]}</div>
           <small>{ABILITIES_DESCRIPTION[abilityState.abilityType]}</small>
-          {abilityState.abilityType === 0 && <ControlsWolf />}
-          {abilityState.abilityType === 1 && <ControlsDrop />}
-          {abilityState.abilityType === 2 && <ControlsSmile />}
-          {abilityState.abilityType === 3 && <ControlsAxe />}
-          {abilityState.abilityType === 4 && <ControlsBones />}
-          {abilityState.abilityType === 5 && <ControlsTeeth />}
+          {AbilitiesInterfaceMap[abilityState.abilityType]}
         </footer>
       )}
     </div>
   );
 };
+
+function ControlsGameMode() {
+  const dispatch = useAppDispatch();
+  const game = useAppSelector((state) => state.app.game)!;
+  const selectedMonster = useAppSelector((state) => state.app.selectedMonster);
+  const selectedCards = useAppSelector((state) => state.app.selectedCards);
+  const lastAction = useAppSelector(selectLastAction);
+  const sendMessage = useSendMessage();
+
+  const handleTakeCard = useCallback(() => {
+    sendMessage({
+      type: MESSAGE_TYPE.TAKE_CARD,
+      gameId: game.id,
+    });
+  }, [game.id, sendMessage]);
+
+  const handleChangeCards = useCallback(() => {
+    sendMessage<{ cardIds: number[]; gameId: string }>({
+      type: MESSAGE_TYPE.CHANGE_CARDS,
+      cardIds: selectedCards.map((card) => card.cardId),
+      gameId: game.id,
+    });
+    dispatch(deSelectCard());
+  }, [dispatch, game.id, selectedCards, sendMessage]);
+
+  const handlePlaceCard = useCallback(() => {
+    if (selectedCards.length !== 1) return;
+    if (!selectedMonster?.monsterId) return;
+
+    const validationError = validateCardToMonster({
+      selectedCard: selectedCards[0],
+      selectedMonster,
+      lastAction,
+      abilityState: null,
+    });
+    if (validationError) {
+      toast(validationError, { type: 'error' });
+      dispatch(deSelectMonster());
+      dispatch(deSelectCard());
+      return;
+    }
+
+    sendMessage<{ cardId: number; monsterId: number; gameId: string }>({
+      type: MESSAGE_TYPE.PLAY_CARD,
+      cardId: selectedCards[0]?.cardId, // TODO
+      monsterId: selectedMonster.monsterId,
+      gameId: game.id,
+    });
+    dispatch(deSelectMonster());
+    dispatch(deSelectCard());
+  }, [dispatch, game.id, lastAction, selectedCards, selectedMonster, sendMessage]);
+
+  return (
+    <main>
+      <span>Действий осталось: {game.actions}</span>
+      {lastAction && <span> {lastAction}</span>}
+      <div>
+        <button onClick={handleTakeCard}>Взять карту</button>
+        <button onClick={handlePlaceCard}>Выложить карту</button>
+        <button disabled={selectedCards.length < 2} onClick={handleChangeCards}>
+          Обменять карты
+        </button>
+      </div>
+    </main>
+  );
+}
+
+function ControlsIfGameIsOver({ handleLeaveGame }: { handleLeaveGame: () => void }) {
+  const winnerId = useAppSelector((state) => state.app.game?.winnerId);
+  return winnerId ? <button onClick={handleLeaveGame}>Выйти из игры</button> : null;
+}
 
 function ControlsWolf() {
   const dispatch = useAppDispatch();
