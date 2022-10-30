@@ -220,10 +220,10 @@ export default class Game {
 
   private gameOver = (playerId: string) => {
     // TODO очистить все состояния ( перепроверить)
-    this.stopLegionMode();
-    this.stopAbilitiesMode();
     this.activePlayerIndex = null;
     this.winnerId = playerId;
+    this.stopLegionMode();
+    this.stopAbilitiesMode();
 
     return {
       type: MESSAGE_TYPE.GAME_OVER,
@@ -274,11 +274,13 @@ export default class Game {
   };
 
   stopAbilitiesMode = () => {
-    const activePlayer = this.getActivePlayer();
-    const monstersDone = activePlayer.howManyMonstersDone();
+    if (this.abilitiesMode === null) {
+      return;
+    }
     this.abilitiesMode = null;
 
-    if (monstersDone === 5) {
+    const activePlayer = this.getActivePlayer();
+    if (activePlayer.howManyMonstersDone() === 5) {
       return this.gameOver(activePlayer.id);
     }
 
