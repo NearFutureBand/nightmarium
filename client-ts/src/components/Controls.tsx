@@ -5,6 +5,7 @@ import { ABILITIES, ABILITIES_DESCRIPTION, ABILITY_TYPE, MESSAGE_TYPE } from '..
 import { validateCardToMonster } from '../helpers';
 import { useSendMessage } from '../hooks';
 import { deSelectCard, deSelectMonster, selectGameId, selectLastAction } from '../slices/App';
+import { Legion } from '../types';
 import { CardView } from './CardView';
 
 // TODO ну тут надо как-то экономить, ибо панели управления слишком схожи между собой
@@ -19,24 +20,12 @@ const AbilitiesInterfaceMap: { [key: number]: JSX.Element } = {
 };
 
 type Props = {};
-// TODO тут все пересмотреть на основе новых данных
-export const Controls: FC<Props> = () => {
-  const dispatch = useAppDispatch();
-  const game = useAppSelector((state) => state.app.game)!;
-  const playerId = useAppSelector((state) => state.app.me?.id);
 
+export const Controls: FC<Props> = () => {
+  const playerId = useAppSelector((state) => state.app.me?.id);
+  const game = useAppSelector((state) => state.app.game)!;
   const abilityState = useAppSelector((state) => state.app.abilityState);
   const legionState = useAppSelector((state) => state.app.awaitingLegion);
-
-  const sendMessage = useSendMessage();
-
-  const handleLeaveGame = useCallback(() => {
-    sendMessage<{ playerId: string; gameId: string }>({
-      type: MESSAGE_TYPE.LEAVE_GAME,
-      playerId: playerId!,
-      gameId: game.id,
-    });
-  }, [game.id, playerId, sendMessage]);
 
   const isMyTurn = useMemo(() => {
     return playerId === game.activePlayer?.id;
@@ -50,16 +39,9 @@ export const Controls: FC<Props> = () => {
 
   return (
     <div className="controls">
-      <ControlsIfGameIsOver handleLeaveGame={handleLeaveGame} />
-      {!abilityState ? (
-        <ControlsGameMode />
-      ) : (
-        <footer className="ability">
-          <div>cпособность: {ABILITIES[abilityState.abilityType]}</div>
-          <small>{ABILITIES_DESCRIPTION[abilityState.abilityType]}</small>
-          {AbilitiesInterfaceMap[abilityState.abilityType]}
-        </footer>
-      )}
+      <ControlsIfGameIsOver />
+      {!abilityState && <ControlsGameMode />}
+      {abilityState && <ControlsForAbility />}
     </div>
   );
 };
@@ -107,7 +89,7 @@ function ControlsGameMode() {
 
     sendMessage<{ cardId: number; monsterId: number; gameId: string }>({
       type: MESSAGE_TYPE.PLAY_CARD,
-      cardId: selectedCards[0]?.cardId, // TODO
+      cardId: selectedCards[0].cardId,
       monsterId: selectedMonster.monsterId,
       gameId: game.id,
     });
@@ -117,8 +99,13 @@ function ControlsGameMode() {
 
   return (
     <main>
-      <span>Действий осталось: {game.actions}</span>
-      {lastAction && <span> {lastAction}</span>}
+      <div>
+        <div>
+          Действий осталось: <strong>{game.actions}</strong>
+        </div>
+        <LastStep />
+      </div>
+
       <div>
         <button onClick={handleTakeCard}>Взять карту</button>
         <button onClick={handlePlaceCard}>Выложить карту</button>
@@ -130,9 +117,52 @@ function ControlsGameMode() {
   );
 }
 
-function ControlsIfGameIsOver({ handleLeaveGame }: { handleLeaveGame: () => void }) {
+function LastStep() {
+  const lastAction = useAppSelector(selectLastAction);
+
+  const parsed = useMemo(() => {
+    if (!lastAction) return '';
+    if (/CHANGE_CARDS/.test(lastAction)) {
+      return 'смена карт';
+    }
+    if (/TAKE_CARD/.test(lastAction)) {
+      return 'взята карта';
+    }
+    const [, legion] = lastAction.split(':') as [string, Legion];
+    return (
+      <>
+        сыграна карта легиона <strong>{legion}</strong>
+      </>
+    );
+  }, [lastAction]);
+
+  return lastAction ? <span>Последний ход: {parsed}</span> : null;
+}
+
+function ControlsIfGameIsOver() {
   const winnerId = useAppSelector((state) => state.app.game?.winnerId);
+  const playerId = useAppSelector((state) => state.app.me?.id);
+  const game = useAppSelector((state) => state.app.game)!;
+  const sendMessage = useSendMessage();
+  const handleLeaveGame = useCallback(() => {
+    sendMessage<{ playerId: string; gameId: string }>({
+      type: MESSAGE_TYPE.LEAVE_GAME,
+      playerId: playerId!,
+      gameId: game.id,
+    });
+  }, [game.id, playerId, sendMessage]);
   return winnerId ? <button onClick={handleLeaveGame}>Выйти из игры</button> : null;
+}
+
+function ControlsForAbility() {
+  const abilityState = useAppSelector((state) => state.app.abilityState)!;
+  return (
+    <div className="ability">
+      <div>cпособность: {ABILITIES[abilityState.abilityType]}</div>
+      <small>{ABILITIES_DESCRIPTION[abilityState.abilityType]}</small>
+      {AbilitiesInterfaceMap[abilityState.abilityType]}
+    </div>
+  );
 }
 
 function ControlsWolf() {
@@ -389,12 +419,12 @@ function ControlsLegionMode({ isMyTurn }: { isMyTurn: boolean }) {
   const playerId = useAppSelector((state) => state.app.me?.id)!;
   const gameId = useAppSelector(selectGameId)!;
 
-  const isCardSelected = useMemo(() => selectedCards.length !== 0, [selectedCards.length]);
+  const oneOrTwoCardsSelected = useMemo(() => selectedCards.length > 0 && selectedCards.length <= 2, [selectedCards.length]);
 
   const sendMessage = useSendMessage();
 
   const handleThrow = useCallback(() => {
-    if (!isCardSelected) return;
+    if (!oneOrTwoCardsSelected) return;
 
     sendMessage<{ cardIds: number[]; playerId: string; gameId: string }>({
       type: MESSAGE_TYPE.THROW_LEGION_CARD,
@@ -403,7 +433,7 @@ function ControlsLegionMode({ isMyTurn }: { isMyTurn: boolean }) {
       gameId,
     });
     dispatch(deSelectCard());
-  }, [dispatch, gameId, isCardSelected, playerId, selectedCards, sendMessage]);
+  }, [dispatch, gameId, oneOrTwoCardsSelected, playerId, selectedCards, sendMessage]);
 
   return (
     <div className="controls">
@@ -412,8 +442,8 @@ function ControlsLegionMode({ isMyTurn }: { isMyTurn: boolean }) {
       ) : (
         <>
           Сбросьте карту легиона {legionState?.legion} или две другие.
-          {isCardSelected && <span> Выбрано: {selectedCards.map((selectedCards) => selectedCards.cardId).join(', ')}</span>}
-          <button disabled={!Boolean(isCardSelected)} onClick={handleThrow}>
+          {oneOrTwoCardsSelected && <span> Выбрано: {selectedCards.map((selectedCards) => selectedCards.cardId).join(', ')}</span>}
+          <button disabled={!Boolean(oneOrTwoCardsSelected)} onClick={handleThrow}>
             Сбросить
           </button>
         </>

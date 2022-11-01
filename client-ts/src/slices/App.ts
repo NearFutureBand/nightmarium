@@ -12,6 +12,11 @@ export interface AppState {
   otherPlayers: User[];
   draggedCard: null | Card;
   awaitingLegion: LegionState | null;
+  settings: {
+    language: string;
+    myCardsPosition: 'left' | 'bottom';
+    background: string;
+  };
 }
 
 const initialState: AppState = {
@@ -23,6 +28,11 @@ const initialState: AppState = {
   otherPlayers: [],
   draggedCard: null,
   awaitingLegion: null,
+  settings: {
+    language: 'ru',
+    myCardsPosition: 'bottom',
+    background: '',
+  },
 };
 
 export const appSlice = createSlice({
