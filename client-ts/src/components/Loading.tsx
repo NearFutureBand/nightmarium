@@ -1,8 +1,20 @@
 import { FC } from 'react';
 
-type Props = {};
+type Props = {
+  fullscreen?: boolean;
+};
 
-export const Loading: FC<Props> = ({}) => {
+export const Loading: FC<Props> = ({ fullscreen = false }) => {
+  return fullscreen ? (
+    <div className="fullscreen-spinner">
+      <Spinner />
+    </div>
+  ) : (
+    <Spinner />
+  );
+};
+
+function Spinner() {
   return (
     <div className="loading">
       <div className="lds-ring">
@@ -13,4 +25,4 @@ export const Loading: FC<Props> = ({}) => {
       </div>
     </div>
   );
-};
+}

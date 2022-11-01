@@ -23,6 +23,7 @@ import Monster from './Monster';
 import { AbilitiesMode, ApplyAbilityMap, LegionMode } from './Modes';
 
 export default class Game {
+  public id: string;
   private cardsAvailable: CardsDatabase;
   private cardsThrownAway: CardsDatabase;
   private _players: Player[];
@@ -32,10 +33,12 @@ export default class Game {
   private idMap: { [playerId: string]: number }; // playerId -> индекс игрока в массиве _players
   public abilitiesMode: AbilitiesMode | null;
   public legionMode: LegionMode | null;
+  public winnerId?: string;
 
   private applyAbilityMap: ApplyAbilityMap;
 
-  constructor() {
+  constructor(id: string) {
+    this.id = id;
     this.cardsAvailable = CARDS;
     this.cardsThrownAway = {};
     this._players = [];
@@ -45,6 +48,7 @@ export default class Game {
     this.idMap = {};
     this.abilitiesMode = null;
     this.legionMode = null;
+    this.winnerId = undefined;
 
     this.applyAbilityMap = {
       [ABILITIES.WOLF]: ({ cardIds, monsterId }) => this.applyWolfAbility({ cardIds, monsterId }),
@@ -79,10 +83,33 @@ export default class Game {
     console.log(this.idMap);
   };
 
+  removePlayer = (playerId: string) => {
+    const playerIndex = this.idMap[playerId];
+    this._players.splice(playerIndex, 1);
+    this.reMapPlayers();
+  };
+
+  resetPlayer = (playerId: string) => {
+    this.getPlayerById(playerId).reset();
+  };
+
+  private reMapPlayers = () => {
+    this.idMap = {};
+    this._players.forEach((player, index) => {
+      this.idMap[player.id] = index;
+    });
+    console.log(this.idMap);
+  };
+
   public get players() {
     return this._players;
   }
 
+  public isGameStarted = () => {
+    return this.activePlayerIndex !== null;
+  };
+
+  // TODO refactor
   public getGameState = (requestPlayerId?: string): GameState => {
     let activePlayer: PlayerState<number> | undefined = undefined;
     try {
@@ -92,14 +119,16 @@ export default class Game {
     }
 
     return {
+      id: this.id,
       activePlayer,
-      me: requestPlayerId ? (this.getPlayerById(requestPlayerId).getPlayerState(true) as PlayerState<Card[]>) : undefined,
+      me: requestPlayerId ? (this.getPlayerById(requestPlayerId)?.getPlayerState(true) as PlayerState<Card[]>) : undefined,
       otherPlayers: sortBy(
         this.players.filter((player) => player.id !== requestPlayerId).map((player) => player.getPlayerState() as PlayerState<number>),
         'id'
       ),
       actions: this.actions,
       lastAction: this.lastAction,
+      winnerId: this.winnerId,
     };
   };
 
@@ -125,13 +154,17 @@ export default class Game {
     const activePlayer = this.getActivePlayer();
     const card = this.giveCard();
     activePlayer?.addCard(card);
-    // TODO может быть объединить lastAction и minusAction ( следующие две строчки )
+    // TODO может быть объединить lastAction и minusAction ? ( следующие две строчки )
     this.lastAction = GAME_ACTIONS.TAKE_CARD;
     this.minusAction();
   };
 
   activePlayerPutsCard = (cardId: number, monsterId: number): PutCardReturnType => {
     const activePlayer = this.getActivePlayer();
+
+    // TODO for endgame test purposes
+    // return this.gameOver(activePlayer.id);
+
     // TODO test it and put this function to the smile and wolf ability handler
     // TODO combine this bit with actions decrement more clear
     const placeCardResult = this.placeCardToMonster({
@@ -155,7 +188,10 @@ export default class Game {
 
   placeCardToMonster = ({ player, cardId, monsterId, card }: { player: Player; cardId?: number; monsterId: number; card?: Card }): PutCardReturnType => {
     const targetMonster = card ? player.placeCardToMonster(card, monsterId) : player.placeCardFromHandToMonster(cardId!, monsterId);
-    this.lastAction = GAME_ACTIONS.PLAY_CARD(targetMonster.body[targetMonster.body.length - 1].legion);
+    // Не запоминать последний ход, если находимся в режиме способности
+    if (!this.abilitiesMode) {
+      this.lastAction = GAME_ACTIONS.PLAY_CARD(targetMonster.body[targetMonster.body.length - 1].legion);
+    }
 
     if (targetMonster.isDone()) {
       console.log('monster is done', targetMonster.getBody());
@@ -164,13 +200,7 @@ export default class Game {
 
       // ПОБЕДА одного из игроков
       if (monstersDone === 5 && !monsterHasTeethAbility) {
-        // TODO очистить все состояния
-        this.stopLegionMode();
-        this.stopAbilitiesMode();
-        return {
-          type: MESSAGE_TYPE.GAME_OVER,
-          winner: player.id,
-        };
+        return this.gameOver(player.id);
       }
 
       const monsterLegion = targetMonster.isOfSameColor();
@@ -186,6 +216,18 @@ export default class Game {
       this.startAbilitiesMode(player.id, targetMonster);
       return this.abilitiesMode!.onAbility();
     }
+  };
+
+  private gameOver = (playerId: string) => {
+    // TODO очистить все состояния ( перепроверить)
+    this.activePlayerIndex = null;
+    this.winnerId = playerId;
+    this.stopLegionMode();
+    this.stopAbilitiesMode();
+
+    return {
+      type: MESSAGE_TYPE.GAME_OVER,
+    };
   };
 
   forEachPlayer = (callback: (player: Player, index: number) => void) => {
@@ -232,7 +274,15 @@ export default class Game {
   };
 
   stopAbilitiesMode = () => {
+    if (this.abilitiesMode === null) {
+      return;
+    }
     this.abilitiesMode = null;
+
+    const activePlayer = this.getActivePlayer();
+    if (activePlayer.howManyMonstersDone() === 5) {
+      return this.gameOver(activePlayer.id);
+    }
 
     if (this.actions === 0) {
       this.setNextActivePlayer();
@@ -260,7 +310,7 @@ export default class Game {
 
     // TODO double check with `action_experimental` that it equals to "THROW_OFF"
     // Если monsterId не передан, значит игрок нажал на кнопку сбросить карту (карты)
-    if (!monsterId) {
+    if (monsterId === undefined) {
       cardIds.forEach((cardId) => {
         const cardIndex = findCardIndex(cardId);
         const [thrownAwayCard] = abilityCards.splice(cardIndex, 1);

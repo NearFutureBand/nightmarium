@@ -46,6 +46,7 @@ export type Player<CardsType = number | Card[]> = {
 };
 
 export type Game = {
+  id: string;
   actions: number;
   lastAction: string | null;
   cardsAvailable: CardMap;
@@ -54,17 +55,26 @@ export type Game = {
   me: Player<Card[]>;
   otherPlayers: Player<number>[];
   activePlayer?: Player<number>;
+  winnerId?: string;
+};
+
+export type User = {
+  id: string;
+  name: string | null;
+  gameId?: string;
+  readyToPlay: boolean;
 };
 
 export type Message<T = {}> = T & {
   type: MESSAGE_TYPE;
 };
 
-export type MessageWithGame = Message<{ game: Game }>;
+export type MessageWithGame = Message<{ game: Game; me: User; otherPlayers: User[] }>;
 
 export type MessageHandshake = MessageWithGame &
   Message<{
-    playerId: string;
+    me: User;
+    otherPlayers: User[];
     ability?: AbilityState;
     legion?: LegionState;
   }>;
@@ -75,7 +85,7 @@ export type MessageAwaitAbility = MessageWithGame &
   }>;
 
 export type MessageGameOver = MessageWithGame & Message<{ winner: string }>;
-
+export type MessagePlayerConnected = Message<{ otherPlayers: User[] }>;
 export type MessageAwaitLegion = MessageWithGame & Message<{ legion: LegionState }>;
 
 // DEVNOTE на случай если надо отедльно показывать какие карты пришли взамен

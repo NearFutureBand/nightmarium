@@ -13,7 +13,7 @@ type Props = {
 
 export const PlayerBoard: FC<Props> = ({ player, isMe = false }) => {
   const isActive = useAppSelector(selectIsActive(player.id));
-  const winnerId = useAppSelector((state) => state.app.winnerId);
+  const winnerId = useAppSelector((state) => state.app.game?.winnerId);
 
   return (
     <div className={classNames('playerBoard', { active: isActive, winner: winnerId === player.id })}>

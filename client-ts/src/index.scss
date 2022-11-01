@@ -9,11 +9,6 @@ body {
   box-sizing: border-box;
 }
 
-#root {
-  height: 100vh;
-  overflow-y: auto;
-}
-
 $card-width: 10rem;
 $card-height: 6.4rem;
 $container-width: $card-width * 5 + 8rem;
@@ -22,13 +17,14 @@ button {
   padding: 0.5rem 1rem;
   margin: 0 0.5rem;
   border: none;
-  background-color: white;
+  background-color: inherit;
   border-radius: 1rem;
   border: 2px solid #eee;
   &:not([disabled]):hover {
     background-color: #eee;
     cursor: pointer;
   }
+  transition: all 0.3s ease;
 }
 
 input {
@@ -37,6 +33,12 @@ input {
   outline: none;
   font-size: inherit;
   margin: 0rem 0.5rem;
+  background-color: inherit;
+}
+
+main.main-page {
+  height: 100vh;
+  overflow-y: auto;
 }
 
 .page {
@@ -57,6 +59,22 @@ input {
   height: 100vh;
 }
 
+.loadingScreen {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  .main {
+    display: flex;
+    gap: 2rem;
+  }
+  .hint {
+    margin: 2rem 0rem;
+    width: 60%;
+  }
+}
+
 .gamepanel {
   width: 100%;
   display: flex;
@@ -75,11 +93,9 @@ input {
   &.active {
     border: 2px solid #eee;
     border-radius: 1rem;
-    box-shadow: 1px 1px 10px #eee;
   }
   &.winner {
     border: none;
-    box-shadow: 1px 1px 30px cyan;
   }
 }
 
@@ -99,8 +115,8 @@ input {
   align-items: center;
   transition: all ease 0.2s;
   &.selected {
+    background-color: rgba(11, 236, 228, 0.5);
     border: 1px solid rgb(11, 236, 228);
-    box-shadow: 0px 0px 5px rgba(11, 236, 228, 1);
   }
   // & .card {
   //   width: $monster-width;
@@ -120,7 +136,8 @@ input {
     }
   }
   &.draggedOver {
-    border: 1px solid rgb(215, 102, 102);
+    background-color: rgba(11, 236, 228, 0.5);
+    border: 1px solid rgb(11, 236, 228);
   }
   // &.inprogress {
   //   .card {
@@ -148,9 +165,6 @@ input {
   background-size: cover;
   transition: all ease 0.2s;
   //border: 3px solid white;
-  &.dragged {
-    background-color: red;
-  }
   &.empty {
     border: 1px solid rgba(0, 0, 0, 0.1);
     cursor: auto;
@@ -175,7 +189,6 @@ input {
   width: 100%;
   overflow-y: auto;
   text-align: center;
-  border-top: 1px solid #eee;
   padding-bottom: 0.6rem;
   & .card {
     &.interactive:hover {
@@ -189,7 +202,6 @@ input {
   padding: 1rem;
   border: 2px solid #eee;
   border-radius: 1rem;
-  box-shadow: 1px 1px 10px #eee;
   main {
     display: flex;
     justify-content: space-between;
@@ -257,4 +269,13 @@ input {
       transform: rotate(360deg);
     }
   }
+}
+
+.fullscreen-spinner {
+  position: fixed;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }

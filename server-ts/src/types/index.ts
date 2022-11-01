@@ -40,12 +40,14 @@ export type AbilitiesMode = {
 };
 
 export type GameState = {
+  id: string;
   activePlayer?: PlayerState<number>;
   me?: PlayerState<Card[]>;
   otherPlayers: PlayerState<number>[];
   actions: number;
   lastAction: string | null;
   abilitiesMode?: AbilitiesMode;
+  winnerId?: string;
 };
 
 export type AbilityWolfData = {
@@ -109,10 +111,6 @@ export type PossibleServerResponseMessage = Message<{
 
 export type AbiltityMessageOrUndefined = Message<{ ability: AbilityMessagePayload }> | undefined;
 
-export type PutCardReturnType =
-  | Message<{ winner: string }>
-  | Message<{ legion: LegionMessagePayload }>
-  | Message<{ ability: AbilityMessagePayload }>
-  | undefined;
+export type PutCardReturnType = Message | Message<{ legion: LegionMessagePayload }> | Message<{ ability: AbilityMessagePayload }> | undefined;
 
 export type ApplyAbilityHandler<T = {}> = (params: T) => PutCardReturnType | void;

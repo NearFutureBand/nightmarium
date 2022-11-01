@@ -5,3 +5,4 @@ export * from './PlayerBoard';
 export * from './Connection';
 export * from './StartScreen';
 export * from './Loading';
+export * from './LoadingScreen';

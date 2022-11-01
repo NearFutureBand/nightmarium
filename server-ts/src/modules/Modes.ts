@@ -1,4 +1,4 @@
-import { MESSAGE_TYPE } from '../constants';
+import { ABILITIES, MESSAGE_TYPE } from '../constants';
 import {
   AbilityMessagePayload,
   AbiltityMessageOrUndefined,
@@ -135,7 +135,12 @@ export class AbilitiesMode {
       return applyAbilityResult;
     }
 
-    ability.actions -= 1;
+    // TODO TMP может быть сделать какой-то рефакторинг
+    if (params.abilityType === ABILITIES.WOLF && params.monsterId === undefined && params.cardIds.length === 2) {
+      ability.actions -= 2;
+    } else {
+      ability.actions -= 1;
+    }
 
     // Одношаговые способности попадают сюда
     if (ability.actions === 0) {
@@ -181,17 +186,7 @@ export class LegionMode {
   otherPlayersResponses: { [playerId: string]: LegionPlayerState }; // Здесь должны быть остальные игроки
   currentLegion: Legion;
 
-  constructor({
-    playerId,
-    monsterId,
-    otherPlayers,
-    legion,
-  }: {
-    playerId: string;
-    monsterId: number;
-    otherPlayers: Player[];
-    legion: Legion;
-  }) {
+  constructor({ playerId, monsterId, otherPlayers, legion }: { playerId: string; monsterId: number; otherPlayers: Player[]; legion: Legion }) {
     this.playerId = playerId;
     this.monsterId = monsterId;
     this.otherPlayersResponses = otherPlayers.reduce((result, player) => {
@@ -219,19 +214,24 @@ export class LegionMode {
   acceptAndCheckPlayerCard = (playerId: string, cards: Card[]) => {
     const playerState = this.otherPlayersResponses[playerId];
 
-    // if user has only one card in total -> accept any card;
+    // если у игрока была всего одна карта, то она засчитывается
     if (playerState?.howManyCardsHas === 1) {
       playerState.respondedCorrectly = true;
       playerState.gaveCards = 1;
       return;
     }
 
-    // Одна карта прислана - ожидаем что она подходящего легиона
+    // Одна карта прислана + ожидаем что она подходящего легиона
     if (cards.length === 1 && cards[0].legion === this.currentLegion) {
       playerState.respondedCorrectly = true;
     }
 
-    // Две карты - засчитываем
+    // Пришла еще одна карта, когда уже была сброшена одна - итого две и ответ засчитан
+    if (cards.length === 1 && playerState.gaveCards === 1) {
+      playerState.respondedCorrectly = true;
+    }
+
+    // Две карты сразу - засчитываем
     if (cards.length === 2) {
       playerState.respondedCorrectly = true;
     }

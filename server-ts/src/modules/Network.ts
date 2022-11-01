@@ -1,183 +1,8 @@
 import { WebSocketServer, WebSocket, RawData } from 'ws';
-import { HOST, PORT, MESSAGE_TYPE } from '../constants';
-import { generateCryptoId } from '../helpers';
-import { ApplyAbilityParams, Message, GameState, AbilityMessagePayload, Legion } from '../types';
-import Game from './Game';
-import Player from './Player';
-
-type GameMessageResponse = {
-  broadcast?: Message;
-  toSenderOnly?: Message;
-  toAllExceptSender?: Message;
-};
-type GameMessageHandler = (cliendId: string, message: Message<any>) => GameMessageResponse;
-
-class GameController {
-  public game: Game | null;
-  public playersMap: { [playerId: string]: string }; // playerId -> clientId
-  public messageActionsMap: {
-    [messageType: string]: GameMessageHandler;
-  };
-
-  constructor() {
-    this.game = null;
-    this.playersMap = {};
-    this.messageActionsMap = {
-      [MESSAGE_TYPE.HANDSHAKE]: this.onHandshake,
-      [MESSAGE_TYPE.START]: this.onStart,
-      [MESSAGE_TYPE.TAKE_CARD]: this.onTakeCard,
-      [MESSAGE_TYPE.PLAY_CARD]: this.onPlayCard,
-      [MESSAGE_TYPE.SUBMIT_ABILITY]: this.onSubmitAbility,
-      [MESSAGE_TYPE.CANCEL_ABILITY]: this.onCancelAbility,
-      [MESSAGE_TYPE.SET_NAME]: this.onSetPlayerName,
-      [MESSAGE_TYPE.THROW_LEGION_CARD]: this.onThrowLegionCard,
-      [MESSAGE_TYPE.CHANGE_CARDS]: this.onChangeCards,
-    };
-  }
-
-  private getPlayerIdByClientId = (cliendId: string) => {
-    for (const playerId in this.playersMap) {
-      if (cliendId === this.playersMap[playerId]) return playerId;
-    }
-    return undefined;
-  };
-
-  public onMessage = (message: Message, cliendId: string): Message | undefined => {
-    console.log(message);
-    return message;
-  };
-
-  startGame = () => {
-    this.game = new Game();
-  };
-
-  endGame = () => {
-    this.game = null;
-  };
-
-  onHandshake: GameMessageHandler = (clientId: string, message: Message<{ playerId: string }>) => {
-    let playerId = message.playerId;
-    let playerAlreadyExists = false;
-
-    if (playerId && playerId in this.playersMap) {
-      this.playersMap[playerId] = clientId;
-      playerAlreadyExists = true;
-    } else {
-      playerId = generateCryptoId();
-      this.game!.addPlayer(new Player(playerId, this.game!.giveDefaulCards()));
-      this.playersMap[playerId] = clientId;
-    }
-
-    const messageToSender: Message<{
-      playerId: string;
-      game: GameState;
-      ability?: AbilityMessagePayload;
-      legion?: Legion;
-    }> = {
-      type: MESSAGE_TYPE.HANDSHAKE,
-      playerId,
-      game: this.game!.getGameState(playerId),
-      ability: this.game!.abilitiesMode?.getMessagePayloadFromCurrentState() || undefined,
-      legion: this.game!.legionMode?.currentLegion || undefined,
-    };
-
-    const messageToAllExceptSender = playerAlreadyExists
-      ? undefined
-      : {
-          type: MESSAGE_TYPE.PLAYER_CONNECTED,
-        };
-
-    return {
-      toSenderOnly: messageToSender,
-      toAllExceptSender: messageToAllExceptSender,
-    };
-  };
-
-  onStart: GameMessageHandler = () => {
-    this.game!.setNextActivePlayer();
-    return {
-      broadcast: {
-        type: MESSAGE_TYPE.START,
-      },
-    };
-  };
-
-  onTakeCard: GameMessageHandler = () => {
-    this.game!.activePlayerTakesCard();
-    return {
-      broadcast: {
-        type: MESSAGE_TYPE.TAKE_CARD,
-      },
-    };
-  };
-
-  onPlayCard: GameMessageHandler = (clientId, message: Message<{ cardId: number; monsterId: number }>) => {
-    try {
-      const result = this.game!.activePlayerPutsCard(message.cardId, message.monsterId);
-      return {
-        broadcast: result || {
-          type: MESSAGE_TYPE.PLAY_CARD,
-        },
-      };
-    } catch (error) {
-      console.log(error);
-      throw error;
-    }
-  };
-
-  onSubmitAbility = (cliendId: string, message: Message): GameMessageResponse => {
-    const { type, ...abilityParams } = message;
-    const result = this.game!.applyAbility({
-      ...abilityParams,
-    } as ApplyAbilityParams); // TODO make this type USEFUL
-    return {
-      broadcast: result || {
-        type: MESSAGE_TYPE.PLAY_CARD,
-      },
-    };
-  };
-
-  onCancelAbility: GameMessageHandler = () => {
-    this.game!.stopAbilitiesMode();
-    return {
-      broadcast: {
-        type: MESSAGE_TYPE.PLAY_CARD,
-      },
-    };
-  };
-
-  onSetPlayerName: GameMessageHandler = (clientId, message: Message<{ playerId: string; name: string }>) => {
-    const playerId = message.playerId;
-    const player = this.game?.getPlayerById(playerId);
-    player?.setName(message.name);
-    return {
-      broadcast: {
-        type: MESSAGE_TYPE.NAME_ACCEPTED,
-        // game: this.game!.getGameState(playerId),// TODO зачем это здесь?
-      },
-    };
-  };
-
-  onThrowLegionCard: GameMessageHandler = (clientId, message: Message<{ cardIds: number[]; playerId: string }>) => {
-    const result = this.game!.playerThrowsLegionCard(message.playerId, message.cardIds);
-    return {
-      broadcast: result,
-    };
-  };
-
-  onChangeCards: GameMessageHandler = (clientId, message: Message<{ cardIds: number[] }>) => {
-    this.game!.activePlayerExchangesCards(message.cardIds);
-    return {
-      broadcast: {
-        type: MESSAGE_TYPE.CHANGE_CARDS,
-      },
-    };
-  };
-
-  // onLeaveGame: GameMessageHandler = (clientId, message: Message) => {
-  //   // remove player, activePlayer
-  // }
-}
+import { HOST, PORT } from '../constants';
+import { Message } from '../types';
+import GameController from './GameController';
+import Logger from './Logger';
 
 export default class Network {
   private host: string;
@@ -204,7 +29,6 @@ export default class Network {
       console.log(' ======= Server started ====== ');
       this.wsServer.on('connection', this.onConnection);
     }
-    this.gameController.startGame();
   };
 
   onConnection = (wsClient: WebSocket) => {
@@ -218,10 +42,10 @@ export default class Network {
 
   onMessage = (event: RawData, clientId: string) => {
     const message: Message = JSON.parse(event.toString());
-    console.log('==>', clientId, message);
+    Logger.logIncomingMessage(clientId, message);
 
     try {
-      const gameResponse = this.gameController.messageActionsMap[message.type](clientId, message);
+      const gameResponse = this.gameController.processGameMessage(clientId, message);
 
       if (gameResponse.toSenderOnly) {
         this.sendMessage(clientId, gameResponse.toSenderOnly);
@@ -233,7 +57,7 @@ export default class Network {
         this.broadcastExceptOne(gameResponse.toAllExceptSender, clientId);
       }
     } catch (error) {
-      console.log(error);
+      Logger.logGenericError(error);
     }
   };
 
@@ -253,21 +77,27 @@ export default class Network {
   };
 
   broadcast = (message: Message) => {
-    this.gameController.game?.forEachPlayer((player) => {
-      this.sendMessage(this.gameController.playersMap[player.id], {
+    Object.values(this.gameController.users).forEach((user) => {
+      const usersGame = this.gameController.getGameById(user.gameId);
+      this.sendMessage(this.gameController.userClientMap[user.id], {
         ...message,
-        game: this.gameController.game!.getGameState(player.id),
+        me: this.gameController.users[user.id],
+        otherPlayers: this.gameController.getOtherPlayers(user.id),
+        game: usersGame?.getGameState(user.id),
       });
     });
   };
 
   broadcastExceptOne = (message: Message, exceptClientId: string) => {
-    this.gameController.game?.forEachPlayer((player) => {
-      const clientId = this.gameController.playersMap[player.id];
+    Object.values(this.gameController.users).forEach((user) => {
+      const clientId = this.gameController.userClientMap[user.id];
       if (clientId !== exceptClientId) {
+        const usersGame = this.gameController.getGameById(user.gameId);
         this.sendMessage(clientId, {
           ...message,
-          game: this.gameController.game!.getGameState(player.id),
+          me: this.gameController.users[user.id],
+          otherPlayers: this.gameController.getOtherPlayers(user.id),
+          game: usersGame?.getGameState(user.id),
         });
       }
     });
@@ -283,8 +113,8 @@ export default class Network {
 
   displayPlayersMap = () => {
     console.log('PLAYER_ID                         |  CLIENT_ID ');
-    for (const playerId in this.gameController.playersMap) {
-      console.log(`${playerId}    ${this.gameController.playersMap[playerId]}`);
+    for (const playerId in this.gameController.userClientMap) {
+      console.log(`${playerId}    ${this.gameController.userClientMap[playerId]}`);
     }
     console.log('----------------------------------\n');
   };

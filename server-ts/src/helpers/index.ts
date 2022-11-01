@@ -8,3 +8,7 @@ export const randomInteger = (min: number, max: number) => {
 export const generateCryptoId = () => {
   return crypto.randomBytes(16).toString('hex');
 };
+
+export const randomFloat = () => {
+  return Math.random();
+};

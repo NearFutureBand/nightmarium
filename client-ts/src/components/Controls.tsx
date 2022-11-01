@@ -1,11 +1,10 @@
 import { FC, useCallback, useMemo } from 'react';
 import { toast } from 'react-toastify';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
-import { ABILITIES, ABILITIES_DESCRIPTION, MESSAGE_TYPE } from '../constants';
+import { ABILITIES, ABILITIES_DESCRIPTION, ABILITY_TYPE, MESSAGE_TYPE } from '../constants';
 import { validateCardToMonster } from '../helpers';
 import { useSendMessage } from '../hooks';
-import { deSelectCard, deSelectMonster, selectLastAction } from '../slices/App';
-import { AbilityState } from '../types';
+import { deSelectCard, deSelectMonster, selectGameId, selectLastAction } from '../slices/App';
 import { CardView } from './CardView';
 
 // TODO ну тут надо как-то экономить, ибо панели управления слишком схожи между собой
@@ -20,17 +19,17 @@ const AbilitiesInterfaceMap = {
 };
 
 type Props = {};
-
+// TODO тут все пересмотреть на основе новых данных
 export const Controls: FC<Props> = () => {
   const dispatch = useAppDispatch();
   const game = useAppSelector((state) => state.app.game)!;
-  const playerId = useAppSelector((state) => state.app.playerId);
+  const playerId = useAppSelector((state) => state.app.me?.id);
   const selectedMonster = useAppSelector((state) => state.app.selectedMonster);
   const selectedCards = useAppSelector((state) => state.app.selectedCards);
   const abilityState = useAppSelector((state) => state.app.abilityState);
   const legionState = useAppSelector((state) => state.app.awaitingLegion);
   const lastAction = useAppSelector(selectLastAction);
-  const winnerId = useAppSelector((state) => state.app.winnerId);
+  const winnerId = useAppSelector((state) => state.app.game?.winnerId);
 
   const sendMessage = useSendMessage();
 
@@ -51,28 +50,39 @@ export const Controls: FC<Props> = () => {
       return;
     }
 
-    sendMessage<{ cardId: number; monsterId: number }>({
+    sendMessage<{ cardId: number; monsterId: number; gameId: string }>({
       type: MESSAGE_TYPE.PLAY_CARD,
       cardId: selectedCards[0]?.cardId, // TODO
       monsterId: selectedMonster.monsterId,
+      gameId: game.id,
     });
     dispatch(deSelectMonster());
     dispatch(deSelectCard());
-  }, [abilityState, dispatch, lastAction, selectedCards, selectedMonster, sendMessage]);
+  }, [abilityState, dispatch, game.id, lastAction, selectedCards, selectedMonster, sendMessage]);
 
   const handleTakeCard = useCallback(() => {
     sendMessage({
       type: MESSAGE_TYPE.TAKE_CARD,
+      gameId: game.id,
     });
-  }, [sendMessage]);
+  }, [game.id, sendMessage]);
 
   const handleChangeCards = useCallback(() => {
-    sendMessage<{ cardIds: number[] }>({
+    sendMessage<{ cardIds: number[]; gameId: string }>({
       type: MESSAGE_TYPE.CHANGE_CARDS,
       cardIds: selectedCards.map((card) => card.cardId),
+      gameId: game.id,
     });
     dispatch(deSelectCard());
-  }, [dispatch, selectedCards, sendMessage]);
+  }, [dispatch, game.id, selectedCards, sendMessage]);
+
+  const handleLeaveGame = useCallback(() => {
+    sendMessage<{ playerId: string; gameId: string }>({
+      type: MESSAGE_TYPE.LEAVE_GAME,
+      playerId: playerId!,
+      gameId: game.id,
+    });
+  }, [game.id, playerId, sendMessage]);
 
   const isMyTurn = useMemo(() => {
     return playerId === game.activePlayer?.id;
@@ -81,23 +91,25 @@ export const Controls: FC<Props> = () => {
   if (legionState) {
     return <ControlsLegionMode isMyTurn={isMyTurn} />;
   }
-  if (!isMyTurn) return null;
 
   // TODO отрефакторить
   if (winnerId) {
     // TODO возможно эта кнопка будет появляться спустя 10 секунд
     return (
       <div className="controls">
-        <button onClick={handleTakeCard}>Вернуться на главную</button>
+        <button onClick={handleLeaveGame}>Выйти из игры</button>
       </div>
     );
   }
+
+  if (!isMyTurn) return null;
 
   return (
     <div className="controls">
       {!abilityState ? (
         <main>
           <span>Действий осталось: {game.actions}</span>
+          {lastAction && <span> {lastAction}</span>}
           <div>
             <button onClick={handleTakeCard}>Взять карту</button>
             <button onClick={handlePlaceCard}>Выложить карту</button>
@@ -127,30 +139,33 @@ function ControlsWolf() {
   const abilityState = useAppSelector((state) => state.app.abilityState)!;
   const selectedMonster = useAppSelector((state) => state.app.selectedMonster);
   const selectedCards = useAppSelector((state) => state.app.selectedCards);
+  const gameId = useAppSelector(selectGameId)!;
 
   const sendMessage = useSendMessage();
 
   const handleSubmit = useCallback(() => {
     // Функция не вызовется, если selectedMonster не существует, поэтому можно восклицательный. Также selectedCards
     // гарантированно будет иметь только один элемент. Все эти условия находятся в disabled проперти кнопки
-    sendMessage<{ cardIds: number[]; monsterId: number; abilityType: number }>({
+    sendMessage<{ cardIds: number[]; monsterId: number; abilityType: number; gameId: string }>({
       type: MESSAGE_TYPE.SUBMIT_ABILITY,
       abilityType: abilityState.abilityType,
       cardIds: [selectedCards[0].cardId],
       monsterId: selectedMonster!.monsterId,
+      gameId,
     });
     dispatch(deSelectMonster());
     dispatch(deSelectCard());
-  }, [abilityState.abilityType, dispatch, selectedCards, selectedMonster, sendMessage]);
+  }, [abilityState.abilityType, dispatch, gameId, selectedCards, selectedMonster, sendMessage]);
 
   const handleThrowOff = useCallback(() => {
-    sendMessage({
+    sendMessage<{ abilityType: ABILITY_TYPE; action_experimental?: string; cardIds: number[]; gameId: string }>({
       type: MESSAGE_TYPE.SUBMIT_ABILITY,
       abilityType: abilityState.abilityType,
       action_experimental: 'THROW OFF',
-      cardIds: selectedCards,
+      cardIds: selectedCards.map((c) => c.cardId),
+      gameId,
     });
-  }, [abilityState.abilityType, selectedCards, sendMessage]);
+  }, [abilityState.abilityType, gameId, selectedCards, sendMessage]);
 
   const isSubmitBlocked = useMemo(() => {
     return selectedMonster?.monsterId === undefined || selectedCards.length !== 1;
@@ -178,15 +193,17 @@ function ControlsWolf() {
 
 function ControlsDrop() {
   const abilityState = useAppSelector((state) => state.app.abilityState)!;
+  const gameId = useAppSelector(selectGameId)!;
 
   const sendMessage = useSendMessage();
 
   const handleSubmit = useCallback(() => {
-    sendMessage<{ abilityType: number }>({
+    sendMessage<{ abilityType: number; gameId: string }>({
       type: MESSAGE_TYPE.SUBMIT_ABILITY,
       abilityType: abilityState.abilityType,
+      gameId,
     });
-  }, [abilityState, sendMessage]);
+  }, [abilityState.abilityType, gameId, sendMessage]);
 
   return (
     <div className="controlsDrop">
@@ -205,25 +222,28 @@ function ControlsSmile() {
   const abilityState = useAppSelector((state) => state.app.abilityState)!;
   const selectedMonster = useAppSelector((state) => state.app.selectedMonster);
   const selectedCards = useAppSelector((state) => state.app.selectedCards);
+  const gameId = useAppSelector(selectGameId)!;
 
   const sendMessage = useSendMessage();
 
   const handleSubmit = useCallback(() => {
-    sendMessage<{ cardId: number; monsterId: number; abilityType: number }>({
+    sendMessage<{ cardId: number; monsterId: number; abilityType: number; gameId: string }>({
       type: MESSAGE_TYPE.SUBMIT_ABILITY,
       abilityType: abilityState.abilityType,
       cardId: selectedCards[0].cardId,
       monsterId: selectedMonster!.monsterId,
+      gameId,
     });
     dispatch(deSelectMonster());
     dispatch(deSelectCard());
-  }, [abilityState.abilityType, dispatch, selectedCards, selectedMonster, sendMessage]);
+  }, [abilityState.abilityType, dispatch, gameId, selectedCards, selectedMonster, sendMessage]);
 
   const handleNotAble = useCallback(() => {
     sendMessage({
       type: MESSAGE_TYPE.CANCEL_ABILITY,
+      gameId,
     });
-  }, [sendMessage]);
+  }, [gameId, sendMessage]);
 
   return (
     <div className="controlsDrop">
@@ -244,25 +264,28 @@ function ControlsAxe() {
   const dispatch = useAppDispatch();
   const abilityState = useAppSelector((state) => state.app.abilityState)!;
   const selectedMonster = useAppSelector((state) => state.app.selectedMonster);
+  const gameId = useAppSelector(selectGameId)!;
 
   const sendMessage = useSendMessage();
 
   const handleSubmit = useCallback(() => {
     // пре-условие стоит в кнопке
-    sendMessage<{ targetPlayerId: string; targetMonsterId: number; abilityType: number }>({
+    sendMessage<{ targetPlayerId: string; targetMonsterId: number; abilityType: number; gameId: string }>({
       type: MESSAGE_TYPE.SUBMIT_ABILITY,
       abilityType: abilityState.abilityType,
       targetPlayerId: selectedMonster!.playerId,
       targetMonsterId: selectedMonster!.monsterId,
+      gameId,
     });
     dispatch(deSelectMonster());
-  }, [abilityState, dispatch, selectedMonster, sendMessage]);
+  }, [abilityState.abilityType, dispatch, gameId, selectedMonster, sendMessage]);
 
   const handleNotAble = useCallback(() => {
     sendMessage({
       type: MESSAGE_TYPE.CANCEL_ABILITY,
+      gameId,
     });
-  }, [sendMessage]);
+  }, [gameId, sendMessage]);
 
   return (
     <div className="controlsDrop">
@@ -283,25 +306,28 @@ function ControlsBones() {
   const dispatch = useAppDispatch();
   const abilityState = useAppSelector((state) => state.app.abilityState)!;
   const selectedMonster = useAppSelector((state) => state.app.selectedMonster);
+  const gameId = useAppSelector(selectGameId)!;
 
   const sendMessage = useSendMessage();
 
   const handleSubmit = useCallback(() => {
     // пре-условие стоит в кнопке
-    sendMessage<{ targetPlayerId: string; targetMonsterId: number; abilityType: number }>({
+    sendMessage<{ targetPlayerId: string; targetMonsterId: number; abilityType: number; gameId: string }>({
       type: MESSAGE_TYPE.SUBMIT_ABILITY,
       abilityType: abilityState.abilityType,
       targetPlayerId: selectedMonster!.playerId,
       targetMonsterId: selectedMonster!.monsterId,
+      gameId,
     });
     dispatch(deSelectMonster());
-  }, [abilityState, dispatch, selectedMonster, sendMessage]);
+  }, [abilityState.abilityType, dispatch, gameId, selectedMonster, sendMessage]);
 
   const handleNotAble = useCallback(() => {
     sendMessage({
       type: MESSAGE_TYPE.CANCEL_ABILITY,
+      gameId,
     });
-  }, [sendMessage]);
+  }, [gameId, sendMessage]);
 
   return (
     <div className="controlsDrop">
@@ -322,24 +348,27 @@ function ControlsTeeth() {
   const dispatch = useAppDispatch();
   const abilityState = useAppSelector((state) => state.app.abilityState)!;
   const selectedMonster = useAppSelector((state) => state.app.selectedMonster);
+  const gameId = useAppSelector(selectGameId)!;
 
   const sendMessage = useSendMessage();
 
   const handleSubmit = useCallback(() => {
     // пре-условие стоит в кнопке
-    sendMessage<{ targetMonsterId: number; abilityType: number }>({
+    sendMessage<{ targetMonsterId: number; abilityType: number; gameId: string }>({
       type: MESSAGE_TYPE.SUBMIT_ABILITY,
       abilityType: abilityState.abilityType,
       targetMonsterId: selectedMonster!.monsterId,
+      gameId,
     });
     dispatch(deSelectMonster());
-  }, [abilityState, dispatch, selectedMonster, sendMessage]);
+  }, [abilityState.abilityType, dispatch, gameId, selectedMonster, sendMessage]);
 
   const handleNotAble = useCallback(() => {
     sendMessage({
       type: MESSAGE_TYPE.CANCEL_ABILITY,
+      gameId,
     });
-  }, [sendMessage]);
+  }, [gameId, sendMessage]);
 
   return (
     <div className="controlsDrop">
@@ -356,7 +385,8 @@ function ControlsLegionMode({ isMyTurn }: { isMyTurn: boolean }) {
   const dispatch = useAppDispatch();
   const legionState = useAppSelector((state) => state.app.awaitingLegion);
   const selectedCards = useAppSelector((state) => state.app.selectedCards);
-  const playerId = useAppSelector((state) => state.app.playerId)!;
+  const playerId = useAppSelector((state) => state.app.me?.id)!;
+  const gameId = useAppSelector(selectGameId)!;
 
   const isCardSelected = useMemo(() => selectedCards.length !== 0, [selectedCards.length]);
 
@@ -365,13 +395,14 @@ function ControlsLegionMode({ isMyTurn }: { isMyTurn: boolean }) {
   const handleThrow = useCallback(() => {
     if (!isCardSelected) return;
 
-    sendMessage<{ cardIds: number[]; playerId: string }>({
+    sendMessage<{ cardIds: number[]; playerId: string; gameId: string }>({
       type: MESSAGE_TYPE.THROW_LEGION_CARD,
       cardIds: selectedCards.map((selectedCards) => selectedCards.cardId),
       playerId: playerId!,
+      gameId,
     });
     dispatch(deSelectCard());
-  }, [dispatch, isCardSelected, playerId, selectedCards, sendMessage]);
+  }, [dispatch, gameId, isCardSelected, playerId, selectedCards, sendMessage]);
 
   return (
     <div className="controls">

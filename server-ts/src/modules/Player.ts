@@ -1,8 +1,28 @@
-import { omit } from 'lodash';
+import { generateCryptoId } from '../helpers';
 import { Card, PlayerState } from '../types';
-import { CARDS } from './Cards';
 import Monster from './Monster';
-import { WebSocket } from 'ws';
+
+export class User {
+  id: string;
+  name: string | null;
+  gameId: string | undefined;
+  readyToPlay: boolean;
+
+  constructor() {
+    this.id = generateCryptoId();
+    this.name = null;
+    this.gameId = undefined;
+    this.readyToPlay = false;
+  }
+
+  public setName = (name: string) => {
+    this.name = name;
+  };
+
+  public setReadyToPlayState = (state: boolean) => {
+    this.readyToPlay = state;
+  };
+}
 
 export default class Player {
   private _id: string;
@@ -10,19 +30,25 @@ export default class Player {
   private cards: Card[];
   private monsters: Monster[];
 
-  constructor(id: string, cards: Card[]) {
+  constructor(id: string, name: string | null) {
     this._id = id;
-    this.name = null;
-    this.cards = cards;
-    this.monsters = new Array(5).fill(0).map((_, i) => new Monster(i));
+    this.name = name;
+    this.cards = [];
+    this.monsters = [];
   }
 
   public get id() {
     return this._id;
   }
 
-  public setName = (name: string) => {
-    this.name = name;
+  public engage = (cards: Card[]) => {
+    this.cards = cards;
+    this.monsters = new Array(5).fill(0).map((_, i) => new Monster(i));
+  };
+
+  public reset = () => {
+    this.cards = [];
+    this.monsters = [];
   };
 
   public getPlayerState = (isMe?: boolean): PlayerState<Card[] | number> => {
