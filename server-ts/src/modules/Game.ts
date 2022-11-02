@@ -230,7 +230,7 @@ export default class Game {
     this.activePlayerIndex = null;
     this.winnerId = playerId;
     this.stopLegionMode();
-    this.stopAbilitiesMode();
+    this.abilitiesMode = null;
 
     return {
       type: MESSAGE_TYPE.GAME_OVER,
@@ -282,9 +282,6 @@ export default class Game {
   };
 
   stopAbilitiesMode = () => {
-    if (this.abilitiesMode === null) {
-      return;
-    }
     this.abilitiesMode = null;
 
     const activePlayer = this.getActivePlayer();
