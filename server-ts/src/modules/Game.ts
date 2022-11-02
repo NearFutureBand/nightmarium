@@ -21,6 +21,7 @@ import Player from './Player';
 import { ABILITIES, GAME_ACTIONS, MESSAGE_TYPE } from '../constants';
 import Monster from './Monster';
 import { AbilitiesMode, ApplyAbilityMap, LegionMode } from './Modes';
+import Logger from './Logger';
 
 export default class Game {
   public id: string;
@@ -34,6 +35,9 @@ export default class Game {
   public abilitiesMode: AbilitiesMode | null;
   public legionMode: LegionMode | null;
   public winnerId?: string;
+
+  // игровые настройки
+  private monstersToWin: number;
 
   private applyAbilityMap: ApplyAbilityMap;
 
@@ -49,6 +53,7 @@ export default class Game {
     this.abilitiesMode = null;
     this.legionMode = null;
     this.winnerId = undefined;
+    this.monstersToWin = 3;
 
     this.applyAbilityMap = {
       [ABILITIES.WOLF]: ({ cardIds, monsterId }) => this.applyWolfAbility({ cardIds, monsterId }),
@@ -67,10 +72,12 @@ export default class Game {
   };
 
   giveCard = () => {
-    const availableIndices = Object.keys(this.cardsAvailable);
-    // if (availableIndices.length === 0) {
-    //   return;
-    // } // TODO check this case later
+    let availableIndices = Object.keys(this.cardsAvailable);
+    if (availableIndices.length === 0) {
+      this.cardsAvailable = { ...this.cardsThrownAway };
+      this.cardsThrownAway = {};
+      availableIndices = Object.keys(this.cardsAvailable);
+    }
     const cardIndex = availableIndices[randomInteger(0, availableIndices.length - 1)];
     const card: Card = { ...this.cardsAvailable[cardIndex] };
     delete this.cardsAvailable[cardIndex];
@@ -199,7 +206,7 @@ export default class Game {
       const monsterHasTeethAbility = targetMonster.hasTeethAbility();
 
       // ПОБЕДА одного из игроков
-      if (monstersDone === 5 && !monsterHasTeethAbility) {
+      if (monstersDone === this.monstersToWin && !monsterHasTeethAbility) {
         return this.gameOver(player.id);
       }
 
@@ -271,6 +278,7 @@ export default class Game {
       applyAbilityMap: this.applyAbilityMap,
     });
     console.log('started ability mode');
+    Logger.log('ABILITY MODE STARTED', this.abilitiesMode);
   };
 
   stopAbilitiesMode = () => {
@@ -280,7 +288,7 @@ export default class Game {
     this.abilitiesMode = null;
 
     const activePlayer = this.getActivePlayer();
-    if (activePlayer.howManyMonstersDone() === 5) {
+    if (activePlayer.howManyMonstersDone() === this.monstersToWin) {
       return this.gameOver(activePlayer.id);
     }
 

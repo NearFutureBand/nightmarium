@@ -2,6 +2,7 @@ import { MESSAGE_TYPE } from '../constants';
 import { randomFloat } from '../helpers';
 import { AbilityMessagePayload, ApplyAbilityParams, GameState, Legion, Message } from '../types';
 import Game from './Game';
+import Logger from './Logger';
 import Player, { User } from './Player';
 
 type GameMessageResponse = {
@@ -213,6 +214,7 @@ export default class GameController {
   onSetPlayerName: GameMessageHandler<{ playerId: string; name: string }> = (clientId, message) => {
     const player = this.users[message.playerId];
     player?.setName(message.name);
+    Logger.log('SET PLAYER NAME', player);
     return {
       toSenderOnly: {
         type: MESSAGE_TYPE.NAME_ACCEPTED,

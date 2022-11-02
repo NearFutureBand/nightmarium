@@ -46,6 +46,7 @@ export default class Network {
 
     try {
       const gameResponse = this.gameController.processGameMessage(clientId, message);
+      Logger.log('<=== OUTCOMING MESSAGES', gameResponse);
 
       if (gameResponse.toSenderOnly) {
         this.sendMessage(clientId, gameResponse.toSenderOnly);
