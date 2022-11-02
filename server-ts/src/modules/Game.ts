@@ -53,7 +53,7 @@ export default class Game {
     this.abilitiesMode = null;
     this.legionMode = null;
     this.winnerId = undefined;
-    this.monstersToWin = 3;
+    this.monstersToWin = 5;
 
     this.applyAbilityMap = {
       [ABILITIES.WOLF]: ({ cardIds, monsterId }) => this.applyWolfAbility({ cardIds, monsterId }),

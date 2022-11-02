@@ -26,10 +26,15 @@ export const Controls: FC<Props> = () => {
   const game = useAppSelector((state) => state.app.game)!;
   const abilityState = useAppSelector((state) => state.app.abilityState);
   const legionState = useAppSelector((state) => state.app.awaitingLegion);
+  const winnerId = useAppSelector((state) => state.app.game?.winnerId);
 
   const isMyTurn = useMemo(() => {
     return playerId === game.activePlayer?.id;
   }, [game.activePlayer?.id, playerId]);
+
+  if (winnerId) {
+    return <ControlsIfGameIsOver />;
+  }
 
   if (legionState) {
     return <ControlsLegionMode isMyTurn={isMyTurn} />;
@@ -39,7 +44,6 @@ export const Controls: FC<Props> = () => {
 
   return (
     <div className="controls">
-      <ControlsIfGameIsOver />
       {!abilityState && <ControlsGameMode />}
       {abilityState && <ControlsForAbility />}
     </div>
