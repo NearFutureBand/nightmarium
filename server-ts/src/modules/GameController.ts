@@ -1,16 +1,24 @@
-import { MESSAGE_TYPE } from '../constants';
-import { randomFloat } from '../helpers';
-import { AbilityMessagePayload, ApplyAbilityParams, GameState, Legion, Message } from '../types';
-import Game from './Game';
-import Logger from './Logger';
-import Player, { User } from './Player';
+import { MESSAGE_TYPE } from "../constants";
+import { randomFloat } from "../helpers";
+import {
+  AbilityMessagePayload,
+  ApplyAbilityParams,
+  GameState,
+  Legion,
+  Message,
+} from "../types";
+import Game from "./Game";
+import Player, { User } from "./Player";
 
 type GameMessageResponse = {
   broadcast?: Message;
   toSenderOnly?: Message;
   toAllExceptSender?: Message;
 };
-type GameMessageHandler<MessagePayloadType = {}> = (cliendId: string, message: Message<MessagePayloadType>) => GameMessageResponse;
+type GameMessageHandler<MessagePayloadType = {}> = (
+  cliendId: string,
+  message: Message<MessagePayloadType>
+) => GameMessageResponse;
 
 export default class GameController {
   public game: Game | null;
@@ -47,7 +55,10 @@ export default class GameController {
     return undefined;
   };
 
-  public processGameMessage = (clientId: string, message: Message): GameMessageResponse => {
+  public processGameMessage = (
+    clientId: string,
+    message: Message
+  ): GameMessageResponse => {
     return this.messageActionsMap[message.type](clientId, message);
   };
 
@@ -71,7 +82,9 @@ export default class GameController {
   };
 
   getOtherPlayers = (exceptPlayerId: string) => {
-    return Object.values(this.users).filter((user) => user.id !== exceptPlayerId);
+    return Object.values(this.users).filter(
+      (user) => user.id !== exceptPlayerId
+    );
   };
 
   getGameById = (gameId?: string) => {
@@ -79,7 +92,10 @@ export default class GameController {
     return this.games[gameId];
   };
 
-  onReadyToPlay: GameMessageHandler<{ playerId: string }> = (clientId, message) => {
+  onReadyToPlay: GameMessageHandler<{ playerId: string }> = (
+    clientId,
+    message
+  ) => {
     const gameId = this.getAwaitingGameId() || this.createGame();
     // тут игра будет существовать 100%
     const game = this.getGameById(gameId)!;
@@ -105,10 +121,15 @@ export default class GameController {
     // TODO перепридумать логику этой функции. Нужно сосчитать все ли игроки нажали "готов"
     const allUsers = Object.values(this.users);
     const awaitingUsers = allUsers.filter((u) => u.readyToPlay);
-    return awaitingUsers.length >= 5 || awaitingUsers.length === allUsers.length;
+    return (
+      awaitingUsers.length >= 5 || awaitingUsers.length === allUsers.length
+    );
   };
 
-  onHandshake: GameMessageHandler<{ playerId: string }> = (clientId, message) => {
+  onHandshake: GameMessageHandler<{ playerId: string }> = (
+    clientId,
+    message
+  ) => {
     let playerId = message.playerId;
     let playerAlreadyExists = false;
     let user: User;
@@ -173,9 +194,16 @@ export default class GameController {
     };
   };
 
-  onPlayCard: GameMessageHandler<{ cardId: number; monsterId: number; gameId: string }> = (clientId, message) => {
+  onPlayCard: GameMessageHandler<{
+    cardId: number;
+    monsterId: number;
+    gameId: string;
+  }> = (clientId, message) => {
     try {
-      const result = this.getGameById(message.gameId)!.activePlayerPutsCard(message.cardId, message.monsterId);
+      const result = this.getGameById(message.gameId)!.activePlayerPutsCard(
+        message.cardId,
+        message.monsterId
+      );
       return {
         broadcast: result || {
           type: MESSAGE_TYPE.PLAY_CARD,
@@ -187,7 +215,10 @@ export default class GameController {
     }
   };
 
-  onSubmitAbility = (cliendId: string, message: Message<any>): GameMessageResponse => {
+  onSubmitAbility = (
+    cliendId: string,
+    message: Message<any>
+  ): GameMessageResponse => {
     const { type, gameId, ...abilityParams } = message;
     const game = this.getGameById(gameId);
     const result = game!.applyAbility({
@@ -200,7 +231,10 @@ export default class GameController {
     };
   };
 
-  onCancelAbility: GameMessageHandler<{ gameId: string }> = (cliendId, message) => {
+  onCancelAbility: GameMessageHandler<{ gameId: string }> = (
+    cliendId,
+    message
+  ) => {
     const game = this.getGameById(message.gameId)!;
     const result = game.stopAbilitiesMode();
 
@@ -211,10 +245,13 @@ export default class GameController {
     };
   };
 
-  onSetPlayerName: GameMessageHandler<{ playerId: string; name: string }> = (clientId, message) => {
+  onSetPlayerName: GameMessageHandler<{ playerId: string; name: string }> = (
+    clientId,
+    message
+  ) => {
     const player = this.users[message.playerId];
     player?.setName(message.name);
-    Logger.log('SET PLAYER NAME', player);
+    // Logger.log('SET PLAYER NAME', player);
     return {
       toSenderOnly: {
         type: MESSAGE_TYPE.NAME_ACCEPTED,
@@ -223,15 +260,25 @@ export default class GameController {
     };
   };
 
-  onThrowLegionCard: GameMessageHandler<{ cardIds: number[]; playerId: string; gameId: string }> = (clientId, message) => {
+  onThrowLegionCard: GameMessageHandler<{
+    cardIds: number[];
+    playerId: string;
+    gameId: string;
+  }> = (clientId, message) => {
     const game = this.getGameById(message.gameId)!;
-    const result = game.playerThrowsLegionCard(message.playerId, message.cardIds);
+    const result = game.playerThrowsLegionCard(
+      message.playerId,
+      message.cardIds
+    );
     return {
       broadcast: result,
     };
   };
 
-  onChangeCards: GameMessageHandler<{ cardIds: number[]; gameId: string }> = (clientId, message) => {
+  onChangeCards: GameMessageHandler<{ cardIds: number[]; gameId: string }> = (
+    clientId,
+    message
+  ) => {
     const game = this.getGameById(message.gameId)!;
     game.activePlayerExchangesCards(message.cardIds);
     return {
@@ -241,7 +288,10 @@ export default class GameController {
     };
   };
 
-  onLeaveGame: GameMessageHandler<{ playerId: string; gameId: string }> = (clientId, message) => {
+  onLeaveGame: GameMessageHandler<{ playerId: string; gameId: string }> = (
+    clientId,
+    message
+  ) => {
     // remove player from game
     const game = this.getGameById(message.gameId)!;
     game.removePlayer(message.playerId);

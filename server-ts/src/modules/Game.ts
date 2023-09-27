@@ -1,6 +1,6 @@
-import { CARDS } from './Cards';
-import { randomInteger } from '../helpers';
-import { sortBy } from 'lodash';
+import { CARDS } from "./Cards";
+import { randomInteger } from "../helpers";
+import { sortBy } from "lodash";
 import {
   AbilityAxeData,
   AbilityBonesData,
@@ -16,12 +16,11 @@ import {
   Legion,
   PlayerState,
   PutCardReturnType,
-} from '../types';
-import Player from './Player';
-import { ABILITIES, GAME_ACTIONS, MESSAGE_TYPE } from '../constants';
-import Monster from './Monster';
-import { AbilitiesMode, ApplyAbilityMap, LegionMode } from './Modes';
-import Logger from './Logger';
+} from "../types";
+import Player from "./Player";
+import { ABILITIES, GAME_ACTIONS, MESSAGE_TYPE } from "../constants";
+import Monster from "./Monster";
+import { AbilitiesMode, ApplyAbilityMap, LegionMode } from "./Modes";
 
 export default class Game {
   public id: string;
@@ -56,12 +55,17 @@ export default class Game {
     this.monstersToWin = 5;
 
     this.applyAbilityMap = {
-      [ABILITIES.WOLF]: ({ cardIds, monsterId }) => this.applyWolfAbility({ cardIds, monsterId }),
+      [ABILITIES.WOLF]: ({ cardIds, monsterId }) =>
+        this.applyWolfAbility({ cardIds, monsterId }),
       [ABILITIES.DROP]: () => this.applyDropAbility({}),
-      [ABILITIES.SMILE]: ({ cardId, monsterId }) => this.applySmileAbility({ cardId, monsterId }),
-      [ABILITIES.AXE]: ({ targetMonsterId, targetPlayerId }) => this.applyAxeAbility({ targetMonsterId, targetPlayerId }),
-      [ABILITIES.BONES]: ({ targetMonsterId, targetPlayerId }) => this.applyBonesAbility({ targetMonsterId, targetPlayerId }),
-      [ABILITIES.TEETH]: ({ targetMonsterId }) => this.applyTeethAbility({ targetMonsterId }),
+      [ABILITIES.SMILE]: ({ cardId, monsterId }) =>
+        this.applySmileAbility({ cardId, monsterId }),
+      [ABILITIES.AXE]: ({ targetMonsterId, targetPlayerId }) =>
+        this.applyAxeAbility({ targetMonsterId, targetPlayerId }),
+      [ABILITIES.BONES]: ({ targetMonsterId, targetPlayerId }) =>
+        this.applyBonesAbility({ targetMonsterId, targetPlayerId }),
+      [ABILITIES.TEETH]: ({ targetMonsterId }) =>
+        this.applyTeethAbility({ targetMonsterId }),
     };
   }
 
@@ -78,7 +82,8 @@ export default class Game {
       this.cardsThrownAway = {};
       availableIndices = Object.keys(this.cardsAvailable);
     }
-    const cardIndex = availableIndices[randomInteger(0, availableIndices.length - 1)];
+    const cardIndex =
+      availableIndices[randomInteger(0, availableIndices.length - 1)];
     const card: Card = { ...this.cardsAvailable[cardIndex] };
     delete this.cardsAvailable[cardIndex];
     return card;
@@ -120,18 +125,25 @@ export default class Game {
   public getGameState = (requestPlayerId?: string): GameState => {
     let activePlayer: PlayerState<number> | undefined = undefined;
     try {
-      activePlayer = this.getActivePlayer()?.getPlayerState() as PlayerState<number>;
+      activePlayer =
+        this.getActivePlayer()?.getPlayerState() as PlayerState<number>;
     } catch (error: any) {
-      console.log('ERROR: ', error.message);
+      console.log("ERROR: ", error.message);
     }
 
     return {
       id: this.id,
       activePlayer,
-      me: requestPlayerId ? (this.getPlayerById(requestPlayerId)?.getPlayerState(true) as PlayerState<Card[]>) : undefined,
+      me: requestPlayerId
+        ? (this.getPlayerById(requestPlayerId)?.getPlayerState(
+            true
+          ) as PlayerState<Card[]>)
+        : undefined,
       otherPlayers: sortBy(
-        this.players.filter((player) => player.id !== requestPlayerId).map((player) => player.getPlayerState() as PlayerState<number>),
-        'id'
+        this.players
+          .filter((player) => player.id !== requestPlayerId)
+          .map((player) => player.getPlayerState() as PlayerState<number>),
+        "id"
       ),
       actions: this.actions,
       lastAction: this.lastAction,
@@ -143,13 +155,17 @@ export default class Game {
     if (!this.activePlayerIndex) {
       this.activePlayerIndex = 0;
     }
-    this.activePlayerIndex = this.activePlayerIndex === this.players.length - 1 ? 0 : this.activePlayerIndex + 1;
+    this.activePlayerIndex =
+      this.activePlayerIndex === this.players.length - 1
+        ? 0
+        : this.activePlayerIndex + 1;
     this.actions = 2;
     this.lastAction = null;
   }
 
   getActivePlayer = () => {
-    if (this.activePlayerIndex !== 0 && !this.activePlayerIndex) throw new Error('No active player');
+    if (this.activePlayerIndex !== 0 && !this.activePlayerIndex)
+      throw new Error("No active player");
     return this._players[this.activePlayerIndex];
   };
 
@@ -166,7 +182,10 @@ export default class Game {
     this.minusAction();
   };
 
-  activePlayerPutsCard = (cardId: number, monsterId: number): PutCardReturnType => {
+  activePlayerPutsCard = (
+    cardId: number,
+    monsterId: number
+  ): PutCardReturnType => {
     const activePlayer = this.getActivePlayer();
 
     // TODO for endgame test purposes
@@ -193,15 +212,29 @@ export default class Game {
     return this._players.filter((player) => player.id !== playerId);
   };
 
-  placeCardToMonster = ({ player, cardId, monsterId, card }: { player: Player; cardId?: number; monsterId: number; card?: Card }): PutCardReturnType => {
-    const targetMonster = card ? player.placeCardToMonster(card, monsterId) : player.placeCardFromHandToMonster(cardId!, monsterId);
+  placeCardToMonster = ({
+    player,
+    cardId,
+    monsterId,
+    card,
+  }: {
+    player: Player;
+    cardId?: number;
+    monsterId: number;
+    card?: Card;
+  }): PutCardReturnType => {
+    const targetMonster = card
+      ? player.placeCardToMonster(card, monsterId)
+      : player.placeCardFromHandToMonster(cardId!, monsterId);
     // Не запоминать последний ход, если находимся в режиме способности
     if (!this.abilitiesMode) {
-      this.lastAction = GAME_ACTIONS.PLAY_CARD(targetMonster.body[targetMonster.body.length - 1].legion);
+      this.lastAction = GAME_ACTIONS.PLAY_CARD(
+        targetMonster.body[targetMonster.body.length - 1].legion
+      );
     }
 
     if (targetMonster.isDone()) {
-      console.log('monster is done', targetMonster.getBody());
+      console.log("monster is done", targetMonster.getBody());
       const monstersDone = player.howManyMonstersDone();
       const monsterHasTeethAbility = targetMonster.hasTeethAbility();
 
@@ -260,7 +293,11 @@ export default class Game {
     const activePlayer = this.getActivePlayer();
     const removedCards = activePlayer.removeCardsFromHand(cardIds);
     this.throwCardsAway(removedCards);
-    activePlayer.addCards(new Array(Math.floor(cardIds.length / 2)).fill(null).map(() => this.giveCard()));
+    activePlayer.addCards(
+      new Array(Math.floor(cardIds.length / 2))
+        .fill(null)
+        .map(() => this.giveCard())
+    );
     this.lastAction = GAME_ACTIONS.CHANGE_CARDS;
     this.minusAction();
   };
@@ -277,8 +314,8 @@ export default class Game {
       stopAbilitiesMode: this.stopAbilitiesMode,
       applyAbilityMap: this.applyAbilityMap,
     });
-    console.log('started ability mode');
-    Logger.log('ABILITY MODE STARTED', this.abilitiesMode);
+    console.log("started ability mode");
+    // Logger.log('ABILITY MODE STARTED', this.abilitiesMode);
   };
 
   stopAbilitiesMode = () => {
@@ -301,14 +338,19 @@ export default class Game {
   //
   // Apply concrete abilities
 
-  applyWolfAbility: ApplyAbilityHandler<AbilityWolfData> = ({ cardIds, monsterId }) => {
+  applyWolfAbility: ApplyAbilityHandler<AbilityWolfData> = ({
+    cardIds,
+    monsterId,
+  }) => {
     const ability = this.abilitiesMode!.getCurrentAbility();
     const abilityCards = ability.cards!;
 
     const findCardIndex = (cardId: number) => {
       const cardIndex = abilityCards.findIndex((card) => card.id === cardId);
       if (cardIndex < 0) {
-        throw new Error(`ApplyWolfAbility: card ${cardId} is not found in ability state`);
+        throw new Error(
+          `ApplyWolfAbility: card ${cardId} is not found in ability state`
+        );
       }
       return cardIndex;
     };
@@ -346,7 +388,10 @@ export default class Game {
     player.addCards(ability.cards!);
   };
 
-  applySmileAbility: ApplyAbilityHandler<AbilitySmileData> = ({ cardId, monsterId }) => {
+  applySmileAbility: ApplyAbilityHandler<AbilitySmileData> = ({
+    cardId,
+    monsterId,
+  }) => {
     const activePlayer = this.getActivePlayer();
     return this.placeCardToMonster({ player: activePlayer, cardId, monsterId });
   };
@@ -354,7 +399,10 @@ export default class Game {
   /**
    * Забрать верхнюю карту чужого монстра на руку
    */
-  applyAxeAbility: ApplyAbilityHandler<AbilityAxeData> = ({ targetPlayerId, targetMonsterId }) => {
+  applyAxeAbility: ApplyAbilityHandler<AbilityAxeData> = ({
+    targetPlayerId,
+    targetMonsterId,
+  }) => {
     const player = this.getActivePlayer();
     const targetPlayer = this.getPlayerById(targetPlayerId);
     const targetMonster = targetPlayer.getMosterById(targetMonsterId);
@@ -366,7 +414,10 @@ export default class Game {
   /**
    * кости, уничтожить недостроенного монстра целиком
    */
-  applyBonesAbility: ApplyAbilityHandler<AbilityBonesData> = ({ targetPlayerId, targetMonsterId }) => {
+  applyBonesAbility: ApplyAbilityHandler<AbilityBonesData> = ({
+    targetPlayerId,
+    targetMonsterId,
+  }) => {
     const targetPlayer = this.getPlayerById(targetPlayerId);
     const targetMonster = targetPlayer.getMosterById(targetMonsterId);
 
@@ -380,7 +431,9 @@ export default class Game {
   /**
    * Выбросить верхнюю карту своего монстра, кроме текущего
    */
-  applyTeethAbility: ApplyAbilityHandler<AbilityTeethData> = ({ targetMonsterId }) => {
+  applyTeethAbility: ApplyAbilityHandler<AbilityTeethData> = ({
+    targetMonsterId,
+  }) => {
     const player = this.getActivePlayer();
     const targetMonster = player.getMosterById(targetMonsterId);
     const removedCard = targetMonster.removeTopBodyPart();
@@ -397,7 +450,7 @@ export default class Game {
       otherPlayers: this.getOtherPlayers(playerId),
       legion,
     });
-    console.log('started legion mode: ', legion, this.legionMode);
+    console.log("started legion mode: ", legion, this.legionMode);
   };
 
   stopLegionMode = () => {
@@ -416,7 +469,10 @@ export default class Game {
     if (this.legionMode!.areAllPlayersResponded()) {
       const activePlayer = this.getActivePlayer();
       // activePlayer.id should be equal to this.legionMode!.playerId
-      this.startAbilitiesMode(activePlayer.id, activePlayer.getMosterById(this.legionMode!.monsterId));
+      this.startAbilitiesMode(
+        activePlayer.id,
+        activePlayer.getMosterById(this.legionMode!.monsterId)
+      );
       this.stopLegionMode();
       return this.abilitiesMode!.onAbility();
     }

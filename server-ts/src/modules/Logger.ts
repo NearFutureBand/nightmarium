@@ -1,12 +1,14 @@
-import { Message } from '../types';
-import fs from 'fs';
-import dayjs from 'dayjs';
+import { Message } from "../types";
+import fs from "fs";
+import dayjs from "dayjs";
 
 class Logger {
   private stream: fs.WriteStream;
 
   constructor() {
-    this.stream = fs.createWriteStream(`logs/logs_${dayjs().format('MM.DD_HH:mm:ss')}`);
+    this.stream = fs.createWriteStream(
+      `${process.cwd()}/logs/logs_${dayjs().format("MM.DD_HH:mm:ss")}`
+    );
   }
 
   private stringify(object: any) {
@@ -14,7 +16,7 @@ class Logger {
   }
 
   private t() {
-    return dayjs().format('DD.MM:HH:mm:ss');
+    return dayjs().format("DD.MM:HH:mm:ss");
   }
 
   private template(messageType?: string) {
@@ -22,12 +24,18 @@ class Logger {
   }
 
   public logIncomingMessage = (clientId: string, message: Message) => {
-    console.log('==>', clientId, message);
-    this.stream.write(`------------------------\n${this.template('===> MESSAGE')} ${clientId} ${this.stringify(message)} \n`);
+    console.log("==>", clientId, message);
+    this.stream.write(
+      `------------------------\n${this.template(
+        "===> MESSAGE"
+      )} ${clientId} ${this.stringify(message)} \n`
+    );
   };
 
   public log(messageType: string, object: any) {
-    this.stream.write(`${this.template(messageType)} ${this.stringify(object)}\n`);
+    this.stream.write(
+      `${this.template(messageType)} ${this.stringify(object)}\n`
+    );
   }
 
   public logGenericError = (error: any) => {
@@ -35,4 +43,4 @@ class Logger {
   };
 }
 
-export default new Logger();
+// export default new Logger();
