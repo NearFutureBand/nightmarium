@@ -38,6 +38,7 @@ export default class Network {
     wsClient.on("message", (event) => this.onMessage(event, clientId)); // TODO find out event type
     wsClient.on("close", () => this.onClose(clientId));
     this.displayClientsMap();
+    this.displayPlayersMap();
   };
 
   onMessage = (event: RawData, clientId: string) => {
@@ -51,6 +52,12 @@ export default class Network {
       );
       // Logger.log('<=== OUTCOMING MESSAGES', gameResponse);
 
+      if (gameResponse.toAdmin && this.gameController.adminClientId) {
+        this.sendMessage(
+          this.gameController.adminClientId,
+          gameResponse.toAdmin
+        );
+      }
       if (gameResponse.toSenderOnly) {
         this.sendMessage(clientId, gameResponse.toSenderOnly);
       }
