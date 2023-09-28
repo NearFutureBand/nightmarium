@@ -1,6 +1,6 @@
-import { generateCryptoId } from '../helpers';
-import { Card, PlayerState } from '../types';
-import Monster from './Monster';
+import { generateCryptoId } from "../helpers";
+import { Card, PlayerState } from "../types";
+import Monster from "./Monster";
 
 export class User {
   id: string;
@@ -74,7 +74,10 @@ export default class Player {
     return targetMonster;
   };
 
-  public placeCardFromHandToMonster = (cardId: number, monsterId: number): Monster => {
+  public placeCardFromHandToMonster = (
+    cardId: number,
+    monsterId: number
+  ): Monster => {
     const targetMonster = this.monsters[monsterId];
     const card = this.findCardOnHandById(cardId);
     targetMonster.addCard(card);
@@ -99,7 +102,11 @@ export default class Player {
   };
 
   public howManyMonstersDone = () => {
-    return this.monsters.reduce((doneMonsters, monster) => (monster.isDone() ? doneMonsters + 1 : doneMonsters), 0);
+    return this.monsters.reduce(
+      (doneMonsters, monster) =>
+        monster.isDone() ? doneMonsters + 1 : doneMonsters,
+      0
+    );
   };
 
   public howManyCards = () => {

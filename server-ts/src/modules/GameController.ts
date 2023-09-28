@@ -14,6 +14,8 @@ type GameMessageResponse = {
   broadcast?: Message;
   toSenderOnly?: Message;
   toAllExceptSender?: Message;
+  toAdmin?: Message;
+  toSpectator?: Message;
 };
 type GameMessageHandler<MessagePayloadType = {}> = (
   cliendId: string,
@@ -25,6 +27,7 @@ export default class GameController {
   public games: { [gameId: string]: Game };
   public userClientMap: { [userId: string]: string }; // playerId -> clientId
   public users: { [playerId: string]: User };
+  public adminClientId: string | undefined;
   public messageActionsMap: {
     [messageType: string]: GameMessageHandler<any>;
   };
@@ -92,6 +95,12 @@ export default class GameController {
     return this.games[gameId];
   };
 
+  /**
+   * Тут создается инстанс Player
+   * @param clientId
+   * @param message
+   * @returns
+   */
   onReadyToPlay: GameMessageHandler<{ playerId: string }> = (
     clientId,
     message
@@ -250,6 +259,18 @@ export default class GameController {
     message
   ) => {
     const player = this.users[message.playerId];
+
+    if (message.name === "admin") {
+      this.adminClientId = clientId;
+      return {
+        toAdmin: {
+          type: MESSAGE_TYPE.NAME_ACCEPTED, // TODO может быть другой тип сообщения здесь
+          games: this.games,
+          users: this.users,
+        },
+      };
+    }
+
     player?.setName(message.name);
     // Logger.log('SET PLAYER NAME', player);
     return {
