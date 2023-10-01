@@ -2,22 +2,22 @@ import { FC, KeyboardEventHandler, useCallback, useState } from "react";
 import { useAppSelector } from "src/hooks/useAppSelector";
 import { MESSAGE_TYPE } from "src/constants";
 import { useSendMessage, useSocket } from "src/hooks/useWebsocket";
-import { selectHowManyReadyToPlay, selectPlayerId } from "src/slices/App";
+import { selectHowManyReadyToPlay, selectUserId } from "src/slices/App";
 
 export const StartScreen: FC = () => {
-  // Этот компонент не рендерится без me, поэтому тут playerId точно существует
-  const playerId = useAppSelector(selectPlayerId)!;
+  // Этот компонент не рендерится без me, поэтому тут userId точно существует
+  const userId = useAppSelector(selectUserId)!;
   const playerName = useAppSelector((state) => state.app.me!.name);
 
   const { disconnect } = useSocket();
   const sendMessage = useSendMessage();
 
   const requestStartGame = useCallback(() => {
-    sendMessage<{ playerId: string }>({
+    sendMessage<{ userId: string }>({
       type: MESSAGE_TYPE.READY_TO_PLAY,
-      playerId,
+      userId,
     });
-  }, [playerId, sendMessage]);
+  }, [userId, sendMessage]);
 
   return (
     <div className='start'>
@@ -35,16 +35,16 @@ export const StartScreen: FC = () => {
 function NameInput() {
   const [name, setName] = useState("");
   // Тут может быть восклицательный, только если компонент используется внутри StartScreen
-  const playerId = useAppSelector(selectPlayerId)!;
+  const userId = useAppSelector(selectUserId)!;
   const sendMessage = useSendMessage();
 
   const onNameEnter: KeyboardEventHandler = useCallback(
     (event) => {
       if (event.key === "Enter") {
-        sendMessage({ type: MESSAGE_TYPE.SET_NAME, playerId, name });
+        sendMessage({ type: MESSAGE_TYPE.SET_NAME, userId, name });
       }
     },
-    [name, playerId, sendMessage]
+    [name, userId, sendMessage]
   );
 
   return (

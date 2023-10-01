@@ -25,8 +25,8 @@ type GameMessageHandler<MessagePayloadType = {}> = (
 export default class GameController {
   public game: Game | null;
   public games: { [gameId: string]: Game };
-  public userClientMap: { [userId: string]: string }; // playerId -> clientId
-  public users: { [playerId: string]: User };
+  public userClientMap: { [userId: string]: string }; // userId -> clientId
+  public users: { [userId: string]: User };
   public adminClientId: string | undefined;
   public messageActionsMap: {
     [messageType: string]: GameMessageHandler<any>;
@@ -51,9 +51,9 @@ export default class GameController {
     };
   }
 
-  private getPlayerIdByClientId = (cliendId: string) => {
-    for (const playerId in this.userClientMap) {
-      if (cliendId === this.userClientMap[playerId]) return playerId;
+  private getUserIdByClientId = (cliendId: string) => {
+    for (const userId in this.userClientMap) {
+      if (cliendId === this.userClientMap[userId]) return userId;
     }
     return undefined;
   };
@@ -84,10 +84,8 @@ export default class GameController {
     }
   };
 
-  getOtherPlayers = (exceptPlayerId: string) => {
-    return Object.values(this.users).filter(
-      (user) => user.id !== exceptPlayerId
-    );
+  getOtherUsers = (exceptUserId: string) => {
+    return Object.values(this.users).filter((user) => user.id !== exceptUserId);
   };
 
   getGameById = (gameId?: string) => {
@@ -101,7 +99,8 @@ export default class GameController {
    * @param message
    * @returns
    */
-  onReadyToPlay: GameMessageHandler<{ playerId: string }> = (
+  onReadyToPlay: GameMessageHandler<{ userId: string }> = (
+    // TODO в СООБЩЕНИИ заменить на userId
     clientId,
     message
   ) => {
@@ -109,10 +108,10 @@ export default class GameController {
     // тут игра будет существовать 100%
     const game = this.getGameById(gameId)!;
 
-    const user = this.users[message.playerId];
+    const user = this.users[message.userId];
     const player = new Player(user.id, user.name);
     game.addPlayer(player);
-    game.getPlayerById(message.playerId).engage(game.giveDefaulCards());
+    game.getPlayerById(message.userId).engage(game.giveDefaulCards());
     user.setReadyToPlayState(true);
     user.gameId = gameId;
 
@@ -135,26 +134,38 @@ export default class GameController {
     );
   };
 
-  onHandshake: GameMessageHandler<{ playerId: string }> = (
+  onHandshake: GameMessageHandler<{ userId: string }> = (
+    // TODO в СООБЩЕНИИ заменить на userId
     clientId,
     message
   ) => {
-    let playerId = message.playerId;
+    if (message.userId === "admin") {
+      this.adminClientId = clientId;
+      return {
+        toAdmin: {
+          type: MESSAGE_TYPE.HANDSHAKE,
+          games: this.games,
+          users: this.users,
+        },
+      };
+    }
+
+    let userId = message.userId;
     let playerAlreadyExists = false;
     let user: User;
 
-    if (playerId && playerId in this.userClientMap) {
+    if (userId && userId in this.userClientMap) {
       playerAlreadyExists = true;
-      this.userClientMap[playerId] = clientId;
-      user = this.users[playerId];
+      this.userClientMap[userId] = clientId;
+      user = this.users[userId];
     } else {
       user = new User();
-      playerId = user.id;
+      userId = user.id;
       this.userClientMap[user.id] = clientId;
       this.users[user.id] = user;
     }
 
-    const otherPlayers = this.getOtherPlayers(playerId);
+    const otherPlayers = this.getOtherUsers(userId);
 
     const usersGame = this.getGameById(user.gameId);
     const messageToSender: Message<{
@@ -167,7 +178,7 @@ export default class GameController {
       type: MESSAGE_TYPE.HANDSHAKE,
       me: user,
       otherPlayers,
-      game: usersGame?.getGameState?.(playerId),
+      game: usersGame?.getGameState?.(userId),
       ability: usersGame?.abilitiesMode?.getMessagePayloadFromCurrentState?.(),
       legion: usersGame?.legionMode?.currentLegion,
     };
@@ -254,23 +265,12 @@ export default class GameController {
     };
   };
 
-  onSetPlayerName: GameMessageHandler<{ playerId: string; name: string }> = (
+  // TODO в СООБЩЕНИИ заменить на userId
+  onSetPlayerName: GameMessageHandler<{ userId: string; name: string }> = (
     clientId,
     message
   ) => {
-    const player = this.users[message.playerId];
-
-    if (message.name === "admin") {
-      this.adminClientId = clientId;
-      return {
-        toAdmin: {
-          type: MESSAGE_TYPE.NAME_ACCEPTED, // TODO может быть другой тип сообщения здесь
-          games: this.games,
-          users: this.users,
-        },
-      };
-    }
-
+    const player = this.users[message.userId];
     player?.setName(message.name);
     // Logger.log('SET PLAYER NAME', player);
     return {
@@ -309,14 +309,14 @@ export default class GameController {
     };
   };
 
-  onLeaveGame: GameMessageHandler<{ playerId: string; gameId: string }> = (
+  onLeaveGame: GameMessageHandler<{ userId: string; gameId: string }> = (
     clientId,
     message
   ) => {
     // remove player from game
     const game = this.getGameById(message.gameId)!;
-    game.removePlayer(message.playerId);
-    this.users[message.playerId].setReadyToPlayState(false);
+    game.removePlayer(message.userId);
+    this.users[message.userId].setReadyToPlayState(false);
 
     // stop game if no players left
     if (game!.players.length === 0) {

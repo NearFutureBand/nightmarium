@@ -31,15 +31,15 @@ const AbilitiesInterfaceMap: { [key: number]: JSX.Element } = {
 };
 
 export const Controls: FC = () => {
-  const playerId = useAppSelector((state) => state.app.me?.id);
+  const userId = useAppSelector((state) => state.app.me?.id);
   const game = useAppSelector((state) => state.app.game)!;
   const abilityState = useAppSelector((state) => state.app.abilityState);
   const legionState = useAppSelector((state) => state.app.awaitingLegion);
   const winnerId = useAppSelector((state) => state.app.game?.winnerId);
 
   const isMyTurn = useMemo(() => {
-    return playerId === game.activePlayer?.id;
-  }, [game.activePlayer?.id, playerId]);
+    return userId === game.activePlayer?.id;
+  }, [game.activePlayer?.id, userId]);
 
   if (winnerId) {
     return <ControlsIfGameIsOver />;
@@ -161,16 +161,16 @@ function LastStep() {
 
 function ControlsIfGameIsOver() {
   const winnerId = useAppSelector((state) => state.app.game?.winnerId);
-  const playerId = useAppSelector((state) => state.app.me?.id);
+  const userId = useAppSelector((state) => state.app.me?.id);
   const game = useAppSelector((state) => state.app.game)!;
   const sendMessage = useSendMessage();
   const handleLeaveGame = useCallback(() => {
-    sendMessage<{ playerId: string; gameId: string }>({
+    sendMessage<{ userId: string; gameId: string }>({
       type: MESSAGE_TYPE.LEAVE_GAME,
-      playerId: playerId!,
+      userId: userId!,
       gameId: game.id,
     });
-  }, [game.id, playerId, sendMessage]);
+  }, [game.id, userId, sendMessage]);
   return winnerId ? (
     <button onClick={handleLeaveGame}>Выйти из игры</button>
   ) : null;
@@ -369,7 +369,7 @@ function ControlsAxe() {
     }>({
       type: MESSAGE_TYPE.SUBMIT_ABILITY,
       abilityType: abilityState.abilityType,
-      targetPlayerId: selectedMonster!.playerId,
+      targetPlayerId: selectedMonster!.userId,
       targetMonsterId: selectedMonster!.monsterId,
       gameId,
     });
@@ -393,13 +393,13 @@ function ControlsAxe() {
     <div className='controlsDrop'>
       {selectedMonster && (
         <span>
-          {selectedMonster.playerId}: {selectedMonster.monsterId + 1}-й монстр
+          {selectedMonster.userId}: {selectedMonster.monsterId + 1}-й монстр
         </span>
       )}
       <button
         onClick={handleSubmit}
         disabled={
-          selectedMonster?.monsterId === undefined || !selectedMonster.playerId
+          selectedMonster?.monsterId === undefined || !selectedMonster.userId
         }
       >
         Забрать
@@ -427,7 +427,7 @@ function ControlsBones() {
     }>({
       type: MESSAGE_TYPE.SUBMIT_ABILITY,
       abilityType: abilityState.abilityType,
-      targetPlayerId: selectedMonster!.playerId,
+      targetPlayerId: selectedMonster!.userId,
       targetMonsterId: selectedMonster!.monsterId,
       gameId,
     });
@@ -451,13 +451,13 @@ function ControlsBones() {
     <div className='controlsDrop'>
       {selectedMonster && (
         <span>
-          {selectedMonster.playerId}: {selectedMonster.monsterId + 1}-й монстр
+          {selectedMonster.userId}: {selectedMonster.monsterId + 1}-й монстр
         </span>
       )}
       <button
         onClick={handleSubmit}
         disabled={
-          selectedMonster?.monsterId === undefined || !selectedMonster.playerId
+          selectedMonster?.monsterId === undefined || !selectedMonster.userId
         }
       >
         Убить
@@ -511,7 +511,7 @@ function ControlsTeeth() {
       <button
         onClick={handleSubmit}
         disabled={
-          selectedMonster?.monsterId === undefined || !selectedMonster?.playerId
+          selectedMonster?.monsterId === undefined || !selectedMonster?.userId
         }
       >
         Убрать
@@ -525,7 +525,7 @@ function ControlsLegionMode({ isMyTurn }: { isMyTurn: boolean }) {
   const dispatch = useAppDispatch();
   const legionState = useAppSelector((state) => state.app.awaitingLegion);
   const selectedCards = useAppSelector((state) => state.app.selectedCards);
-  const playerId = useAppSelector((state) => state.app.me?.id)!;
+  const userId = useAppSelector((state) => state.app.me?.id)!;
   const gameId = useAppSelector(selectGameId)!;
 
   const oneOrTwoCardsSelected = useMemo(
@@ -538,10 +538,10 @@ function ControlsLegionMode({ isMyTurn }: { isMyTurn: boolean }) {
   const handleThrow = useCallback(() => {
     if (!oneOrTwoCardsSelected) return;
 
-    sendMessage<{ cardIds: number[]; playerId: string; gameId: string }>({
+    sendMessage<{ cardIds: number[]; userId: string; gameId: string }>({
       type: MESSAGE_TYPE.THROW_LEGION_CARD,
       cardIds: selectedCards.map((selectedCards) => selectedCards.cardId),
-      playerId: playerId!,
+      userId: userId!,
       gameId,
     });
     dispatch(deSelectCard());
@@ -549,15 +549,14 @@ function ControlsLegionMode({ isMyTurn }: { isMyTurn: boolean }) {
     dispatch,
     gameId,
     oneOrTwoCardsSelected,
-    playerId,
+    userId,
     selectedCards,
     sendMessage,
   ]);
 
   return (
     <div className='controls'>
-      {isMyTurn ||
-      legionState!.players[playerId].respondedCorrectly === true ? (
+      {isMyTurn || legionState!.players[userId].respondedCorrectly === true ? (
         "Ожидается сброс карт от других игроков"
       ) : (
         <>

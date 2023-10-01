@@ -46,14 +46,14 @@ export const MonsterView = ({
 
   const selected = useMemo(() => {
     return (
-      player.id === selectedMonster?.playerId &&
+      player.id === selectedMonster?.userId &&
       monster.id === selectedMonster?.monsterId
     );
   }, [
     monster.id,
     player.id,
     selectedMonster?.monsterId,
-    selectedMonster?.playerId,
+    selectedMonster?.userId,
   ]);
 
   const handleClick = useCallback(() => {
@@ -61,7 +61,7 @@ export const MonsterView = ({
     dispatch(
       setSelectedMonster({
         monsterId: monster.id,
-        playerId: player.id,
+        userId: player.id,
         monsterBodyLength: monster.body.length,
       })
     );
@@ -103,7 +103,7 @@ export const MonsterView = ({
       },
       selectedMonster: {
         monsterId: monster.id,
-        playerId: player.id,
+        userId: player.id,
         monsterBodyLength: monster.body.length,
       },
       lastAction,

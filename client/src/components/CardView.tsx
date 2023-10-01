@@ -79,7 +79,7 @@ export const CardWithImage: FC<Props> = ({
       {
         cardId: card.id,
         monsterId: monster?.id,
-        playerId: player?.id,
+        userId: player?.id,
       },
       selectedCards
     );
@@ -104,7 +104,7 @@ export const CardWithImage: FC<Props> = ({
         setSelectedCard({
           cardId: card.id,
           monsterId: monster?.id,
-          playerId: player?.id,
+          userId: player?.id,
           shiftPressed: multiSelectAllowed ? event.shiftKey : false,
           cardBodypart: card.bodypart,
           legion: card.legion,

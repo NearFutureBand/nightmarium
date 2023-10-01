@@ -15,7 +15,7 @@ export const getCardIndexInSelection = (
     return (
       card.cardId === cardData.cardId &&
       card.monsterId === cardData.monsterId &&
-      card.playerId === cardData.playerId
+      card.userId === cardData.userId
     );
   });
 };

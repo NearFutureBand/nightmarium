@@ -93,7 +93,7 @@ export default class Network {
       this.sendMessage(this.gameController.userClientMap[user.id], {
         ...message,
         me: this.gameController.users[user.id],
-        otherPlayers: this.gameController.getOtherPlayers(user.id),
+        otherPlayers: this.gameController.getOtherUsers(user.id),
         game: usersGame?.getGameState(user.id),
       });
     });
@@ -107,7 +107,7 @@ export default class Network {
         this.sendMessage(clientId, {
           ...message,
           me: this.gameController.users[user.id],
-          otherPlayers: this.gameController.getOtherPlayers(user.id),
+          otherPlayers: this.gameController.getOtherUsers(user.id),
           game: usersGame?.getGameState(user.id),
         });
       }

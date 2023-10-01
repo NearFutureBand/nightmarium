@@ -5,7 +5,7 @@ import { useAppSelector } from "./hooks/useAppSelector";
 import { generateRandomBackground } from "./helpers";
 import {
   selectAmIReadyToPlay,
-  selectPlayerId,
+  selectUserId,
   setAbilityState,
   setAwaitingLegion,
   setGame,
@@ -32,7 +32,7 @@ const backgroundColor = generateRandomBackground();
 
 function Router() {
   const game = useAppSelector((state) => state.app.game);
-  const playerId = useAppSelector(selectPlayerId);
+  const userId = useAppSelector(selectUserId);
   const winnerId = game?.winnerId;
   const imReadyToPlay = useAppSelector(selectAmIReadyToPlay);
 
@@ -41,7 +41,7 @@ function Router() {
     [game?.activePlayer]
   );
 
-  if (!playerId) {
+  if (!userId) {
     return <Loading fullscreen />;
   }
 

@@ -54,7 +54,7 @@ export const useInitSocket = ({
 
   const _onHandshake = useCallback(
     (message: MessageHandshake) => {
-      localStorage.setItem("playerId", message.me.id);
+      localStorage.setItem("userId", message.me.id);
       onHandshake?.(message);
     },
     [onHandshake]
@@ -114,9 +114,9 @@ export const useInitSocket = ({
     (socket: WebSocket) => {
       dispatch(setNetworkLoading(false));
       dispatch(setIsConnected(true));
-      const playerId = localStorage.getItem("playerId");
-      console.log("CLIENT: connected", playerId);
-      socket.send(JSON.stringify({ type: "HANDSHAKE", playerId }));
+      const userId = localStorage.getItem("userId");
+      console.log("CLIENT: connected", userId);
+      socket.send(JSON.stringify({ type: "HANDSHAKE", userId }));
       saveServerAddress({ url: socket.url });
       toast(`Успешно подключен к  ${socket.url}`);
     },

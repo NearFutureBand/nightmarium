@@ -48,15 +48,15 @@ export const appSlice = createSlice({
   initialState,
   reducers: {
     setSelectedMonster: (state, action: PayloadAction<SelectedMonster>) => {
-      const { monsterId, playerId, monsterBodyLength } = action.payload;
+      const { monsterId, userId, monsterBodyLength } = action.payload;
       if (
         state.selectedMonster?.monsterId === monsterId &&
-        state.selectedMonster?.playerId === playerId
+        state.selectedMonster?.userId === userId
       ) {
         state.selectedMonster = null;
         return;
       }
-      state.selectedMonster = { monsterId, playerId, monsterBodyLength };
+      state.selectedMonster = { monsterId, userId, monsterBodyLength };
     },
     deSelectMonster: (state) => {
       state.selectedMonster = null;
@@ -65,17 +65,11 @@ export const appSlice = createSlice({
       state,
       action: PayloadAction<SelectedCard & { shiftPressed: boolean }>
     ) => {
-      const {
-        monsterId,
-        playerId,
-        cardId,
-        shiftPressed,
-        cardBodypart,
-        legion,
-      } = action.payload;
+      const { monsterId, userId, cardId, shiftPressed, cardBodypart, legion } =
+        action.payload;
 
       const cardIndexIfSelected = getCardIndexInSelection(
-        { cardId, monsterId, playerId },
+        { cardId, monsterId, userId },
         state.selectedCards
       );
       const isCardAlreadySelected = cardIndexIfSelected >= 0;
@@ -93,7 +87,7 @@ export const appSlice = createSlice({
         state.selectedCards.length > 1
       ) {
         state.selectedCards = [
-          { monsterId, cardId, playerId, cardBodypart, legion },
+          { monsterId, cardId, userId, cardBodypart, legion },
         ];
       }
       if (isCardAlreadySelected && shiftPressed) {
@@ -103,14 +97,14 @@ export const appSlice = createSlice({
         state.selectedCards.push({
           monsterId,
           cardId,
-          playerId,
+          userId,
           cardBodypart,
           legion,
         });
       }
       if (!isCardAlreadySelected && !shiftPressed) {
         state.selectedCards = [
-          { monsterId, cardId, playerId, cardBodypart, legion },
+          { monsterId, cardId, userId, cardBodypart, legion },
         ];
       }
     },
@@ -138,13 +132,13 @@ export const appSlice = createSlice({
   },
 });
 
-export const selectPlayerId = (state: RootState) => {
+export const selectUserId = (state: RootState) => {
   return state.app.me?.id;
 };
 
-export const selectIsActive = (playerId?: string) => (state: RootState) => {
+export const selectIsActive = (userId?: string) => (state: RootState) => {
   const game = state.app.game;
-  return playerId === game?.activePlayer?.id;
+  return userId === game?.activePlayer?.id;
 };
 
 export const selectAvailableBodyPartsToInstall = (

@@ -23,8 +23,8 @@ export type AbilityState = {
 export type LegionState = {
   legion: Legion;
   players: {
-    [playerId: string]: {
-      playerId: string;
+    [userId: string]: {
+      userId: string;
       howManyCardsHas: number; // сколько карт у игрока есть ( не может отдать больше этого количества)
       gaveCards: number;
       respondedCorrectly: boolean;
@@ -51,7 +51,7 @@ export type Game = {
   lastAction: string | null;
   cardsAvailable: CardMap;
   cardsThrownAway: CardMap;
-  playerId: string;
+  userId: string;
   me: Player<Card[]>;
   otherPlayers: Player<number>[];
   activePlayer?: Player<number>;
@@ -97,7 +97,7 @@ export type MessageAwaitLegion = MessageWithGame &
 // export type MessageChangeCards = MessageWithGame & Message<{ cards: Card[] }>;
 
 export type SelectedMonsterShort = {
-  playerId: string;
+  userId: string;
   monsterId: number;
 };
 
@@ -106,7 +106,7 @@ export type SelectedMonster = SelectedMonsterShort & {
 };
 
 export type SelectedCardShort = {
-  playerId?: string;
+  userId?: string;
   monsterId?: number;
   cardId: number;
 };
