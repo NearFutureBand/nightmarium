@@ -7,7 +7,7 @@ import {
 } from "react";
 import { SocketContextType } from "./types";
 import { SERVER_HOST, SERVER_PORT } from "./constants";
-import { Message } from "src/types";
+import { MESSAGE_TYPE, Message } from "src/types";
 
 const DEFAULT_VALUE: SocketContextType = {
   connect: () => {},
@@ -24,6 +24,9 @@ export const SocketConnectProvider = ({ children }: PropsWithChildren) => {
   const onopen = () => {
     console.log("[websocket]: open");
     setIsConnected(true);
+    socket.current?.send(
+      JSON.stringify({ type: MESSAGE_TYPE.HANDSHAKE, playerId: "admin" })
+    );
   };
 
   const onmessage = () => {
