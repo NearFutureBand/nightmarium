@@ -1,3 +1,4 @@
-// TODO какое-то тупое eslint правило ругается
-export * from "./context";
-export * from "./hooks";
+import { useContext } from 'react';
+import { StoreContext } from './context';
+
+export const useStore = () => useContext(StoreContext);

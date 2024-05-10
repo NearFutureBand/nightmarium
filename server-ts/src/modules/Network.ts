@@ -1,7 +1,7 @@
-import { WebSocketServer, WebSocket, RawData } from "ws";
-import { HOST, PORT } from "../constants";
-import { Message } from "../types";
-import GameController from "./GameController";
+import { WebSocketServer, WebSocket, RawData } from 'ws';
+import { GAME_SERVER_HOST, GAME_SERVER_PORT } from '../constants';
+import { Message } from '../types';
+import GameController from './GameController';
 
 export default class Network {
   private host: string;
@@ -11,8 +11,8 @@ export default class Network {
   private gameController: GameController;
 
   constructor() {
-    this.host = HOST;
-    this.port = PORT;
+    this.host = GAME_SERVER_HOST;
+    this.port = GAME_SERVER_PORT;
     this.wsServer = null;
     this.clientsMap = {};
     this.gameController = new GameController();
@@ -25,8 +25,8 @@ export default class Network {
   launchServer = () => {
     if (!this.wsServer) {
       this.wsServer = new WebSocketServer({ host: this.host, port: this.port });
-      console.log(" ======= Server started ====== ");
-      this.wsServer.on("connection", this.onConnection);
+      console.log(' ======= Server started ====== ');
+      this.wsServer.on('connection', this.onConnection);
     }
   };
 
@@ -35,8 +35,8 @@ export default class Network {
     console.log(`new client is connected ${clientId}`);
     this.addClient(clientId, wsClient);
 
-    wsClient.on("message", (event) => this.onMessage(event, clientId)); // TODO find out event type
-    wsClient.on("close", () => this.onClose(clientId));
+    wsClient.on('message', (event) => this.onMessage(event, clientId)); // TODO find out event type
+    wsClient.on('close', () => this.onClose(clientId));
     this.displayClientsMap();
     this.displayPlayersMap();
   };
@@ -46,17 +46,11 @@ export default class Network {
     // Logger.logIncomingMessage(clientId, message);
 
     try {
-      const gameResponse = this.gameController.processGameMessage(
-        clientId,
-        message
-      );
+      const gameResponse = this.gameController.processGameMessage(clientId, message);
       // Logger.log('<=== OUTCOMING MESSAGES', gameResponse);
 
       if (gameResponse.toAdmin && this.gameController.adminClientId) {
-        this.sendMessage(
-          this.gameController.adminClientId,
-          gameResponse.toAdmin
-        );
+        this.sendMessage(this.gameController.adminClientId, gameResponse.toAdmin);
       }
       if (gameResponse.toSenderOnly) {
         this.sendMessage(clientId, gameResponse.toSenderOnly);
@@ -83,7 +77,7 @@ export default class Network {
   sendMessage = <T>(clientId: string, message: Message<T>) => {
     const wsClient = this.clientsMap[clientId];
     if (!wsClient) return;
-    console.log("<==", message.type);
+    console.log('<==', message.type);
     wsClient.send(JSON.stringify(message));
   };
 
@@ -115,21 +109,19 @@ export default class Network {
   };
 
   displayClientsMap = () => {
-    console.log("CLIENT_ID           |   WEBSOCKET ");
+    console.log('CLIENT_ID           |   WEBSOCKET ');
     for (const clientId in this.clientsMap) {
       console.log(`${clientId}     ${Boolean(this.clientsMap[clientId])}`);
     }
-    console.log("----------------------------------\n");
+    console.log('----------------------------------\n');
   };
 
   displayPlayersMap = () => {
-    console.log("PLAYER_ID                         |  CLIENT_ID ");
+    console.log('PLAYER_ID                         |  CLIENT_ID ');
     for (const playerId in this.gameController.userClientMap) {
-      console.log(
-        `${playerId}    ${this.gameController.userClientMap[playerId]}`
-      );
+      console.log(`${playerId}    ${this.gameController.userClientMap[playerId]}`);
     }
-    console.log("----------------------------------\n");
+    console.log('----------------------------------\n');
   };
 }
 

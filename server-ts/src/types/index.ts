@@ -1,5 +1,5 @@
-import { MESSAGE_TYPE } from 'lib';
 import Monster from '../modules/Monster';
+import { MESSAGE_TYPE } from '../shared/types';
 
 export type Legion = 'red' | 'orange' | 'blue' | 'green';
 

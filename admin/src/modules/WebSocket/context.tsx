@@ -1,40 +1,26 @@
-import {
-  PropsWithChildren,
-  createContext,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
-import { SocketContextType } from "./types";
-import { SERVER_HOST, SERVER_PORT } from "./constants";
-import { MESSAGE_TYPE, Message } from "src/types";
+import { PropsWithChildren, createContext, useEffect, useRef, useState } from 'react';
+import { SocketContextType } from './types';
+import { SERVER_HOST, SERVER_PORT } from './constants';
+import { MESSAGE_TYPE, Message } from 'src/types';
 
-const DEFAULT_VALUE: SocketContextType = {
-  connect: () => {},
-  isConnected: false,
-  sendMessage: () => {},
-};
-
-export const SocketContext = createContext<SocketContextType>(DEFAULT_VALUE);
+export const SocketContext = createContext<SocketContextType>({} as SocketContextType);
 
 export const SocketConnectProvider = ({ children }: PropsWithChildren) => {
   const [isConnected, setIsConnected] = useState(false);
   const socket = useRef<WebSocket>();
 
   const onopen = () => {
-    console.log("[websocket]: open");
+    console.log('[websocket]: open');
     setIsConnected(true);
-    socket.current?.send(
-      JSON.stringify({ type: MESSAGE_TYPE.HANDSHAKE, playerId: "admin" })
-    );
+    socket.current?.send(JSON.stringify({ type: MESSAGE_TYPE.HANDSHAKE, playerId: 'admin' }));
   };
 
   const onmessage = () => {
-    console.log("[websocket]: message");
+    console.log('[websocket]: message');
   };
 
   const onerror = () => {
-    console.log("[websocket]: error");
+    console.log('[websocket]: error');
   };
 
   const connect = () => {
@@ -61,8 +47,6 @@ export const SocketConnectProvider = ({ children }: PropsWithChildren) => {
   }, []);
 
   return (
-    <SocketContext.Provider value={{ connect, isConnected, sendMessage }}>
-      {children}
-    </SocketContext.Provider>
+    <SocketContext.Provider value={{ connect, isConnected, sendMessage }}>{children}</SocketContext.Provider>
   );
 };

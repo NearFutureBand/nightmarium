@@ -1,7 +1,6 @@
 import { CARDS } from './Cards';
 import { randomInteger } from '../helpers';
 import { sortBy } from 'lodash';
-import { MESSAGE_TYPE } from 'lib';
 import {
   AbilityAxeData,
   AbilityBonesData,
@@ -22,6 +21,7 @@ import Player from './Player';
 import { ABILITIES, GAME_ACTIONS } from '../constants';
 import Monster from './Monster';
 import { AbilitiesMode, ApplyAbilityMap, LegionMode } from './Modes';
+import { MESSAGE_TYPE } from '../shared/types';
 
 export default class Game {
   public id: string;

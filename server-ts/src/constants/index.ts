@@ -21,5 +21,7 @@ export const GAME_ACTIONS = {
   TAKE_CARD: 'TAKE_CARD',
 };
 
-export const HOST: string = process.env.HOST || '0.0.0.0';
-export const PORT: number = process.env.PORT ? Number(process.env.PORT) : 9000;
+export const GAME_SERVER_HOST: string = process.env.GAME_SERVER_HOST || '0.0.0.0';
+export const GAME_SERVER_PORT: number = process.env.GAME_SERVER_PORT
+  ? Number(process.env.GAME_SERVER_PORT)
+  : 9000;

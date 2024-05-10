@@ -1,5 +1,5 @@
-import { MESSAGE_TYPE } from 'lib';
 import { randomFloat } from '../helpers';
+import { MESSAGE_TYPE } from '../shared/types';
 import { AbilityMessagePayload, ApplyAbilityParams, GameState, Legion, Message } from '../types';
 import Game from './Game';
 import Player, { User } from './Player';

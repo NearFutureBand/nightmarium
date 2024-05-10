@@ -1,5 +1,5 @@
-import { MESSAGE_TYPE } from 'lib';
 import { ABILITIES } from '../constants';
+import { MESSAGE_TYPE } from '../shared/types';
 import {
   AbilityMessagePayload,
   AbiltityMessageOrUndefined,

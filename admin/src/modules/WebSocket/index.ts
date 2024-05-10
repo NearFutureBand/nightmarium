@@ -1,2 +1,4 @@
-export * from "./context";
-export * from "./types";
+import { useContext } from 'react';
+import { SocketContext } from './context';
+
+export const useWebsocket = () => useContext(SocketContext);
