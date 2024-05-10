@@ -1,14 +1,8 @@
-import { MESSAGE_TYPE } from "../constants";
-import { randomFloat } from "../helpers";
-import {
-  AbilityMessagePayload,
-  ApplyAbilityParams,
-  GameState,
-  Legion,
-  Message,
-} from "../types";
-import Game from "./Game";
-import Player, { User } from "./Player";
+import { MESSAGE_TYPE } from 'lib';
+import { randomFloat } from '../helpers';
+import { AbilityMessagePayload, ApplyAbilityParams, GameState, Legion, Message } from '../types';
+import Game from './Game';
+import Player, { User } from './Player';
 
 type GameMessageResponse = {
   broadcast?: Message;
@@ -58,10 +52,7 @@ export default class GameController {
     return undefined;
   };
 
-  public processGameMessage = (
-    clientId: string,
-    message: Message
-  ): GameMessageResponse => {
+  public processGameMessage = (clientId: string, message: Message): GameMessageResponse => {
     return this.messageActionsMap[message.type](clientId, message);
   };
 
@@ -129,9 +120,7 @@ export default class GameController {
     // TODO перепридумать логику этой функции. Нужно сосчитать все ли игроки нажали "готов"
     const allUsers = Object.values(this.users);
     const awaitingUsers = allUsers.filter((u) => u.readyToPlay);
-    return (
-      awaitingUsers.length >= 5 || awaitingUsers.length === allUsers.length
-    );
+    return awaitingUsers.length >= 5 || awaitingUsers.length === allUsers.length;
   };
 
   onHandshake: GameMessageHandler<{ userId: string }> = (
@@ -139,7 +128,7 @@ export default class GameController {
     clientId,
     message
   ) => {
-    if (message.userId === "admin") {
+    if (message.userId === 'admin') {
       this.adminClientId = clientId;
       return {
         toAdmin: {
@@ -235,10 +224,7 @@ export default class GameController {
     }
   };
 
-  onSubmitAbility = (
-    cliendId: string,
-    message: Message<any>
-  ): GameMessageResponse => {
+  onSubmitAbility = (cliendId: string, message: Message<any>): GameMessageResponse => {
     const { type, gameId, ...abilityParams } = message;
     const game = this.getGameById(gameId);
     const result = game!.applyAbility({
@@ -251,10 +237,7 @@ export default class GameController {
     };
   };
 
-  onCancelAbility: GameMessageHandler<{ gameId: string }> = (
-    cliendId,
-    message
-  ) => {
+  onCancelAbility: GameMessageHandler<{ gameId: string }> = (cliendId, message) => {
     const game = this.getGameById(message.gameId)!;
     const result = game.stopAbilitiesMode();
 
@@ -266,10 +249,7 @@ export default class GameController {
   };
 
   // TODO в СООБЩЕНИИ заменить на userId
-  onSetPlayerName: GameMessageHandler<{ userId: string; name: string }> = (
-    clientId,
-    message
-  ) => {
+  onSetPlayerName: GameMessageHandler<{ userId: string; name: string }> = (clientId, message) => {
     const player = this.users[message.userId];
     player?.setName(message.name);
     // Logger.log('SET PLAYER NAME', player);
@@ -287,19 +267,13 @@ export default class GameController {
     gameId: string;
   }> = (clientId, message) => {
     const game = this.getGameById(message.gameId)!;
-    const result = game.playerThrowsLegionCard(
-      message.playerId,
-      message.cardIds
-    );
+    const result = game.playerThrowsLegionCard(message.playerId, message.cardIds);
     return {
       broadcast: result,
     };
   };
 
-  onChangeCards: GameMessageHandler<{ cardIds: number[]; gameId: string }> = (
-    clientId,
-    message
-  ) => {
+  onChangeCards: GameMessageHandler<{ cardIds: number[]; gameId: string }> = (clientId, message) => {
     const game = this.getGameById(message.gameId)!;
     game.activePlayerExchangesCards(message.cardIds);
     return {
@@ -309,10 +283,7 @@ export default class GameController {
     };
   };
 
-  onLeaveGame: GameMessageHandler<{ userId: string; gameId: string }> = (
-    clientId,
-    message
-  ) => {
+  onLeaveGame: GameMessageHandler<{ userId: string; gameId: string }> = (clientId, message) => {
     // remove player from game
     const game = this.getGameById(message.gameId)!;
     game.removePlayer(message.userId);

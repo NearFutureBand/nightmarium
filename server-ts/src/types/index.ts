@@ -1,4 +1,4 @@
-import { MESSAGE_TYPE } from '../constants';
+import { MESSAGE_TYPE } from 'lib';
 import Monster from '../modules/Monster';
 
 export type Legion = 'red' | 'orange' | 'blue' | 'green';
@@ -111,6 +111,10 @@ export type PossibleServerResponseMessage = Message<{
 
 export type AbiltityMessageOrUndefined = Message<{ ability: AbilityMessagePayload }> | undefined;
 
-export type PutCardReturnType = Message | Message<{ legion: LegionMessagePayload }> | Message<{ ability: AbilityMessagePayload }> | undefined;
+export type PutCardReturnType =
+  | Message
+  | Message<{ legion: LegionMessagePayload }>
+  | Message<{ ability: AbilityMessagePayload }>
+  | undefined;
 
 export type ApplyAbilityHandler<T = {}> = (params: T) => PutCardReturnType | void;
