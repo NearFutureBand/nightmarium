@@ -17,7 +17,7 @@ type GameMessageHandler<MessagePayloadType = {}> = (
 ) => GameMessageResponse;
 
 export default class GameController {
-  public game: Game | null;
+  // public game: Game | null;
   public games: { [gameId: string]: Game };
   public userClientMap: { [userId: string]: string }; // userId -> clientId
   public users: { [userId: string]: User };
@@ -27,8 +27,8 @@ export default class GameController {
   };
 
   constructor() {
-    this.game = null;
-    this.games = {}; // TODO пока не используется
+    // this.game = null;
+    this.games = {};
     this.userClientMap = {};
     this.users = {};
     this.messageActionsMap = {
@@ -42,6 +42,7 @@ export default class GameController {
       [MESSAGE_TYPE.CHANGE_CARDS]: this.onChangeCards,
       [MESSAGE_TYPE.READY_TO_PLAY]: this.onReadyToPlay,
       [MESSAGE_TYPE.LEAVE_GAME]: this.onLeaveGame,
+      [MESSAGE_TYPE.ADMIN_HANDSHAKE]: this.onAdminHandshake,
     };
   }
 
@@ -113,6 +114,11 @@ export default class GameController {
       broadcast: {
         type: MESSAGE_TYPE.READY_TO_PLAY,
       },
+      toAdmin: {
+        type: MESSAGE_TYPE.READY_TO_PLAY,
+        games: this.games,
+        users: this.users,
+      },
     };
   };
 
@@ -128,17 +134,6 @@ export default class GameController {
     clientId,
     message
   ) => {
-    if (message.userId === 'admin') {
-      this.adminClientId = clientId;
-      return {
-        toAdmin: {
-          type: MESSAGE_TYPE.HANDSHAKE,
-          games: this.games,
-          users: this.users,
-        },
-      };
-    }
-
     let userId = message.userId;
     let playerAlreadyExists = false;
     let user: User;
@@ -181,16 +176,38 @@ export default class GameController {
     return {
       toSenderOnly: messageToSender,
       toAllExceptSender: messageToAllExceptSender,
+      toAdmin: {
+        type: MESSAGE_TYPE.HANDSHAKE,
+        games: this.games,
+        users: this.users,
+      },
     };
   };
 
-  sendStartGameMessage = (gameId: string): GameMessageResponse => {
+  onAdminHandshake: GameMessageHandler = (clientId, message) => {
+    this.adminClientId = clientId;
+
+    return {
+      toAdmin: {
+        type: MESSAGE_TYPE.ADMIN_HANDSHAKE,
+        games: this.games,
+        users: this.users,
+      },
+    };
+  };
+
+  sendStartGameMessage = (gameId: string) => {
     this.getGameById(gameId)!.setNextActivePlayer();
     return {
       broadcast: {
         type: MESSAGE_TYPE.START,
       },
-    };
+      toAdmin: {
+        type: MESSAGE_TYPE.START,
+        games: this.games,
+        users: this.users,
+      },
+    } as GameMessageResponse;
   };
 
   onTakeCard: GameMessageHandler<{ gameId: string }> = (cliendId, message) => {
@@ -250,13 +267,18 @@ export default class GameController {
 
   // TODO в СООБЩЕНИИ заменить на userId
   onSetPlayerName: GameMessageHandler<{ userId: string; name: string }> = (clientId, message) => {
-    const player = this.users[message.userId];
-    player?.setName(message.name);
+    const user = this.users[message.userId];
+    user?.setName(message.name);
     // Logger.log('SET PLAYER NAME', player);
     return {
       toSenderOnly: {
         type: MESSAGE_TYPE.NAME_ACCEPTED,
-        me: player,
+        me: user,
+      },
+      toAdmin: {
+        type: MESSAGE_TYPE.NAME_ACCEPTED,
+        games: this.games,
+        users: this.users,
       },
     };
   };

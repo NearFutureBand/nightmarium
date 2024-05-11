@@ -10,11 +10,12 @@ export const SocketConnectProvider = ({ children }: PropsWithChildren) => {
   const onopen = () => {
     console.log('[websocket]: open');
     setIsConnected(true);
-    socket.current?.send(JSON.stringify({ type: MESSAGE_TYPE.HANDSHAKE, playerId: 'admin' }));
+    socket.current?.send(JSON.stringify({ type: MESSAGE_TYPE.ADMIN_HANDSHAKE }));
   };
 
-  const onmessage = () => {
-    console.log('[websocket]: message');
+  const onmessage = (event: MessageEvent<unknown>) => {
+    const m: Message = JSON.parse(event.data as string);
+    console.log('TO ADMIN: message', m);
   };
 
   const onerror = () => {
@@ -41,6 +42,7 @@ export const SocketConnectProvider = ({ children }: PropsWithChildren) => {
   useEffect(() => {
     return () => {
       setIsConnected(false);
+      socket.current?.close();
     };
   }, []);
 

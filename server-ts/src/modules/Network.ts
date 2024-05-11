@@ -18,10 +18,6 @@ export default class Network {
     this.gameController = new GameController();
   }
 
-  addClient = (clientId: string, wsClient: WebSocket) => {
-    this.clientsMap[clientId] = wsClient;
-  };
-
   launchServer = () => {
     if (!this.wsServer) {
       this.wsServer = new WebSocketServer({ host: this.host, port: this.port });
@@ -39,6 +35,10 @@ export default class Network {
     wsClient.on('close', () => this.onClose(clientId));
     this.displayClientsMap();
     this.displayPlayersMap();
+  };
+
+  addClient = (clientId: string, wsClient: WebSocket) => {
+    this.clientsMap[clientId] = wsClient;
   };
 
   onMessage = (event: RawData, clientId: string) => {
