@@ -1,17 +1,16 @@
-import { SocketConnectProvider } from "src/modules/WebSocket";
-import { useWebsocket } from "./modules/WebSocket/hooks";
-import { StateScreen } from "./pages/StateScreen";
-import { StoreProvider } from "./modules/Store";
+import { SocketConnectProvider, useWebsocket } from 'src/modules/WebSocket';
+import { StateScreen } from './pages/StateScreen';
+import { StoreProvider } from './modules/Store/context';
 
 export function Router() {
   const { isConnected } = useWebsocket();
 
   return (
     <>
-      <header className='sticky top-0 w-full shadow-sm'>
-        Status: {isConnected ? "Connected" : "Disconnected"}
+      <header className="sticky top-0 w-full shadow-sm bg-white px-4 py-2">
+        Status: {isConnected ? 'Connected' : 'Disconnected'}
       </header>
-      {!isConnected && <StateScreen />}
+      {isConnected && <StateScreen />}
     </>
   );
 }
