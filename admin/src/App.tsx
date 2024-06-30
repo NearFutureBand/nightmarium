@@ -17,10 +17,10 @@ export function Router() {
 
 export function App() {
   return (
-    <SocketConnectProvider>
-      <StoreProvider>
+    <StoreProvider>
+      <SocketConnectProvider>
         <Router />
-      </StoreProvider>
-    </SocketConnectProvider>
+      </SocketConnectProvider>
+    </StoreProvider>
   );
 }

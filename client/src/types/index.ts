@@ -1,8 +1,8 @@
-import { MESSAGE_TYPE, ABILITY_TYPE } from "src/constants";
+import { MESSAGE_TYPE, ABILITY_TYPE } from 'src/constants';
 
 export type BodypartIndex = 0 | 1 | 2;
 
-export type Legion = "blue" | "red" | "orange" | "green";
+export type Legion = 'blue' | 'red' | 'orange' | 'green';
 
 export type Card = {
   ability: ABILITY_TYPE | null;
@@ -49,8 +49,8 @@ export type Game = {
   id: string;
   actions: number;
   lastAction: string | null;
-  cardsAvailable: CardMap;
-  cardsThrownAway: CardMap;
+  cardsAvailable: Card[];
+  cardsThrownAway: Card[];
   userId: string;
   me: Player<Card[]>;
   otherPlayers: Player<number>[];
@@ -90,8 +90,7 @@ export type MessageAwaitAbility = MessageWithGame &
 
 export type MessageGameOver = MessageWithGame & Message<{ winner: string }>;
 export type MessagePlayerConnected = Message<{ otherPlayers: User[] }>;
-export type MessageAwaitLegion = MessageWithGame &
-  Message<{ legion: LegionState }>;
+export type MessageAwaitLegion = MessageWithGame & Message<{ legion: LegionState }>;
 
 // DEVNOTE на случай если надо отедльно показывать какие карты пришли взамен
 // export type MessageChangeCards = MessageWithGame & Message<{ cards: Card[] }>;

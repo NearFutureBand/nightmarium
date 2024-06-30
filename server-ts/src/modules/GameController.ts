@@ -1,6 +1,6 @@
 import { randomFloat } from '../helpers';
 import { MESSAGE_TYPE } from '../shared/types';
-import { AbilityMessagePayload, ApplyAbilityParams, GameState, Legion, Message } from '../types';
+import { AbilityMessagePayload, ApplyAbilityParams, Card, GameState, Legion, Message } from '../types';
 import Game from './Game';
 import Player, { User } from './Player';
 
@@ -43,6 +43,7 @@ export default class GameController {
       [MESSAGE_TYPE.READY_TO_PLAY]: this.onReadyToPlay,
       [MESSAGE_TYPE.LEAVE_GAME]: this.onLeaveGame,
       [MESSAGE_TYPE.ADMIN_HANDSHAKE]: this.onAdminHandshake,
+      [MESSAGE_TYPE.ADMIN_RESORT_CARDS]: this.onAdminResortCards,
     };
   }
 
@@ -86,7 +87,7 @@ export default class GameController {
   };
 
   /**
-   * Тут создается инстанс Player
+   * Тут создается инстанс Player и Game, если нужно
    * @param clientId
    * @param message
    * @returns
@@ -217,6 +218,11 @@ export default class GameController {
       broadcast: {
         type: MESSAGE_TYPE.TAKE_CARD,
       },
+      toAdmin: {
+        type: MESSAGE_TYPE.TAKE_CARD,
+        games: this.games,
+        users: this.users,
+      },
     };
   };
 
@@ -234,6 +240,11 @@ export default class GameController {
         broadcast: result || {
           type: MESSAGE_TYPE.PLAY_CARD,
         },
+        toAdmin: {
+          type: MESSAGE_TYPE.PLAY_CARD,
+          games: this.games,
+          users: this.users,
+        },
       };
     } catch (error) {
       console.log(error);
@@ -241,7 +252,7 @@ export default class GameController {
     }
   };
 
-  onSubmitAbility = (cliendId: string, message: Message<any>): GameMessageResponse => {
+  onSubmitAbility: GameMessageHandler = (cliendId: string, message: Message<any>) => {
     const { type, gameId, ...abilityParams } = message;
     const game = this.getGameById(gameId);
     const result = game!.applyAbility({
@@ -250,6 +261,11 @@ export default class GameController {
     return {
       broadcast: result || {
         type: MESSAGE_TYPE.PLAY_CARD,
+      },
+      toAdmin: {
+        type: MESSAGE_TYPE.PLAY_CARD,
+        games: this.games,
+        users: this.users,
       },
     };
   };
@@ -261,6 +277,11 @@ export default class GameController {
     return {
       broadcast: result || {
         type: MESSAGE_TYPE.PLAY_CARD,
+      },
+      toAdmin: {
+        type: MESSAGE_TYPE.PLAY_CARD,
+        games: this.games,
+        users: this.users,
       },
     };
   };
@@ -292,6 +313,11 @@ export default class GameController {
     const result = game.playerThrowsLegionCard(message.playerId, message.cardIds);
     return {
       broadcast: result,
+      toAdmin: {
+        type: MESSAGE_TYPE.AWAIT_LEGION_CARD,
+        games: this.games,
+        users: this.users,
+      },
     };
   };
 
@@ -301,6 +327,11 @@ export default class GameController {
     return {
       broadcast: {
         type: MESSAGE_TYPE.CHANGE_CARDS,
+      },
+      toAdmin: {
+        type: MESSAGE_TYPE.CHANGE_CARDS,
+        games: this.games,
+        users: this.users,
       },
     };
   };
@@ -319,6 +350,27 @@ export default class GameController {
     return {
       broadcast: {
         type: MESSAGE_TYPE.LEAVE_GAME,
+      },
+      toAdmin: {
+        type: MESSAGE_TYPE.LEAVE_GAME,
+        games: this.games,
+        users: this.users,
+      },
+    };
+  };
+
+  onAdminResortCards: GameMessageHandler<{ gameId: string; cardId: number; targetIndex: number }> = (
+    cliendId,
+    message
+  ) => {
+    const game = this.getGameById(message.gameId)!;
+    game.replaceCards(message.cardId, message.targetIndex);
+
+    return {
+      toAdmin: {
+        type: MESSAGE_TYPE.ADMIN_RESORT_CARDS,
+        games: this.games,
+        users: this.users,
       },
     };
   };

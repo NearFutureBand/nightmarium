@@ -16,6 +16,7 @@ export enum MESSAGE_TYPE {
   READY_TO_PLAY = 'READY_TO_PLAY',
   LEAVE_GAME = 'LEAVE_GAME',
   ADMIN_HANDSHAKE = 'ADMIN_HANDSHAKE',
+  ADMIN_RESORT_CARDS = 'ADMIN_RESORT_CARDS',
 }
 
 export type Message<T = object> = T & {
@@ -76,9 +77,9 @@ export type Game = {
 };
 export type Games = Record<string, Game>;
 
-export type CardsAvailable = Record<string, Card>;
+export type CardsAvailable = Card[];
 
-export type CardsThrownAway = Record<string, Card>;
+export type CardsThrownAway = Card[];
 
 export type Player = {
   _id: string;

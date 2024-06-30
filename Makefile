@@ -5,4 +5,6 @@ run-server:
 sl:
 	cd server-ts && npm run dev
 cl:
-	cd client-ts && npm start
+	cd client && npm run dev
+al:
+	cd admin && npm run dev

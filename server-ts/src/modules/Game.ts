@@ -25,8 +25,8 @@ import { MESSAGE_TYPE } from '../shared/types';
 
 export default class Game {
   public id: string;
-  private cardsAvailable: CardsDatabase;
-  private cardsThrownAway: CardsDatabase;
+  private cardsAvailable: Card[];
+  private cardsThrownAway: Card[];
   private _players: Player[];
   private activePlayerIndex: number | null;
   private actions: number;
@@ -43,8 +43,8 @@ export default class Game {
 
   constructor(id: string) {
     this.id = id;
-    this.cardsAvailable = CARDS;
-    this.cardsThrownAway = {};
+    this.cardsAvailable = this.getShuffledCards();
+    this.cardsThrownAway = [];
     this._players = [];
     this.activePlayerIndex = null;
     this.actions = 0;
@@ -74,15 +74,8 @@ export default class Game {
   };
 
   giveCard = () => {
-    let availableIndices = Object.keys(this.cardsAvailable);
-    if (availableIndices.length === 0) {
-      this.cardsAvailable = { ...this.cardsThrownAway };
-      this.cardsThrownAway = {};
-      availableIndices = Object.keys(this.cardsAvailable);
-    }
-    const cardIndex = availableIndices[randomInteger(0, availableIndices.length - 1)];
-    const card: Card = { ...this.cardsAvailable[cardIndex] };
-    delete this.cardsAvailable[cardIndex];
+    const card = this.cardsAvailable[0];
+    this.cardsAvailable = this.cardsAvailable.slice(1);
     return card;
   };
 
@@ -268,7 +261,7 @@ export default class Game {
   };
 
   throwCardAway = (card: Card) => {
-    this.cardsThrownAway[card.id] = card;
+    this.cardsThrownAway.push(card);
   };
 
   throwCardsAway = (cards: Card[]) => {
@@ -282,6 +275,24 @@ export default class Game {
     activePlayer.addCards(new Array(Math.floor(cardIds.length / 2)).fill(null).map(() => this.giveCard()));
     this.lastAction = GAME_ACTIONS.CHANGE_CARDS;
     this.minusAction();
+  };
+
+  /** @deprecated */
+  setNewAvailableCardsOrder = (cards: Card[]) => {
+    this.cardsAvailable = cards;
+  };
+
+  replaceCards = (cardId: number, targetIndex: number) => {
+    let cardIndexFromAvailable = this.findCardIndexById(cardId, this.cardsAvailable);
+    if (cardIndexFromAvailable !== undefined) {
+      const [movingCard] = this.cardsAvailable.splice(cardIndexFromAvailable, 1);
+      this.cardsAvailable.splice(targetIndex, 0, movingCard);
+      return;
+    }
+    cardIndexFromAvailable = this.findCardIndexById(cardId, this.cardsThrownAway);
+    if (cardIndexFromAvailable === undefined) return;
+    const [movingCard] = this.cardsThrownAway.splice(cardIndexFromAvailable, 1);
+    this.cardsAvailable.splice(targetIndex, 0, movingCard);
   };
 
   //
@@ -444,5 +455,22 @@ export default class Game {
       type: MESSAGE_TYPE.AWAIT_LEGION_CARD,
       legion: this.legionMode!.getLegionModeState(),
     };
+  };
+
+  private getShuffledCards = () => {
+    const cards = Object.values(CARDS);
+    for (let i = cards.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const temp = cards[i];
+      cards[i] = cards[j];
+      cards[j] = temp;
+    }
+    return cards;
+  };
+
+  private findCardIndexById = (cardId: number, cards: Card[]): number | undefined => {
+    const result = cards.findIndex((card) => card.id === cardId);
+    if (result === -1) return undefined;
+    return result;
   };
 }
