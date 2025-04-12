@@ -65,7 +65,7 @@ export type User = {
   readyToPlay: boolean;
 };
 
-export type Message<T = {}> = T & {
+export type Message<T = object> = T & {
   type: MESSAGE_TYPE;
 };
 

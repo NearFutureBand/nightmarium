@@ -25,6 +25,7 @@ export const CardView = ({
         className
       )}
       draggable
+      style={{ backgroundColor: LEGIONS[card.legion] }}
       {...containerProps}
     >
       <div className="flex justify-between">
@@ -46,3 +47,10 @@ export const CardView = ({
     </div>
   );
 };
+
+const LEGIONS = {
+  'green': 'rgb(111, 194, 111)',
+  'red': 'rgb(226, 88, 88)',
+  'blue': 'rgb(92, 92, 218)',
+  'orange': 'rgb(210, 210, 68)'
+}

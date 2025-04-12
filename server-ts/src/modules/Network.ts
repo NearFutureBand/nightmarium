@@ -44,25 +44,31 @@ export default class Network {
   onMessage = (event: RawData, clientId: string) => {
     const message: Message = JSON.parse(event.toString());
     // Logger.logIncomingMessage(clientId, message);
+    console.debug('==> Message', message);
 
     try {
       const gameResponse = this.gameController.processGameMessage(clientId, message);
       // Logger.log('<=== OUTCOMING MESSAGES', gameResponse);
 
       if (gameResponse.toAdmin && this.gameController.adminClientId) {
+        console.debug('<== to admin', gameResponse.toAdmin);
         this.sendMessage(this.gameController.adminClientId, gameResponse.toAdmin);
       }
       if (gameResponse.toSenderOnly) {
+        console.debug('<== to sender', gameResponse.toSenderOnly);
         this.sendMessage(clientId, gameResponse.toSenderOnly);
       }
       if (gameResponse.broadcast) {
+         console.debug('<== broadcast', gameResponse.broadcast);
         this.broadcast(gameResponse.broadcast);
       }
       if (gameResponse.toAllExceptSender) {
+          console.debug('<== to all except sender', gameResponse.toAllExceptSender);
         this.broadcastExceptOne(gameResponse.toAllExceptSender, clientId);
       }
     } catch (error) {
       // Logger.logGenericError(error);
+      console.debug('Message controller error', error);
     }
   };
 
@@ -77,7 +83,6 @@ export default class Network {
   sendMessage = <T>(clientId: string, message: Message<T>) => {
     const wsClient = this.clientsMap[clientId];
     if (!wsClient) return;
-    console.log('<==', message.type);
     wsClient.send(JSON.stringify(message));
   };
 
@@ -109,19 +114,21 @@ export default class Network {
   };
 
   displayClientsMap = () => {
-    console.log('CLIENT_ID           |   WEBSOCKET ');
-    for (const clientId in this.clientsMap) {
-      console.log(`${clientId}     ${Boolean(this.clientsMap[clientId])}`);
-    }
-    console.log('----------------------------------\n');
+    // console.log('CLIENT_ID           |   WEBSOCKET ');
+    // for (const clientId in this.clientsMap) {
+    //   console.log(`${clientId}     ${Boolean(this.clientsMap[clientId])}`);
+    // }
+    // console.log('----------------------------------\n');
+    console.log(this.clientsMap);
   };
 
   displayPlayersMap = () => {
-    console.log('PLAYER_ID                         |  CLIENT_ID ');
-    for (const playerId in this.gameController.userClientMap) {
-      console.log(`${playerId}    ${this.gameController.userClientMap[playerId]}`);
-    }
-    console.log('----------------------------------\n');
+    // console.log('PLAYER_ID                         |  CLIENT_ID ');
+    // for (const playerId in this.gameController.userClientMap) {
+    //   console.log(`${playerId}    ${this.gameController.userClientMap[playerId]}`);
+    // }
+    // console.log('----------------------------------\n');
+    console.log(this.gameController.userClientMap);
   };
 }
 

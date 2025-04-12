@@ -57,6 +57,8 @@ export const CardWithImage: FC<Props> = ({
     legionState,
   });
 
+  console.log({ cardOnHand, clickable });
+
   const multiSelectAllowed = useMemo(() => {
     // if (legionState && cardOnHand && !isMyTurn) return true;
     // if (
@@ -210,6 +212,11 @@ function useCardStatus({
 
   const clickable = useMemo(() => {
     if (disabled) return false;
+
+    if (legionState) {
+      return cardOnHand;
+    }
+
     if (abilityState) {
       const smileAbility = abilityState.abilityType === ABILITY_TYPE.SMILE;
       const notMyHand = !cardOnHand;
@@ -226,9 +233,6 @@ function useCardStatus({
       if (axeAbility && (isInMyMonster || cardOnHand)) return false;
       if (wolfAbility && (isInMyMonster || cardOnHand)) return false;
     }
-
-    // Выбор карты, когда кто-то другой собрал одноцветного монстра
-    if (legionState && !cardOnHand && !isMyTurn) return false;
 
     if (cardOnHand) return true;
     if (!abilityState && isMyTurn && !cardOnHand) return false;

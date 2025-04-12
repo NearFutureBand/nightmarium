@@ -525,7 +525,7 @@ function ControlsLegionMode({ isMyTurn }: { isMyTurn: boolean }) {
   const dispatch = useAppDispatch();
   const legionState = useAppSelector((state) => state.app.awaitingLegion);
   const selectedCards = useAppSelector((state) => state.app.selectedCards);
-  const userId = useAppSelector((state) => state.app.me?.id)!;
+  const playerId = useAppSelector((state) => state.app.me?.id)!;
   const gameId = useAppSelector(selectGameId)!;
 
   const oneOrTwoCardsSelected = useMemo(
@@ -538,10 +538,10 @@ function ControlsLegionMode({ isMyTurn }: { isMyTurn: boolean }) {
   const handleThrow = useCallback(() => {
     if (!oneOrTwoCardsSelected) return;
 
-    sendMessage<{ cardIds: number[]; userId: string; gameId: string }>({
+    sendMessage<{ cardIds: number[]; playerId: string; gameId: string }>({
       type: MESSAGE_TYPE.THROW_LEGION_CARD,
       cardIds: selectedCards.map((selectedCards) => selectedCards.cardId),
-      userId: userId!,
+      playerId: playerId!,
       gameId,
     });
     dispatch(deSelectCard());
@@ -549,14 +549,16 @@ function ControlsLegionMode({ isMyTurn }: { isMyTurn: boolean }) {
     dispatch,
     gameId,
     oneOrTwoCardsSelected,
-    userId,
+    playerId,
     selectedCards,
     sendMessage,
   ]);
 
+  console.log({legionState})
+
   return (
     <div className='controls'>
-      {isMyTurn || legionState!.players[userId].respondedCorrectly === true ? (
+      {isMyTurn || legionState!.players[playerId].respondedCorrectly === true ? (
         "Ожидается сброс карт от других игроков"
       ) : (
         <>
