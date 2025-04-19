@@ -7,6 +7,7 @@ export type Card = {
   bodypart: number[];
 };
 
+/** @deprecated */
 export enum MESSAGE_TYPE {
   HANDSHAKE = 'HANDSHAKE',
   PLAYER_CONNECTED = 'PLAYER_CONNECTED',

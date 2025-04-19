@@ -1,5 +1,10 @@
 import Monster from '../modules/Monster';
-import { MESSAGE_TYPE } from '../shared/types';
+// import { MESSAGE_TYPE } from '../shared/types';
+
+export type MessageType = "HANDSHAKE" | "PLAYER_CONNECTED" | "AWAIT_ABILITY" | "START" |
+  "PLAY_CARD" | "TAKE_CARD" | "SUBMIT_ABILITY" | "CANCEL_ABILITY" | "GAME_OVER" |
+  "SET_NAME" | "NAME_ACCEPTED" | "AWAIT_LEGION_CARD" | "THROW_LEGION_CARD"
+  | "CHANGE_CARDS" | "READY_TO_PLAY" | "LEAVE_GAME" | "PLAYER_CONNECTED";
 
 export type Legion = 'red' | 'orange' | 'blue' | 'green';
 
@@ -13,7 +18,7 @@ export type Card = {
 export type CardsDatabase = { [id: string]: Card };
 
 export type Message<T = {}> = T & {
-  type: MESSAGE_TYPE;
+  type: MessageType;
 };
 
 export type PlayerState<CardsType> = {

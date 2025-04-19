@@ -1,5 +1,5 @@
 import { CARDS } from './Cards';
-import { randomInteger } from '../helpers';
+import { randomFloat, randomInteger } from '../helpers';
 import { sortBy } from 'lodash';
 import {
   AbilityAxeData,
@@ -14,6 +14,7 @@ import {
   CardsDatabase,
   GameState,
   Legion,
+  MessageType,
   PlayerState,
   PutCardReturnType,
 } from '../types';
@@ -41,8 +42,8 @@ export default class Game {
 
   private applyAbilityMap: ApplyAbilityMap;
 
-  constructor(id: string) {
-    this.id = id;
+  constructor() {
+    this.id = crypto.randomUUID();
     this.cardsAvailable = this.getShuffledCards();
     this.cardsThrownAway = [];
     this._players = [];
@@ -65,6 +66,11 @@ export default class Game {
         this.applyBonesAbility({ targetMonsterId, targetPlayerId }),
       [ABILITIES.TEETH]: ({ targetMonsterId }) => this.applyTeethAbility({ targetMonsterId }),
     };
+  }
+
+  start = () => {
+    this._players.forEach(player => player.engage(this.giveDefaulCards()));
+    this.setNextActivePlayer();
   }
 
   giveDefaulCards = (): Card[] => {
@@ -245,7 +251,7 @@ export default class Game {
     this.abilitiesMode = null;
 
     return {
-      type: MESSAGE_TYPE.GAME_OVER,
+      type: 'GAME_OVER' as MessageType,
     };
   };
 

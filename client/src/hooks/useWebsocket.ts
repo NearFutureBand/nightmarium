@@ -131,6 +131,7 @@ export const useInitSocket = ({
 
   const connect = useCallback(
     (host: string, port: number) => {
+      console.log('connecting  to', `ws://${host}:${port}`)
       const _socket = new WebSocket(`ws://${host}:${port}`);
       _socket.onopen = () => onOpen(_socket, { host, port });
       _socket.onmessage = onMessage;

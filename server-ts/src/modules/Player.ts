@@ -2,7 +2,7 @@ import { generateCryptoId } from "../helpers";
 import { Card, PlayerState } from "../types";
 import Monster from "./Monster";
 
-export class User {
+class User {
   id: string;
   name: string | null;
   gameId: string | undefined;
@@ -24,21 +24,15 @@ export class User {
   };
 }
 
-export default class Player {
-  private _id: string;
-  private name: string | null;
+export default class Player extends User {
   private cards: Card[];
   private monsters: Monster[];
+  public gameId: string | undefined;
 
-  constructor(id: string, name: string | null) {
-    this._id = id;
-    this.name = name;
+  constructor() {
+    super();
     this.cards = [];
     this.monsters = [];
-  }
-
-  public get id() {
-    return this._id;
   }
 
   public engage = (cards: Card[]) => {
@@ -53,7 +47,7 @@ export default class Player {
 
   public getPlayerState = (isMe?: boolean): PlayerState<Card[] | number> => {
     return {
-      id: this._id,
+      id: this.id,
       name: this.name,
       cards: isMe ? this.cards : this.cards.length,
       monsters: this.monsters,
