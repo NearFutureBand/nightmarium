@@ -1,26 +1,18 @@
-import { create } from "zustand";
+import { create } from 'zustand';
 import { toast } from 'react-toastify';
-import { Game, Message, MESSAGE_TYPE, MessageHandshake, MessageNameAccepted, MessageWithGame, Player } from "src/types";
-import { saveHostAndPort } from "src/utils/saveHostAndPort";
-
-type WebSocketStore = {
-  connected: boolean;
-  game: Game | null;
-  me: Player | null;
-  otherPlayers: Player[];
-  connect: (host: string, port: string) => void;
-  sendMessage: <MessagePayloadT, >(message: Message<MessagePayloadT>) => void;
-  disconnect: () => void;
-}
+import { Message, MESSAGE_TYPE } from 'src/types';
+import { saveHostAndPort } from 'src/utils/saveHostAndPort';
+import { WebSocketStore } from './types';
+import handshakeHandler from './controllers/handshake';
+import simpleMessageHandlers from './controllers/simple';
 
 export const useWebsocket = create<WebSocketStore>((set) => {
   let socket: WebSocket | null;
 
-  const messageHandlers: Partial<Record<MESSAGE_TYPE, (m: Message) => void>> = {
-    'HANDSHAKE': (m: Message) => handleHandshake(m as MessageHandshake),
-    'NAME_ACCEPTED': (m: Message) => handleNameAccepted(m as MessageNameAccepted),
-    'START': (m: Message) => handleStartGame(m as MessageWithGame)
-  }
+  const messageHandlers: Partial<Record<MESSAGE_TYPE, (m: Message<any>) => void>> = {
+    ...handshakeHandler(set),
+    ...simpleMessageHandlers(set)
+  };
 
   const handleMessage = (event: MessageEvent<unknown>) => {
     const m: Message = JSON.parse(event.data as string);
@@ -29,21 +21,6 @@ export const useWebsocket = create<WebSocketStore>((set) => {
       messageHandlers[m.type]?.(m);
     }
   };
-
-  const handleHandshake = (m: MessageHandshake) => {
-    localStorage.setItem('playerId', m.me.id);
-    set(() => ({ me: m.me, otherPlayers: m.otherPlayers, game: m.game }));
-  }
-
-  const handleNameAccepted = (m: MessageNameAccepted) => {
-    set(() => ({ me: m.me }));
-  }
-
-  const handleStartGame = (m: MessageWithGame) => {
-    set(() => ({ me: m.me, otherPlayers: m.otherPlayers, game: m.game }));
-  }
-
-  //
 
   const handleOpen = ({ host, port }: { host: string; port: string }) => {
     if (!socket) return;
@@ -59,7 +36,7 @@ export const useWebsocket = create<WebSocketStore>((set) => {
     socket.close();
     set(() => ({ connected: false }));
     // clearPortAndHost();
-  }
+  };
 
   return {
     connected: false,
@@ -71,14 +48,11 @@ export const useWebsocket = create<WebSocketStore>((set) => {
       _socket.onopen = () => handleOpen({ host, port });
       _socket.onmessage = handleMessage;
       // socket.onerror = onError;
-      // setSocket(socket);
       socket = _socket;
     },
     sendMessage: (message) => {
       socket?.send(JSON.stringify(message));
     },
-    disconnect,
-    // increasePopulation: () => set((state) => ({ bears: state.bears + 1 })),
-    // removeAllBears: () => set({ bears: 0 }),
-  }
-})
+    disconnect
+  };
+});
