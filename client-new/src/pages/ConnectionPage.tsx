@@ -1,49 +1,39 @@
-import { FormEventHandler, useEffect, useRef } from "react";
-import { useWebsocket } from "src/modules/websocket";
-import { restoreHostAndPort } from "src/utils/saveHostAndPort";
+import { useActionState, useEffect, useRef } from 'react';
+import { useWebsocket } from 'src/modules/websocket';
+import { restoreHostAndPort } from 'src/utils/saveHostAndPort';
 
 const { host, port } = restoreHostAndPort();
 
 export const ConnectionPage = () => {
-  const hostRef = useRef<HTMLInputElement>(null);
-  const portRef = useRef<HTMLInputElement>(null);
-  const connect = useWebsocket(state => state.connect);
-  
-  const handleConnect: FormEventHandler<HTMLFormElement> = (e) => {
-    e.preventDefault();
-    if (hostRef.current && portRef.current) {
-      connect(hostRef.current?.value, portRef.current?.value);
+  const formRef = useRef<HTMLFormElement>(null);
+  const connect = useWebsocket((state) => state.connect);
+
+  const [, submitAction, isPending] = useActionState(async (_: any, formData: FormData) => {
+    const host = formData.get('host') as string | null;
+    const port = formData.get('port') as string | null;
+    if (host && port) {
+      connect(host, port);
     }
-  }
+  }, null);
 
   useEffect(() => {
-    if (hostRef.current?.value && portRef.current?.value) {
-      connect(hostRef.current?.value, portRef.current?.value);
+    if (host && port) {
+      formRef.current?.requestSubmit();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
-     <main className="min-h-dvh flex flex-col justify-center items-center gap-6">
+    <main className="min-h-dvh flex flex-col justify-center items-center gap-6">
       <h1>Выберите подключение</h1>
-      <form onSubmit={handleConnect} className="flex gap-2 items-center">
-        <button type="submit">Подключиться</button> к серверу
-        <input
-          ref={hostRef}
-          type="text"
-          placeholder="HOST"
-          required
-          defaultValue={host}
-        />
+      <form action={submitAction} className="flex gap-2 items-center" ref={formRef}>
+        <button type="submit" disabled={isPending}>
+          Подключиться
+        </button>{' '}
+        к серверу
+        <input type="text" name="host" placeholder="HOST" required defaultValue={host} />
         :
-        <input
-          ref={portRef}
-          type="text"
-          placeholder="PORT"
-          required
-          defaultValue={port}
-        />
+        <input type="text" name="port" placeholder="PORT" required defaultValue={port} />
       </form>
     </main>
-  )
-}
+  );
+};

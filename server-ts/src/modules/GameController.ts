@@ -71,12 +71,11 @@ class GamesState {
   getPlayerById = (playerId: string) => {
     if (!(playerId in this.players)) return undefined;
     return this.players[playerId];
-  }
+  };
 
   getPlayers = () => {
     return this.players;
-  }
-
+  };
 }
 
 class GameMessagesController extends GamesState {
@@ -85,11 +84,11 @@ class GameMessagesController extends GamesState {
   constructor() {
     super();
     this.messageActionsMap = {
-      'HANDSHAKE': this.onHandshake,
-      'SET_NAME': this.onSetPlayerName,
-      'READY_TO_PLAY': this.onReadyToPlay,
+      HANDSHAKE: this.onHandshake,
+      SET_NAME: this.onSetPlayerName,
+      READY_TO_PLAY: this.onReadyToPlay,
       // [MESSAGE_TYPE.TAKE_CARD]: this.onTakeCard,
-      // [MESSAGE_TYPE.PLAY_CARD]: this.onPlayCard,
+      PLAY_CARD: this.onPlayCard
       // [MESSAGE_TYPE.SUBMIT_ABILITY]: this.onSubmitAbility,
       // [MESSAGE_TYPE.CANCEL_ABILITY]: this.onCancelAbility,
 
@@ -111,14 +110,11 @@ class GameMessagesController extends GamesState {
       return this.messageActionsMap[messageType]?.(clientId, message) || {};
     } catch (error) {
       Logger.log('Process game message error', error);
-      return {}
+      return {};
     }
   };
 
-  private onHandshake: GameMessageHandler<{ playerId: string }> = (
-    clientId,
-    message
-  ) => {
+  private onHandshake: GameMessageHandler<{ playerId: string }> = (clientId, message) => {
     let playerId = message.playerId;
     let playerAlreadyExists = false;
     let player: Player;
@@ -149,13 +145,13 @@ class GameMessagesController extends GamesState {
       otherPlayers,
       game: usersGame?.getGameState?.(playerId),
       ability: usersGame?.abilitiesMode?.getMessagePayloadFromCurrentState?.(),
-      legion: usersGame?.legionMode?.currentLegion,
+      legion: usersGame?.legionMode?.currentLegion
     };
 
     const messageToAllExceptSender = playerAlreadyExists
       ? undefined
       : {
-          type: 'PLAYER_CONNECTED' as  MessageType,
+          type: 'PLAYER_CONNECTED' as MessageType
         };
 
     return {
@@ -164,32 +160,32 @@ class GameMessagesController extends GamesState {
       toAdmin: {
         type: 'HANDSHAKE',
         games: this.games,
-        users: this.players,
-      },
+        users: this.players
+      }
     };
   };
 
-  private onSetPlayerName: GameMessageHandler<{ playerId: string; name: string }> = (clientId, message) => {
+  private onSetPlayerName: GameMessageHandler<{ playerId: string; name: string }> = (
+    clientId,
+    message
+  ) => {
     const player = this.getPlayerById(message.playerId);
     player?.setName(message.name);
     return {
       toSenderOnly: {
         type: 'NAME_ACCEPTED',
-        me: player,
+        me: player
       },
       toAdmin: {
         type: 'NAME_ACCEPTED',
-        // @todo это можно добавлять не тут а выше 
+        // @todo это можно добавлять не тут а выше
         games: this.games,
-        users: this.players,
-      },
+        users: this.players
+      }
     };
   };
 
-  onReadyToPlay: GameMessageHandler<{ playerId: string }> = (
-    clientId,
-    message
-  ) => {
+  private onReadyToPlay: GameMessageHandler<{ playerId: string }> = (clientId, message) => {
     const { playerId } = message;
     const gameId = this.getAwaitingGameId() || this.createGame();
     const game = this.getGameById(gameId)!;
@@ -204,13 +200,13 @@ class GameMessagesController extends GamesState {
     }
     return {
       broadcast: {
-        type: 'READY_TO_PLAY',
+        type: 'READY_TO_PLAY'
       },
       toAdmin: {
         type: 'READY_TO_PLAY',
         games: this.games,
-        users: this.players,
-      },
+        users: this.players
+      }
     };
   };
 
@@ -223,9 +219,35 @@ class GameMessagesController extends GamesState {
       toAdmin: {
         type: 'START',
         games: this.games,
-        users: this.players,
-      },
+        users: this.players
+      }
     } as GameMessageResponse;
+  };
+
+  private onPlayCard: GameMessageHandler<{
+    cardId: number;
+    monsterId: number;
+    gameId: string;
+  }> = (clientId, message) => {
+    try {
+      const result = this.getGameById(message.gameId)!.activePlayerPutsCard(
+        message.cardId,
+        message.monsterId
+      );
+      return {
+        broadcast: result || {
+          type: 'PLAY_CARD'
+        },
+        toAdmin: {
+          type: 'PLAY_CARD',
+          games: this.games,
+          users: this.players
+        }
+      };
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
   };
 }
 
@@ -240,35 +262,29 @@ class GameControllerOld {
   // public playerClientMap: { [playerId: string]: string }; // userId -> clientId
   // public players: { [userId: string]: Player };
   // public adminClientId: string | undefined;
-
   // constructor() {
   //   this.games = {};
   //   this.playerClientMap = {};
   //   this.players = {};
   // }
-
   // private getUserIdByClientId = (cliendId: string) => {
   //   for (const userId in this.playerClientMap) {
   //     if (cliendId === this.playerClientMap[userId]) return userId;
   //   }
   //   return undefined;
   // };
-
   // public processGameMessage = (clientId: string, message: Message): GameMessageResponse => {
   //   return this.messageActionsMap[message.type](clientId, message);
   // };
-
   // private createGame = () => {
   //   const gameId = `${randomFloat()}`;
   //   const game = new Game(gameId);
   //   this.games[gameId] = game;
   //   return gameId;
   // };
-
   // private deleteGame = (gameId: string) => {
   //   delete this.games[gameId];
   // };
-
   // private getAwaitingGameId = () => {
   //   for (const gameId in this.games) {
   //     if (!this.games[gameId].isGameStarted()) {
@@ -276,16 +292,13 @@ class GameControllerOld {
   //     }
   //   }
   // };
-
   // getOtherUsers = (exceptUserId: string) => {
   //   return Object.values(this.players).filter((user) => user.id !== exceptUserId);
   // };
-
   // getGameById = (gameId?: string) => {
   //   if (!gameId) return undefined;
   //   return this.games[gameId];
   // };
-
   /**
    * Тут создается инстанс Player и Game, если нужно
    * @param clientId
@@ -300,14 +313,12 @@ class GameControllerOld {
   //   const gameId = this.getAwaitingGameId() || this.createGame();
   //   // тут игра будет существовать 100%
   //   const game = this.getGameById(gameId)!;
-
   //   const player = this.players[message.userId];
   //   // const player = new Player(user.id, user.name);
   //   game.addPlayer(player);
   //   game.getPlayerById(message.userId).engage(game.giveDefaulCards());
   //   player.setReadyToPlayState(true);
   //   player.gameId = gameId;
-
   //   if (this.areAllReadyToPlay()) {
   //     return this.sendStartGameMessage(gameId);
   //   }
@@ -322,18 +333,14 @@ class GameControllerOld {
   //     },
   //   };
   // };
-
   // areAllReadyToPlay = () => {
   //   // TODO перепридумать логику этой функции. Нужно сосчитать все ли игроки нажали "готов"
   //   const allUsers = Object.values(this.players);
   //   const awaitingUsers = allUsers.filter((u) => u.readyToPlay);
   //   return awaitingUsers.length >= 5 || awaitingUsers.length === allUsers.length;
   // };
-
-  
   // onAdminHandshake: GameMessageHandler = (clientId, message) => {
   //   this.adminClientId = clientId;
-
   //   return {
   //     toAdmin: {
   //       type: MESSAGE_TYPE.ADMIN_HANDSHAKE,
@@ -342,7 +349,6 @@ class GameControllerOld {
   //     },
   //   };
   // };
-
   // sendStartGameMessage = (gameId: string) => {
   //   this.getGameById(gameId)!.setNextActivePlayer();
   //   return {
@@ -356,7 +362,6 @@ class GameControllerOld {
   //     },
   //   } as GameMessageResponse;
   // };
-
   // onTakeCard: GameMessageHandler<{ gameId: string }> = (cliendId, message) => {
   //   const game = this.getGameById(message.gameId)!;
   //   game.activePlayerTakesCard();
@@ -371,7 +376,6 @@ class GameControllerOld {
   //     },
   //   };
   // };
-
   // onPlayCard: GameMessageHandler<{
   //   cardId: number;
   //   monsterId: number;
@@ -397,7 +401,6 @@ class GameControllerOld {
   //     throw error;
   //   }
   // };
-
   // onSubmitAbility: GameMessageHandler = (cliendId: string, message: Message<any>) => {
   //   const { type, gameId, ...abilityParams } = message;
   //   const game = this.getGameById(gameId);
@@ -415,11 +418,9 @@ class GameControllerOld {
   //     },
   //   };
   // };
-
   // onCancelAbility: GameMessageHandler<{ gameId: string }> = (cliendId, message) => {
   //   const game = this.getGameById(message.gameId)!;
   //   const result = game.stopAbilitiesMode();
-
   //   return {
   //     broadcast: result || {
   //       type: MESSAGE_TYPE.PLAY_CARD,
@@ -431,7 +432,6 @@ class GameControllerOld {
   //     },
   //   };
   // };
-
   // // TODO в СООБЩЕНИИ заменить на userId
   // onSetPlayerName: GameMessageHandler<{ userId: string; name: string }> = (clientId, message) => {
   //   const user = this.players[message.userId];
@@ -449,7 +449,6 @@ class GameControllerOld {
   //     },
   //   };
   // };
-
   // onThrowLegionCard: GameMessageHandler<{
   //   cardIds: number[];
   //   playerId: string;
@@ -466,7 +465,6 @@ class GameControllerOld {
   //     },
   //   };
   // };
-
   // onChangeCards: GameMessageHandler<{ cardIds: number[]; gameId: string }> = (clientId, message) => {
   //   const game = this.getGameById(message.gameId)!;
   //   game.activePlayerExchangesCards(message.cardIds);
@@ -481,18 +479,15 @@ class GameControllerOld {
   //     },
   //   };
   // };
-
   // onLeaveGame: GameMessageHandler<{ userId: string; gameId: string }> = (clientId, message) => {
   //   // remove player from game
   //   const game = this.getGameById(message.gameId)!;
   //   game.removePlayer(message.userId);
   //   this.players[message.userId].setReadyToPlayState(false);
-
   //   // stop game if no players left
   //   if (game!.players.length === 0) {
   //     this.deleteGame(message.gameId);
   //   }
-
   //   return {
   //     broadcast: {
   //       type: MESSAGE_TYPE.LEAVE_GAME,
@@ -504,14 +499,12 @@ class GameControllerOld {
   //     },
   //   };
   // };
-
   // onAdminResortCards: GameMessageHandler<{ gameId: string; cardId: number; targetIndex: number }> = (
   //   cliendId,
   //   message
   // ) => {
   //   const game = this.getGameById(message.gameId)!;
   //   game.replaceCards(message.cardId, message.targetIndex);
-
   //   return {
   //     toAdmin: {
   //       type: MESSAGE_TYPE.ADMIN_RESORT_CARDS,

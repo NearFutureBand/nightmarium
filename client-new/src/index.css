@@ -1,17 +1,15 @@
 @import 'tailwindcss';
 
 html {
-  background-color: rgb(40, 40, 40);
+  background-color: #282828;
   color: rgb(225, 225, 225);
+  overflow-x: hidden;
 }
 
-/* @utility nightmarium {
-  @layer base {
-  h1 {
-    @apply text-4xl
-  }
+@theme {
+  --color-bg-500: #282828;
 }
-} */
+
 @layer base {
   h1 {
     @apply text-4xl font-bold;

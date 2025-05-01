@@ -1,16 +1,19 @@
 import { useWebsocket } from 'src/modules/websocket';
-import { Card } from './components/Card';
 import { MyCards } from './components/MyCards';
+import { PlayerBoard } from './components/PlayerBoard';
+import { Controls } from './components/Controls';
 
 export const GamePage = () => {
-  // const game = useWebsocket((state) => state.game)!;
+  const game = useWebsocket((state) => state.game)!;
 
   return (
-    <>
-      {/* {game.me.cards?.map((card) => (
-        <Card id={card.id} key={card.id} />
-      ))} */}
+    <main className="pb-32">
+      <Controls />
+      <PlayerBoard player={game.me} />
+      {game.otherPlayers.map((player) => (
+        <PlayerBoard player={player} key={player.id} />
+      ))}
       <MyCards />
-    </>
+    </main>
   );
 };

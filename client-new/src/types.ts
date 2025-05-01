@@ -54,7 +54,7 @@ export type LegionState = {
   };
 };
 
-export type Monster = {
+export type MonsterType = {
   id: number;
   body: CardType[];
   abilitiesUsed: boolean;
@@ -64,7 +64,7 @@ export type Player = {
   id: string;
   name: string | null;
   readyToPlay: boolean;
-  monsters?: Monster[];
+  monsters?: MonsterType[];
   cards?: CardType[];
   cardsCount?: number;
 };
