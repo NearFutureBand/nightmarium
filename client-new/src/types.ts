@@ -79,7 +79,7 @@ export type Game = {
   me: Player;
   otherPlayers: Player[];
   activePlayer?: Player;
-  // winnerId?: string;
+  winnerId?: string;
 };
 
 // export type User = {

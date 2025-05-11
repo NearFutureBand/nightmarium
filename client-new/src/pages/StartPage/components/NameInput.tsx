@@ -15,7 +15,7 @@ export function NameInput() {
   };
 
   return (
-    <form className="flex gap-2 items-center" onSubmit={handleSubmitName}>
+    <form className="flex gap-2 items-center flex-col md:flex-row" onSubmit={handleSubmitName}>
       Представьтесь, пожалуйста: <input type="text" ref={inputRef} maxLength={50} />
       <button type="submit">Сохранить имя</button>
     </form>

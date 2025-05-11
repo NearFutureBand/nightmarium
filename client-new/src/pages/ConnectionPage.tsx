@@ -23,15 +23,18 @@ export const ConnectionPage = () => {
   }, []);
 
   return (
-    <main className="min-h-dvh flex flex-col justify-center items-center gap-6">
+    <main className="min-h-dvh flex flex-col justify-center items-center gap-6 p-2">
       <h1>Выберите подключение</h1>
-      <form action={submitAction} className="flex gap-2 items-center" ref={formRef}>
+      <form
+        action={submitAction}
+        className="flex gap-2 items-center flex-col md:flex-row"
+        ref={formRef}>
         <button type="submit" disabled={isPending}>
           Подключиться
         </button>{' '}
         к серверу
         <input type="text" name="host" placeholder="HOST" required defaultValue={host} />
-        :
+        <span className="hidden md:block">:</span>
         <input type="text" name="port" placeholder="PORT" required defaultValue={port} />
       </form>
     </main>

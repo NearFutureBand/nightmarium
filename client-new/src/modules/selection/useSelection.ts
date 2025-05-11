@@ -1,23 +1,26 @@
 import { CardType, MonsterType } from 'src/types';
 import { create } from 'zustand';
 
-export const useDragndrop = create<{
-  selectedCard: CardType | null;
-  selectedMonster: MonsterType | null;
-  setSelectedCard: (card: CardType) => void;
+type SelectedCard = { card: CardType; playerId: string };
+type SelectedMonster = { monster: MonsterType; playerId: string };
+
+export const useSelection = create<{
+  selectedCard: SelectedCard | null;
+  selectedMonster: SelectedMonster | null;
+  setSelectedCard: (cardData: SelectedCard) => void;
   resetSelectedCard: () => void;
-  setSelectedMonster: (monster: MonsterType) => void;
+  setSelectedMonster: (monsterData: SelectedMonster) => void;
   resetSelectedMonster: () => void;
 }>((set) => {
   return {
     selectedCard: null,
     selectedMonster: null,
-    setSelectedCard: (card: CardType) => {
-      set({ selectedCard: card });
+    setSelectedCard: (cardData: SelectedCard) => {
+      set({ selectedCard: cardData });
     },
     resetSelectedCard: () => set({ selectedCard: null }),
-    setSelectedMonster: (monster: MonsterType) => {
-      set({ selectedMonster: monster });
+    setSelectedMonster: (monsterData: SelectedMonster) => {
+      set({ selectedMonster: monsterData });
     },
     resetSelectedMonster: () => set({ selectedMonster: null })
   };

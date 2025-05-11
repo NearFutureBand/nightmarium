@@ -1,10 +1,19 @@
 import { useGameData } from 'src/modules/websocket/hooks/useGameData';
 import { LastStep } from './LastStep';
+import { useSendMessage } from 'src/modules/websocket/hooks/useSendMessage';
+import { useGameId } from 'src/modules/websocket/hooks/useGameId';
 
 export const ControlsRegular = () => {
   const { actions } = useGameData();
+  const sendMessage = useSendMessage();
+  const gameId = useGameId();
 
-  const handleTakeCard = () => {};
+  const handleTakeCard = () => {
+    sendMessage({
+      type: 'TAKE_CARD',
+      gameId
+    });
+  };
   const handlePlaceCard = () => {};
   const handleChangeCards = () => {};
 

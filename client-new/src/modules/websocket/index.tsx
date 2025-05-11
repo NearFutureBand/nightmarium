@@ -25,6 +25,7 @@ export const useWebsocket = create<WebSocketStore>((set) => {
   const handleOpen = ({ host, port }: { host: string; port: string }) => {
     if (!socket) return;
     set(() => ({ connected: true }));
+    console.log('HADNLE OPEN');
     const playerId = localStorage.getItem('playerId');
     socket.send(JSON.stringify({ type: 'HANDSHAKE', playerId }));
     saveHostAndPort(host, port);

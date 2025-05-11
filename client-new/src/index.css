@@ -8,11 +8,12 @@ html {
 
 @theme {
   --color-bg-500: #282828;
+  --color-bg-600: #444;
 }
 
 @layer base {
   h1 {
-    @apply text-4xl font-bold;
+    @apply text-4xl font-bold text-center;
   }
   input {
     @apply p-1 border-b-1 outline-0;
@@ -20,4 +21,23 @@ html {
   button {
     @apply py-1 px-4 border-1 rounded-2xl outline-0 cursor-pointer;
   }
+}
+
+.player-board-0 {
+  transition: transform 0.5s ease;
+  position: absolute;
+  transform-style: preserve-3d;
+  transform: rotateY(40deg) translateX(-20%) translateY(-25%) scale(35%);
+}
+
+.player-board-1 {
+  transition: transform 0.5s ease;
+  position: absolute;
+  transform-style: preserve-3d;
+  transform: rotateY(-40deg) translateX(20%) translateY(-25%) scale(35%);
+}
+
+.my-player-board {
+  transform: translate3d(0px, 50%, -500px);
+  transition: transform 0.5s ease;
 }

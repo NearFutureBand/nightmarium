@@ -5,6 +5,7 @@ type DefaultMessagePayload = {
   me: Player;
   otherPlayers: Player[];
   game?: Game;
+  ability?: AbilityState;
 };
 
 export type DefaultMessage = Message<DefaultMessagePayload>;
@@ -21,10 +22,16 @@ export default (set: (nextState: Partial<WebSocketStore>) => void) => ({
   PLAYER_CONNECTED: (m: Message<{ me: Player; otherPlayers: Player[] }>) => {
     set({ me: m.me, otherPlayers: m.otherPlayers });
   },
-  PLAY_CARD: (m: DefaultMessage) => {
-    set({ me: m.me, otherPlayers: m.otherPlayers, game: m.game });
+  PLAY_CARD: (m: ExtendedMessage<{ ability: AbilityState }>) => {
+    set({ me: m.me, otherPlayers: m.otherPlayers, game: m.game, ability: m.ability });
   },
   AWAIT_ABILITY: (m: ExtendedMessage<{ ability: AbilityState }>) => {
+    set({ me: m.me, otherPlayers: m.otherPlayers, game: m.game });
+  },
+  TAKE_CARD: (m: DefaultMessage) => {
+    set({ me: m.me, otherPlayers: m.otherPlayers, game: m.game });
+  },
+  READY_TO_PLAY: (m: DefaultMessage) => {
     set({ me: m.me, otherPlayers: m.otherPlayers, game: m.game });
   }
 });

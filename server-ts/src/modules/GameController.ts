@@ -87,7 +87,7 @@ class GameMessagesController extends GamesState {
       HANDSHAKE: this.onHandshake,
       SET_NAME: this.onSetPlayerName,
       READY_TO_PLAY: this.onReadyToPlay,
-      // [MESSAGE_TYPE.TAKE_CARD]: this.onTakeCard,
+      TAKE_CARD: this.onTakeCard,
       PLAY_CARD: this.onPlayCard
       // [MESSAGE_TYPE.SUBMIT_ABILITY]: this.onSubmitAbility,
       // [MESSAGE_TYPE.CANCEL_ABILITY]: this.onCancelAbility,
@@ -248,6 +248,21 @@ class GameMessagesController extends GamesState {
       console.log(error);
       throw error;
     }
+  };
+
+  onTakeCard: GameMessageHandler<{ gameId: string }> = (cliendId, message) => {
+    const game = this.getGameById(message.gameId)!;
+    game.activePlayerTakesCard();
+    return {
+      broadcast: {
+        type: 'TAKE_CARD'
+      },
+      toAdmin: {
+        type: 'TAKE_CARD',
+        games: this.games,
+        users: this.players
+      }
+    };
   };
 }
 
