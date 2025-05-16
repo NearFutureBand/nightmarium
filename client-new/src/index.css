@@ -1,14 +1,14 @@
 @import 'tailwindcss';
 
-html {
-  background-color: #282828;
-  color: rgb(225, 225, 225);
-  overflow-x: hidden;
-}
-
 @theme {
+  --color-text-400: #999;
+  --color-text-500: rgb(225, 225, 225);
   --color-bg-500: #282828;
   --color-bg-600: #444;
+}
+
+body {
+  @apply bg-bg-500 text-text-500 overflow-x-hidden;
 }
 
 @layer base {
@@ -20,6 +20,9 @@ html {
   }
   button {
     @apply py-1 px-4 border-1 rounded-2xl outline-0 cursor-pointer;
+    &:disabled {
+      @apply cursor-not-allowed text-[#999];
+    }
   }
 }
 
@@ -38,6 +41,6 @@ html {
 }
 
 .my-player-board {
-  transform: translate3d(0px, 50%, -500px);
+  transform: rotateX(10deg) scale(90%);
   transition: transform 0.5s ease;
 }

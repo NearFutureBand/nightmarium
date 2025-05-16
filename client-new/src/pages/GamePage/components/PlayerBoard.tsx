@@ -2,6 +2,7 @@ import { Player } from 'src/types';
 import { Monsters } from './Monsters';
 import { useGameData } from 'src/modules/websocket/hooks/useGameData';
 import clsx from 'clsx';
+import { useIsTurn } from 'src/hooks/useIsTurn';
 
 export const PlayerBoard = ({
   player,
@@ -12,20 +13,23 @@ export const PlayerBoard = ({
   myBoard?: boolean;
   className?: string;
 }) => {
-  const { activePlayer } = useGameData();
-
-  const isTurn = player.id === activePlayer?.id;
-  const isMyTurn = myBoard && isTurn;
+  const { getIsTurn, isMyTurn } = useIsTurn();
+  const isTurn = getIsTurn(player.id);
 
   return (
     <section
-      className={clsx('p-2 w-full flex flex-col gap-2', { ' bg-bg-600': isTurn }, className)}>
+      className={clsx(
+        'p-4 w-full flex flex-col gap-2 rounded-4xl',
+        { ' bg-bg-600': isTurn },
+        className
+      )}>
       <h1>
+        {isTurn && !myBoard && 'Ходит '}
         {player.name}
-        {isMyTurn && ', ваш ход'}
+        {isMyTurn && myBoard && ', ваш ход'}
       </h1>
       <small>{player.id}</small>
-      <Monsters monsters={player.monsters!} />
+      <Monsters monsters={player.monsters!} myMonsters={myBoard} />
     </section>
   );
 };
