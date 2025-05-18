@@ -1,6 +1,5 @@
 import { Player } from 'src/types';
 import { Monsters } from './Monsters';
-import { useGameData } from 'src/modules/websocket/hooks/useGameData';
 import clsx from 'clsx';
 import { useIsTurn } from 'src/hooks/useIsTurn';
 
@@ -29,7 +28,7 @@ export const PlayerBoard = ({
         {isMyTurn && myBoard && ', ваш ход'}
       </h1>
       <small>{player.id}</small>
-      <Monsters monsters={player.monsters!} myMonsters={myBoard} />
+      <Monsters monsters={player.monsters!} myMonsters={myBoard} playerId={player.id} />
     </section>
   );
 };

@@ -8,7 +8,7 @@ export const Controls = () => {
   const { isMyTurn } = useIsTurn();
 
   if (!isMyTurn) {
-    return <div className="h-[82px] w-full"></div>;
+    return null;
   }
 
   return (

@@ -1,7 +1,9 @@
 import { useGameData } from 'src/modules/websocket/hooks/useGameData';
-import { LastStep } from './LastStep';
+import { LastStep } from '../LastStep';
 import { useSendMessage } from 'src/modules/websocket/hooks/useSendMessage';
 import { useGameId } from 'src/modules/websocket/hooks/useGameId';
+import { PlaceCard } from './components/PlaceCard';
+import { ExchangeCards } from './components/ExchangeCards';
 
 export const ControlsRegular = () => {
   const { actions } = useGameData();
@@ -14,15 +16,13 @@ export const ControlsRegular = () => {
       gameId
     });
   };
-  const handlePlaceCard = () => {};
-  const handleChangeCards = () => {};
 
   return (
     <>
       <section className="flex flex-col md:flex-row gap-2">
         <button onClick={handleTakeCard}>Взять карту</button>
-        <button onClick={handlePlaceCard}>Выложить карту</button>
-        <button onClick={handleChangeCards}>Обменять карты</button>
+        <PlaceCard />
+        <ExchangeCards />
       </section>
 
       <section>

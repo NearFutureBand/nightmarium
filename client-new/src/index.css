@@ -5,6 +5,7 @@
   --color-text-500: rgb(225, 225, 225);
   --color-bg-500: #282828;
   --color-bg-600: #444;
+  --color-accent-500: cyan;
 }
 
 body {
@@ -21,7 +22,7 @@ body {
   button {
     @apply py-1 px-4 border-1 rounded-2xl outline-0 cursor-pointer;
     &:disabled {
-      @apply cursor-not-allowed text-[#999];
+      @apply cursor-not-allowed text-text-400;
     }
   }
 }
