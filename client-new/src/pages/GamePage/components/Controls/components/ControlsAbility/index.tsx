@@ -4,14 +4,17 @@ import { Axe } from './components/Axe';
 import { Bones } from './components/Bones';
 import { Wolf } from './components/Wolf';
 import { FC } from 'react';
+import { Drop } from './components/Drop';
+import { Smile } from './components/Smile';
+import { Teeth } from './components/Teeth';
 
 const ABILITY_CONTROLS: { [key: number]: FC } = {
   0: () => <Wolf />,
-  // 1: <ControlsDrop />,
-  // 2: <ControlsSmile />,
+  1: () => <Drop />,
+  2: () => <Smile />,
   3: () => <Axe />,
-  4: () => <Bones />
-  // 5: <ControlsTeeth />
+  4: () => <Bones />,
+  5: () => <Teeth />
 };
 
 export const ControlsAbility = () => {
@@ -24,7 +27,7 @@ export const ControlsAbility = () => {
   return (
     <>
       <p>Способность: {abilityName}</p>
-      <p>{abilityDescription}</p>
+      <small>{abilityDescription}</small>
       {Controls && <Controls />}
     </>
   );

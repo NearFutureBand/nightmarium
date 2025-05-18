@@ -3,6 +3,7 @@ import { Card } from './Card';
 import { Monster } from './Monster';
 import { useIsTurn } from 'src/hooks/useIsTurn';
 import { useSelection } from 'src/modules/selection/useSelection';
+import { useAbility } from 'src/modules/websocket/hooks/useAbility';
 
 export const Monsters = ({
   monsters,
@@ -16,6 +17,7 @@ export const Monsters = ({
   const { isMyTurn } = useIsTurn();
   const selectMonster = useSelection((s) => s.selectMonster);
   const selectedMonster = useSelection((s) => s.selectedMonster);
+  const ability = useAbility();
   return (
     <div className="flex gap-2 w-full">
       {monsters.map((monster) => {
@@ -29,7 +31,8 @@ export const Monsters = ({
             isSelected={
               monster.id === selectedMonster?.monster.id && selectedMonster.playerId === playerId
             }
-            selectable={isMyTurn && myMonsters}>
+            selectable={isMyTurn && myMonsters}
+            isActive={isMyTurn && ability?.monsterId === monster.id}>
             {monster.body.map((card) => (
               <Card
                 key={card.id}

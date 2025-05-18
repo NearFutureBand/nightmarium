@@ -8,7 +8,7 @@ import {
   Legion,
   LegionMessagePayload,
   LegionPlayerState,
-  PutCardReturnType,
+  PutCardReturnType
 } from '../types';
 import Monster from './Monster';
 import Player from './Player';
@@ -40,7 +40,7 @@ export class AbilitiesMode {
     targetMonster,
     giveCard,
     stopAbilitiesMode,
-    applyAbilityMap,
+    applyAbilityMap
   }: {
     playerId: string;
     targetMonster: Monster;
@@ -58,7 +58,7 @@ export class AbilitiesMode {
       index: 0,
       done: false,
       inprogress: false,
-      actions: this.getActionsNumberByAbilityType(sequence[0]),
+      actions: this.getActionsNumberByAbilityType(sequence[0])
     };
     this.giveCard = giveCard;
     this.stopAbilitiesMode = stopAbilitiesMode;
@@ -84,7 +84,7 @@ export class AbilitiesMode {
       index: nextIndex,
       done: false,
       inprogress: false,
-      actions: this.getActionsNumberByAbilityType(nextAbilityType),
+      actions: this.getActionsNumberByAbilityType(nextAbilityType)
     };
 
     return this.onAbility();
@@ -108,6 +108,7 @@ export class AbilitiesMode {
       abilityNumber: ability.index,
       abilityType: ability.type,
       actions: ability.actions,
+      monsterId: this.monsterId
     };
 
     if (ability.type <= 1) {
@@ -118,7 +119,7 @@ export class AbilitiesMode {
     }
     return {
       type: MESSAGE_TYPE.AWAIT_ABILITY,
-      ability: messagePayload,
+      ability: messagePayload
     };
   };
 
@@ -164,7 +165,8 @@ export class AbilitiesMode {
         abilityNumber: ability.index,
         abilityType: ability.type!,
         actions: ability.actions,
-      },
+        monsterId: this.monsterId
+      }
     };
   };
 
@@ -181,6 +183,7 @@ export class AbilitiesMode {
       abilityType: this.currentAbilityState.type!,
       actions: this.currentAbilityState.actions,
       cards: this.currentAbilityState.cards,
+      monsterId: this.monsterId
     };
   };
 }
@@ -195,7 +198,7 @@ export class LegionMode {
     playerId,
     monsterId,
     otherPlayers,
-    legion,
+    legion
   }: {
     playerId: string;
     monsterId: number;
@@ -212,8 +215,8 @@ export class LegionMode {
           playerId: player.id,
           howManyCardsHas,
           respondedCorrectly: howManyCardsHas === 0,
-          gaveCards: 0,
-        },
+          gaveCards: 0
+        }
       };
     }, {} as { [playerId: string]: LegionPlayerState });
     this.currentLegion = legion;
@@ -222,7 +225,7 @@ export class LegionMode {
   getLegionModeState = (): LegionMessagePayload => {
     return {
       legion: this.currentLegion,
-      players: this.otherPlayersResponses,
+      players: this.otherPlayersResponses
     };
   };
 

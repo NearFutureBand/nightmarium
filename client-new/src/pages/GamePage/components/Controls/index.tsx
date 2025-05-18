@@ -12,7 +12,7 @@ export const Controls = () => {
   }
 
   return (
-    <header className="fixed top-0 left-0 flex flex-col gap-2 p-2 justify-center items-center bg-bg-500 z-10 w-full">
+    <header className="sticky top-0 left-0 flex flex-col p-2 justify-center items-center bg-bg-500 z-10 w-full">
       {ability ? <ControlsAbility /> : <ControlsRegular />}
     </header>
   );

@@ -88,12 +88,13 @@ class GameMessagesController extends GamesState {
       SET_NAME: this.onSetPlayerName,
       READY_TO_PLAY: this.onReadyToPlay,
       TAKE_CARD: this.onTakeCard,
-      PLAY_CARD: this.onPlayCard
+      PLAY_CARD: this.onPlayCard,
+      EXCHANGE_CARDS: this.onChangeCards
       // [MESSAGE_TYPE.SUBMIT_ABILITY]: this.onSubmitAbility,
       // [MESSAGE_TYPE.CANCEL_ABILITY]: this.onCancelAbility,
 
       // [MESSAGE_TYPE.THROW_LEGION_CARD]: this.onThrowLegionCard,
-      // [MESSAGE_TYPE.CHANGE_CARDS]: this.onChangeCards,
+
       // [MESSAGE_TYPE.READY_TO_PLAY]: this.onReadyToPlay,
       // [MESSAGE_TYPE.LEAVE_GAME]: this.onLeaveGame,
       // [MESSAGE_TYPE.ADMIN_HANDSHAKE]: this.onAdminHandshake,
@@ -248,6 +249,24 @@ class GameMessagesController extends GamesState {
       console.log(error);
       throw error;
     }
+  };
+
+  private onChangeCards: GameMessageHandler<{ cardIds: number[]; gameId: string }> = (
+    clientId,
+    message
+  ) => {
+    const game = this.getGameById(message.gameId)!;
+    game.activePlayerExchangesCards(message.cardIds);
+    return {
+      broadcast: {
+        type: 'EXCHANGE_CARDS'
+      },
+      toAdmin: {
+        type: 'EXCHANGE_CARDS',
+        games: this.games,
+        users: this.players
+      }
+    };
   };
 
   onTakeCard: GameMessageHandler<{ gameId: string }> = (cliendId, message) => {

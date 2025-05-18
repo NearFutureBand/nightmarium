@@ -12,7 +12,7 @@ export type MESSAGE_TYPE =
   | 'NAME_ACCEPTED'
   | 'AWAIT_LEGION_CARD'
   | 'THROW_LEGION_CARD'
-  | 'CHANGE_CARDS'
+  | 'EXCHANGE_CARDS'
   | 'READY_TO_PLAY'
   | 'LEAVE_GAME';
 
@@ -40,6 +40,7 @@ export type AbilityState = {
   abilityNumber: number;
   abilityType: number;
   actions: number;
+  monsterId: number;
 };
 
 export type LegionState = {

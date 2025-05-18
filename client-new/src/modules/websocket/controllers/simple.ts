@@ -25,13 +25,16 @@ export default (set: (nextState: Partial<WebSocketStore>) => void) => ({
   PLAY_CARD: (m: ExtendedMessage<{ ability: AbilityState }>) => {
     set({ me: m.me, otherPlayers: m.otherPlayers, game: m.game, ability: m.ability });
   },
-  AWAIT_ABILITY: (m: ExtendedMessage<{ ability: AbilityState }>) => {
-    set({ me: m.me, otherPlayers: m.otherPlayers, game: m.game });
-  },
   TAKE_CARD: (m: DefaultMessage) => {
     set({ me: m.me, otherPlayers: m.otherPlayers, game: m.game });
   },
   READY_TO_PLAY: (m: DefaultMessage) => {
+    set({ me: m.me, otherPlayers: m.otherPlayers, game: m.game });
+  },
+  AWAIT_ABILITY: (m: ExtendedMessage<{ ability: AbilityState }>) => {
+    set({ me: m.me, otherPlayers: m.otherPlayers, game: m.game, ability: m.ability });
+  },
+  EXCHANGE_CARDS: (m: DefaultMessage) => {
     set({ me: m.me, otherPlayers: m.otherPlayers, game: m.game });
   }
 });

@@ -11,9 +11,9 @@ export const GamePage = () => {
   const otherlayersRight = [...game.otherPlayers].slice(separation, game.otherPlayers.length);
 
   return (
-    <main className="pb-32 pt-[80px]">
+    <main className="pb-32">
       <Controls />
-      <div className="flex relative perspective-distant overflow-x-scroll overflow-y-visible p-10">
+      <div className="flex relative perspective-distant overflow-x-scroll overflow-y-visible px-10">
         {otherPlayersLeft.map((player) => (
           <PlayerBoard
             player={player}

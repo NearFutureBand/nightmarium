@@ -42,7 +42,7 @@ export const Card = ({
       onDragEnter={(e) => e.preventDefault()}
       onDragLeave={(e) => e.preventDefault()}
       onClick={() => {
-        console.log('select card', card);
+        if (disabled) return;
         if (card) selectCard({ card, monsterId, playerId });
       }}
     />

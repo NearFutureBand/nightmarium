@@ -17,11 +17,7 @@ export const PlayerBoard = ({
 
   return (
     <section
-      className={clsx(
-        'p-4 w-full flex flex-col gap-2 rounded-4xl',
-        { ' bg-bg-600': isTurn },
-        className
-      )}>
+      className={clsx('p-4 flex flex-col gap-2 rounded-4xl', { ' bg-bg-600': isTurn }, className)}>
       <h1>
         {isTurn && !myBoard && 'Ходит '}
         {player.name}
