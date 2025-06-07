@@ -5,6 +5,7 @@ import { readFileSync } from 'fs';
 import GameController from '../GameController';
 import { Message } from '../../types';
 import { Logger } from '../Logger';
+import Player from '../Player';
 
 export default class Network {
   private host: string;
@@ -23,14 +24,21 @@ export default class Network {
 
   launchWssServer = () => {
     if (!this.wsServer) {
-      const server = createServer({
-        cert: readFileSync('/Users/pavelbelyakov/Github/nightmarium/server-ts/src/modules/Network/cert.pem'),
-        key: readFileSync('/Users/pavelbelyakov/Github/nightmarium/server-ts/src/modules/Network/key.pem'),
-      }, (req, res) => {
-        if (this.wsServer) {
-          this.wsServer.handleUpgrade(req, req.socket, Buffer.alloc(0), this.onConnection);
+      const server = createServer(
+        {
+          cert: readFileSync(
+            '/Users/pavelbelyakov/Github/nightmarium/server-ts/src/modules/Network/cert.pem'
+          ),
+          key: readFileSync(
+            '/Users/pavelbelyakov/Github/nightmarium/server-ts/src/modules/Network/key.pem'
+          )
+        },
+        (req, res) => {
+          if (this.wsServer) {
+            this.wsServer.handleUpgrade(req, req.socket, Buffer.alloc(0), this.onConnection);
+          }
         }
-      });
+      );
       this.wsServer = new WebSocketServer({ server });
       this.wsServer.on('connection', this.onConnection);
       server.listen({ port: this.port, host: this.host }, () => {
@@ -38,9 +46,9 @@ export default class Network {
       });
       server.on('upgrade', (req, socket, head) => {
         console.log('upgrade', req, socket, head);
-      })
+      });
     }
-  }
+  };
   launchServer = () => {
     if (!this.wsServer) {
       this.wsServer = new WebSocketServer({ port: this.port, host: this.host });
@@ -94,26 +102,24 @@ export default class Network {
   private broadcast = (message: Message) => {
     Logger.log('<== Broadcast', message);
     Object.values(this.gameController.getPlayers()).forEach((player) => {
-      const playersGame = this.gameController.getGameById(player.gameId);
-      this.sendMessage(this.gameController.playerClientMap[player.id], {
+      this.sendMessage(this.getClientIdByPlayerId(player.id), {
         ...message,
-        me: this.gameController.getPlayerById(player.id),
-        otherPlayers: this.gameController.getOtherUsers(player.id),
-        game: playersGame?.getGameState(player.id),
+        me: this.serializeCurrentPlayer(player.id),
+        otherPlayers: this.serializeOtherPlayersFor(player.id),
+        game: this.serializeGameFor(player.id, player.gameId)
       });
     });
   };
   private broadcastExceptOne = (message: Message, exceptClientId: string) => {
     Logger.log('<== Broadcast except one', message);
     Object.values(this.gameController.getPlayers()).forEach((player) => {
-      const clientId = this.gameController.playerClientMap[player.id];
+      const clientId = this.getClientIdByPlayerId(player.id);
       if (clientId !== exceptClientId) {
-        const usersGame = this.gameController.getGameById(player.gameId);
         this.sendMessage(clientId, {
           ...message,
-          me: this.gameController.getPlayerById(player.id),
-          otherPlayers: this.gameController.getOtherUsers(player.id),
-          game: usersGame?.getGameState(player.id),
+          me: this.serializeCurrentPlayer(player.id),
+          otherPlayers: this.serializeOtherPlayersFor(player.id),
+          game: this.serializeGameFor(player.id, player.gameId)
         });
       }
     });
@@ -138,6 +144,19 @@ export default class Network {
     // }
     // console.log('----------------------------------\n');
     console.log(this.gameController.playerClientMap);
+  };
+  private getClientIdByPlayerId = (playerId: string) => {
+    return this.gameController.playerClientMap[playerId];
+  };
+  private serializeGameFor = (playerId: string, playersGameId: string | undefined) => {
+    const playersGame = this.gameController.getGameById(playersGameId);
+    return playersGame?.serialize(playerId);
+  };
+  private serializeOtherPlayersFor = (playerId: string) => {
+    return this.gameController.getOtherUsers(playerId).map((player) => player.serialize());
+  };
+  private serializeCurrentPlayer = (playerId: string) => {
+    return this.gameController.getPlayerById(playerId)?.serialize();
   };
 }
 

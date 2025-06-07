@@ -1,3 +1,4 @@
+import { PutCardReturnType } from 'src/modules/Game/GameActions/types';
 import Monster from '../modules/Monster';
 // import { MESSAGE_TYPE } from '../shared/types';
 
@@ -35,11 +36,13 @@ export type Message<T = {}> = T & {
   type: MessageType;
 };
 
-export type PlayerState<CardsType> = {
+export type PlayerState = {
   id: string;
   name: string | null;
-  cards: CardsType;
+  cards?: Card[];
+  cardsCount?: number;
   monsters: Monster[];
+  readyToPlay: boolean;
 };
 
 export type AbilityState = {
@@ -60,39 +63,13 @@ export type AbilitiesMode = {
 
 export type GameState = {
   id: string;
-  activePlayer?: PlayerState<number>;
-  me?: PlayerState<Card[]>;
-  otherPlayers: PlayerState<number>[];
+  activePlayer?: PlayerState;
+  me?: PlayerState;
+  otherPlayers: PlayerState[];
   actions: number;
   lastAction: string | null;
   abilitiesMode?: AbilitiesMode;
-  winnerId?: string;
-};
-
-export type AbilityWolfData = {
-  cardIds: number[];
-  monsterId?: number;
-};
-
-export type AbilityDropData = {};
-
-export type AbilitySmileData = {
-  cardId: number;
-  monsterId: number;
-};
-
-export type AbilityAxeData = {
-  targetPlayerId: string;
-  targetMonsterId: number;
-};
-
-export type AbilityBonesData = {
-  targetMonsterId: number;
-  targetPlayerId: string;
-};
-
-export type AbilityTeethData = {
-  targetMonsterId: number;
+  winnerId?: string | null;
 };
 
 export type ApplyAbilityParams = {
@@ -130,11 +107,5 @@ export type PossibleServerResponseMessage = Message<{
 }> | void;
 
 export type AbiltityMessageOrUndefined = Message<{ ability: AbilityMessagePayload }> | undefined;
-
-export type PutCardReturnType =
-  | Message
-  | Message<{ legion: LegionMessagePayload }>
-  | Message<{ ability: AbilityMessagePayload }>
-  | undefined;
 
 export type ApplyAbilityHandler<T = {}> = (params: T) => PutCardReturnType | void;

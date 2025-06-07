@@ -16,7 +16,7 @@ import {
   Legion,
   MessageType,
   PlayerState,
-  PutCardReturnType,
+  PutCardReturnType
 } from '../types';
 import Player from './Player';
 import { ABILITIES, GAME_ACTIONS } from '../constants';
@@ -64,14 +64,14 @@ export default class Game {
         this.applyAxeAbility({ targetMonsterId, targetPlayerId }),
       [ABILITIES.BONES]: ({ targetMonsterId, targetPlayerId }) =>
         this.applyBonesAbility({ targetMonsterId, targetPlayerId }),
-      [ABILITIES.TEETH]: ({ targetMonsterId }) => this.applyTeethAbility({ targetMonsterId }),
+      [ABILITIES.TEETH]: ({ targetMonsterId }) => this.applyTeethAbility({ targetMonsterId })
     };
   }
 
   start = () => {
-    this._players.forEach(player => player.engage(this.giveDefaulCards()));
+    this._players.forEach((player) => player.engage(this.giveDefaulCards()));
     this.setNextActivePlayer();
-  }
+  };
 
   giveDefaulCards = (): Card[] => {
     return new Array(6).fill(null).map(() => {
@@ -140,7 +140,7 @@ export default class Game {
       ),
       actions: this.actions,
       lastAction: this.lastAction,
-      winnerId: this.winnerId,
+      winnerId: this.winnerId
     };
   };
 
@@ -155,7 +155,8 @@ export default class Game {
   }
 
   getActivePlayer = () => {
-    if (this.activePlayerIndex !== 0 && !this.activePlayerIndex) throw new Error('No active player');
+    if (this.activePlayerIndex !== 0 && !this.activePlayerIndex)
+      throw new Error('No active player');
     return this._players[this.activePlayerIndex];
   };
 
@@ -172,7 +173,7 @@ export default class Game {
     this.minusAction();
   };
 
-  activePlayerPutsCard = (cardId: number, monsterId: number): PutCardReturnType => {
+  public activePlayerPutsCard = (cardId: number, monsterId: number): PutCardReturnType => {
     const activePlayer = this.getActivePlayer();
 
     // TODO for endgame test purposes
@@ -183,7 +184,7 @@ export default class Game {
     const placeCardResult = this.placeCardToMonster({
       player: activePlayer,
       cardId,
-      monsterId,
+      monsterId
     });
 
     this.actions -= 1;
@@ -203,7 +204,7 @@ export default class Game {
     player,
     cardId,
     monsterId,
-    card,
+    card
   }: {
     player: Player;
     cardId?: number;
@@ -215,7 +216,9 @@ export default class Game {
       : player.placeCardFromHandToMonster(cardId!, monsterId);
     // Не запоминать последний ход, если находимся в режиме способности
     if (!this.abilitiesMode) {
-      this.lastAction = GAME_ACTIONS.PLAY_CARD(targetMonster.body[targetMonster.body.length - 1].legion);
+      this.lastAction = GAME_ACTIONS.PLAY_CARD(
+        targetMonster.body[targetMonster.body.length - 1].legion
+      );
     }
 
     if (targetMonster.isDone()) {
@@ -234,7 +237,7 @@ export default class Game {
         this.startLegionMode(player.id, targetMonster.id, monsterLegion);
         return {
           type: MESSAGE_TYPE.AWAIT_LEGION_CARD,
-          legion: this.legionMode!.getLegionModeState(),
+          legion: this.legionMode!.getLegionModeState()
         };
       }
 
@@ -251,7 +254,7 @@ export default class Game {
     this.abilitiesMode = null;
 
     return {
-      type: 'GAME_OVER' as MessageType,
+      type: 'GAME_OVER' as MessageType
     };
   };
 
@@ -278,7 +281,9 @@ export default class Game {
     const activePlayer = this.getActivePlayer();
     const removedCards = activePlayer.removeCardsFromHand(cardIds);
     this.throwCardsAway(removedCards);
-    activePlayer.addCards(new Array(Math.floor(cardIds.length / 2)).fill(null).map(() => this.giveCard()));
+    activePlayer.addCards(
+      new Array(Math.floor(cardIds.length / 2)).fill(null).map(() => this.giveCard())
+    );
     this.lastAction = GAME_ACTIONS.CHANGE_CARDS;
     this.minusAction();
   };
@@ -301,9 +306,6 @@ export default class Game {
     this.cardsAvailable.splice(targetIndex, 0, movingCard);
   };
 
-  //
-  // Abilities mode methods
-
   startAbilitiesMode = (playerId: string, targetMonster: Monster) => {
     // create class here and assign ability handlers
     this.abilitiesMode = new AbilitiesMode({
@@ -311,7 +313,7 @@ export default class Game {
       targetMonster,
       giveCard: this.giveCard,
       stopAbilitiesMode: this.stopAbilitiesMode,
-      applyAbilityMap: this.applyAbilityMap,
+      applyAbilityMap: this.applyAbilityMap
     });
     console.log('started ability mode');
     // Logger.log('ABILITY MODE STARTED', this.abilitiesMode);
@@ -330,97 +332,8 @@ export default class Game {
     }
   };
 
-  applyAbility = (params: ApplyAbilityParams): PutCardReturnType => {
+  public applyAbility = (params: ApplyAbilityParams): PutCardReturnType => {
     return this.abilitiesMode!.applyAbility(params);
-  };
-
-  //
-  // Apply concrete abilities
-
-  applyWolfAbility: ApplyAbilityHandler<AbilityWolfData> = ({ cardIds, monsterId }) => {
-    const ability = this.abilitiesMode!.getCurrentAbility();
-    const abilityCards = ability.cards!;
-
-    const findCardIndex = (cardId: number) => {
-      const cardIndex = abilityCards.findIndex((card) => card.id === cardId);
-      if (cardIndex < 0) {
-        throw new Error(`ApplyWolfAbility: card ${cardId} is not found in ability state`);
-      }
-      return cardIndex;
-    };
-
-    // TODO double check with `action_experimental` that it equals to "THROW_OFF"
-    // Если monsterId не передан, значит игрок нажал на кнопку сбросить карту (карты)
-    if (monsterId === undefined) {
-      cardIds.forEach((cardId) => {
-        const cardIndex = findCardIndex(cardId);
-        const [thrownAwayCard] = abilityCards.splice(cardIndex, 1);
-        this.throwCardAway(thrownAwayCard);
-      });
-      return;
-    }
-
-    const activePlayer = this.getActivePlayer();
-    // установить можно только одну кару за раз, поэтому тут гарантированно нулевой индекс в массиве
-    const cardIndex = findCardIndex(cardIds[0]);
-
-    const placeCardResult = this.placeCardToMonster({
-      player: activePlayer,
-      card: abilityCards[cardIndex],
-      monsterId,
-    });
-
-    abilityCards.splice(cardIndex, 1);
-    ability.cards = abilityCards;
-    return placeCardResult;
-  };
-
-  applyDropAbility: ApplyAbilityHandler<AbilityDropData> = () => {
-    const ability = this.abilitiesMode!.getCurrentAbility()!;
-    const player = this.getActivePlayer();
-    // cards здесь определены точно, так как это применение способности и в стейте эти карты уже есть
-    player.addCards(ability.cards!);
-  };
-
-  applySmileAbility: ApplyAbilityHandler<AbilitySmileData> = ({ cardId, monsterId }) => {
-    const activePlayer = this.getActivePlayer();
-    return this.placeCardToMonster({ player: activePlayer, cardId, monsterId });
-  };
-
-  /**
-   * Забрать верхнюю карту чужого монстра на руку
-   */
-  applyAxeAbility: ApplyAbilityHandler<AbilityAxeData> = ({ targetPlayerId, targetMonsterId }) => {
-    const player = this.getActivePlayer();
-    const targetPlayer = this.getPlayerById(targetPlayerId);
-    const targetMonster = targetPlayer.getMosterById(targetMonsterId);
-
-    const removedCard = targetMonster.removeTopBodyPart();
-    player.addCard(removedCard);
-  };
-
-  /**
-   * кости, уничтожить недостроенного монстра целиком
-   */
-  applyBonesAbility: ApplyAbilityHandler<AbilityBonesData> = ({ targetPlayerId, targetMonsterId }) => {
-    const targetPlayer = this.getPlayerById(targetPlayerId);
-    const targetMonster = targetPlayer.getMosterById(targetMonsterId);
-
-    // проверка действительно ли монстр завершен ( но это также будет првоерено и на фронте)
-
-    // TODO реально ли это объединить в один метод, чтобы сразу карты убитого монстра попадали в cardsThrownAway
-    const removedCards = targetMonster.kill();
-    this.throwCardsAway(removedCards);
-  };
-
-  /**
-   * Выбросить верхнюю карту своего монстра, кроме текущего
-   */
-  applyTeethAbility: ApplyAbilityHandler<AbilityTeethData> = ({ targetMonsterId }) => {
-    const player = this.getActivePlayer();
-    const targetMonster = player.getMosterById(targetMonsterId);
-    const removedCard = targetMonster.removeTopBodyPart();
-    this.throwCardAway(removedCard);
   };
 
   //
@@ -431,7 +344,7 @@ export default class Game {
       playerId,
       monsterId,
       otherPlayers: this.getOtherPlayers(playerId),
-      legion,
+      legion
     });
     console.log('started legion mode: ', legion, this.legionMode);
   };
@@ -452,14 +365,17 @@ export default class Game {
     if (this.legionMode!.areAllPlayersResponded()) {
       const activePlayer = this.getActivePlayer();
       // activePlayer.id should be equal to this.legionMode!.playerId
-      this.startAbilitiesMode(activePlayer.id, activePlayer.getMosterById(this.legionMode!.monsterId));
+      this.startAbilitiesMode(
+        activePlayer.id,
+        activePlayer.getMosterById(this.legionMode!.monsterId)
+      );
       this.stopLegionMode();
       return this.abilitiesMode!.onAbility();
     }
 
     return {
-      type: MESSAGE_TYPE.AWAIT_LEGION_CARD,
-      legion: this.legionMode!.getLegionModeState(),
+      type: 'AWAIT_LEGION_CARD' as MessageType,
+      legion: this.legionMode!.getLegionModeState()
     };
   };
 

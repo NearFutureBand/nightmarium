@@ -1,6 +1,6 @@
-import { generateCryptoId } from "../helpers";
-import { Card, PlayerState } from "../types";
-import Monster from "./Monster";
+import { generateCryptoId } from '../helpers';
+import { Card, PlayerState } from '../types';
+import Monster from './Monster';
 
 class User {
   id: string;
@@ -45,12 +45,14 @@ export default class Player extends User {
     this.monsters = [];
   };
 
-  public getPlayerState = (isMe?: boolean): PlayerState<Card[] | number> => {
+  public serialize = (isMe?: boolean): PlayerState => {
     return {
       id: this.id,
       name: this.name,
-      cards: isMe ? this.cards : this.cards.length,
+      cards: isMe ? this.cards : undefined,
+      cardsCount: isMe ? undefined : this.cards.length,
       monsters: this.monsters,
+      readyToPlay: this.readyToPlay
     };
   };
 
@@ -68,10 +70,7 @@ export default class Player extends User {
     return targetMonster;
   };
 
-  public placeCardFromHandToMonster = (
-    cardId: number,
-    monsterId: number
-  ): Monster => {
+  public placeCardFromHandToMonster = (cardId: number, monsterId: number): Monster => {
     const targetMonster = this.monsters[monsterId];
     const card = this.findCardOnHandById(cardId);
     targetMonster.addCard(card);
@@ -97,8 +96,7 @@ export default class Player extends User {
 
   public howManyMonstersDone = () => {
     return this.monsters.reduce(
-      (doneMonsters, monster) =>
-        monster.isDone() ? doneMonsters + 1 : doneMonsters,
+      (doneMonsters, monster) => (monster.isDone() ? doneMonsters + 1 : doneMonsters),
       0
     );
   };
