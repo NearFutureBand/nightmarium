@@ -1,6 +1,6 @@
-import { useWebsocket } from '..';
+import { useGameData } from './useGameData';
 
 export const useAbility = () => {
-  const { ability } = useWebsocket();
-  return ability;
+  const { abilitiesMode } = useGameData();
+  return abilitiesMode;
 };

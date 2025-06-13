@@ -14,6 +14,7 @@ import {
 import Monster from './Monster';
 import Player from './Player';
 
+/** @deprecated */
 export class LegionMode {
   playerId: string;
   monsterId: number;

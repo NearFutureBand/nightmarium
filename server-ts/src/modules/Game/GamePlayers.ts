@@ -11,32 +11,32 @@ export default class GamePlayers {
     this.activePlayerIndex = null;
   }
 
-  addPlayer = (player: Player) => {
+  public addPlayer = (player: Player) => {
     const playersArrayLength = this.players.push(player);
     this.playerIdMap[player.id] = playersArrayLength - 1;
   };
 
-  removePlayer = (playerId: string) => {
+  public removePlayer = (playerId: string) => {
     const playerIndex = this.playerIdMap[playerId];
     this.players.splice(playerIndex, 1);
     this.reMapPlayers();
   };
 
-  resetPlayer = (playerId: string) => {
+  public resetPlayer = (playerId: string) => {
     this.getPlayerById(playerId).reset();
   };
 
-  /** @todo add try-catch if no activePlayer */
-  getActivePlayer = () => {
+  /** @todo add throw error if no activePlayer */
+  public getActivePlayer = () => {
     if (this.activePlayerIndex === null) return null;
     return this.players[this.activePlayerIndex];
   };
 
-  getPlayerById = (id: string): Player => {
+  public getPlayerById = (id: string): Player => {
     return this.players[this.playerIdMap[id]];
   };
 
-  setNextActivePlayer(callback?: () => void) {
+  public setNextActivePlayer(callback?: () => void) {
     if (!this.activePlayerIndex) {
       this.activePlayerIndex = 0;
     }
@@ -46,15 +46,15 @@ export default class GamePlayers {
     callback?.();
   }
 
-  getOtherPlayers = (playerId: string) => {
+  public getOtherPlayers = (playerId: string) => {
     return this.players.filter((player) => player.id !== playerId);
   };
 
-  forEachPlayer = (callback: (player: Player, index: number) => void) => {
+  public forEachPlayer = (callback: (player: Player, index: number) => void) => {
     this.players.forEach(callback);
   };
 
-  getAllPlayers = () => {
+  public getAllPlayers = () => {
     return this.players;
   };
 
@@ -63,5 +63,9 @@ export default class GamePlayers {
     this.players.forEach((player, index) => {
       this.playerIdMap[player.id] = index;
     });
+  };
+
+  public resetActivePlayer = () => {
+    this.activePlayerIndex = null;
   };
 }

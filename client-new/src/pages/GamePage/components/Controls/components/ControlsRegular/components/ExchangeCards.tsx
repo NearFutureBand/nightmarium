@@ -11,8 +11,7 @@ export const ExchangeCards = memo(function () {
   const canExchange = selectedCards.length >= 2;
   const handleExchangeCards = () => {
     sendMessage<{ cardIds: number[]; gameId: string }>({
-      /** @todo change type to EXCHANGE_CARDS */
-      type: 'CHANGE_CARDS',
+      type: 'EXCHANGE_CARDS',
       cardIds: selectedCards.map((card) => card.card.id),
       gameId: gameId!
     });

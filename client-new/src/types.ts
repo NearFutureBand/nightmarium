@@ -48,7 +48,7 @@ export type LegionState = {
   players: {
     [userId: string]: {
       userId: string;
-      howManyCardsHas: number; // сколько карт у игрока есть ( не может отдать больше этого количества)
+      howManyCardsHas: number;
       gaveCards: number;
       respondedCorrectly: boolean;
     };
@@ -81,6 +81,8 @@ export type Game = {
   otherPlayers: Player[];
   activePlayer?: Player;
   winnerId?: string;
+  legionMode?: LegionState;
+  abilitiesMode?: AbilityState;
 };
 
 // export type User = {

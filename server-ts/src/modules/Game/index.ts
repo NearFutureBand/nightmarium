@@ -53,7 +53,9 @@ export default class Game extends GameActions {
       ),
       actions: this.actions,
       lastAction: this.lastAction,
-      winnerId: this.winnerId
+      winnerId: this.winnerId,
+      legionMode: this.legionState?.serialize(),
+      abilitiesMode: this.abilities?.serialize()
     };
   };
 }

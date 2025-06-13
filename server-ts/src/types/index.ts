@@ -1,6 +1,10 @@
-import { PutCardReturnType } from 'src/modules/Game/GameActions/types';
 import Monster from '../modules/Monster';
-// import { MESSAGE_TYPE } from '../shared/types';
+import {
+  Legion,
+  LegionPlayerState,
+  LegionStateSerialized
+} from 'src/modules/Game/GameModes/Legion/types';
+import { AbilityStateSerialized } from 'src/modules/Game/GameModes/Abilities/types';
 
 export type MessageType =
   | 'HANDSHAKE'
@@ -19,9 +23,9 @@ export type MessageType =
   | 'EXCHANGE_CARDS'
   | 'READY_TO_PLAY'
   | 'LEAVE_GAME'
-  | 'PLAYER_CONNECTED';
-
-export type Legion = 'red' | 'orange' | 'blue' | 'green';
+  | 'PLAYER_CONNECTED'
+  | 'ADMIN_HANDSHAKE'
+  | 'ADMIN_RESORT_CARDS';
 
 export type Card = {
   id: number;
@@ -45,21 +49,12 @@ export type PlayerState = {
   readyToPlay: boolean;
 };
 
-export type AbilityState = {
-  type: number | null;
-  index: number; // Индекс способности в монстре ( 0 - 3 )
-  done: boolean; // Выполнена способность или нет - в целом пока бесполезно
-  inprogress: boolean;
-  actions: number; // Сколько действий осталось внутри этой способности, нужно для сложных сп. таких как Волк
-  cards?: Card[]; // Карты, выдаваемые внутри способности. Будут храниться здесь, чтобы оперировать только индексами карт
-};
-
-export type AbilitiesMode = {
-  playerId: string;
-  monsterId: number;
-  sequence: (number | null)[];
-  currentAbilityState: AbilityState;
-};
+// export type AbilitiesMode = {
+//   playerId: string;
+//   monsterId: number;
+//   sequence: (number | null)[];
+//   currentAbilityState: AbilityState;
+// };
 
 export type GameState = {
   id: string;
@@ -68,44 +63,23 @@ export type GameState = {
   otherPlayers: PlayerState[];
   actions: number;
   lastAction: string | null;
-  abilitiesMode?: AbilitiesMode;
+  abilitiesMode?: AbilityStateSerialized;
   winnerId?: string | null;
+  legionMode?: LegionStateSerialized;
 };
 
-export type ApplyAbilityParams = {
-  abilityNumber: number;
-  abilityType: number;
-} & AbilityWolfData &
-  AbilityDropData &
-  AbilitySmileData &
-  AbilityAxeData &
-  AbilityBonesData &
-  AbilityTeethData;
+// export type AbilityMessagePayload = {
+//   cards?: Card[];
+//   abilityNumber: number;
+//   abilityType: number;
+//   actions: number;
+//   monsterId: number;
+// };
 
-export type AbilityMessagePayload = {
-  cards?: Card[];
-  abilityNumber: number;
-  abilityType: number;
-  actions: number;
-  monsterId: number;
-};
+// export type PossibleServerResponseMessage = Message<{
+//   ability: AbilityMessagePayload;
+// }> | void;
 
-export type LegionPlayerState = {
-  playerId: string;
-  howManyCardsHas: number; // сколько карт у игрока есть ( не может отдать больше этого количества)
-  gaveCards: number;
-  respondedCorrectly: boolean;
-};
+// export type AbiltityMessageOrUndefined = Message<{ ability: AbilityMessagePayload }> | undefined;
 
-export type LegionMessagePayload = {
-  legion: Legion;
-  players: { [playerId: string]: LegionPlayerState };
-};
-
-export type PossibleServerResponseMessage = Message<{
-  ability: AbilityMessagePayload;
-}> | void;
-
-export type AbiltityMessageOrUndefined = Message<{ ability: AbilityMessagePayload }> | undefined;
-
-export type ApplyAbilityHandler<T = {}> = (params: T) => PutCardReturnType | void;
+// export type ApplyAbilityHandler<T = {}> = (params: T) => PutCardReturnType | void;

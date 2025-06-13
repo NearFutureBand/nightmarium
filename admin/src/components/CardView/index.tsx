@@ -21,13 +21,12 @@ export const CardView = ({
   return (
     <div
       className={twMerge(
-        'min-w-[200px] w-full max-w-[300px] h-20 border border-slate-700 bg-slate-400 p-2 shrink-0 z-0 relative',
+        'min-w-[200px] w-full max-w-[300px] h-20 rounded-xl bg-slate-400 p-2 shrink-0 z-0 relative',
         className
       )}
       draggable
       style={{ backgroundColor: LEGIONS[card.legion] }}
-      {...containerProps}
-    >
+      {...containerProps}>
       <div className="flex justify-between">
         <strong className="text-lg">
           ({index}) {card.id}
@@ -42,15 +41,14 @@ export const CardView = ({
         onDragEnter={onDragEnter}
         onDragLeave={onDragLeave}
         onDrop={onDrop}
-        onDragOver={onDragOver}
-      ></div>
+        onDragOver={onDragOver}></div>
     </div>
   );
 };
 
 const LEGIONS = {
-  'green': 'rgb(111, 194, 111)',
-  'red': 'rgb(226, 88, 88)',
-  'blue': 'rgb(92, 92, 218)',
-  'orange': 'rgb(210, 210, 68)'
-}
+  green: 'rgb(111, 194, 111)',
+  red: 'rgb(226, 88, 88)',
+  blue: 'rgb(92, 92, 218)',
+  orange: 'rgb(210, 210, 68)'
+};

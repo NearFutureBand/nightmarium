@@ -25,10 +25,18 @@ function GameState({ game }: { game: Game }) {
     sendMessage({ type: MESSAGE_TYPE.ADMIN_RESORT_CARDS, gameId: game.id, cardId, targetIndex });
   };
   return (
-    <div className="p-2 bg-slate-300">
+    <div className="p-2 bg-slate-500">
       <h1 className="text-2xl">Game {game.id}</h1>
-      <CardGrid cards={game.cardsAvailable} title="Cards available" updateCardsOrder={updateCardsOrder} />
-      <CardGrid cards={game.cardsThrownAway} title="Cards thrown" updateCardsOrder={updateCardsOrder} />
+      <CardGrid
+        cards={game.cards.cardsAvailable}
+        title="Cards available"
+        updateCardsOrder={updateCardsOrder}
+      />
+      <CardGrid
+        cards={game.cards.cardsThrownAway}
+        title="Cards thrown"
+        updateCardsOrder={updateCardsOrder}
+      />
     </div>
   );
 }
@@ -36,19 +44,25 @@ function GameState({ game }: { game: Game }) {
 function CardGrid({
   cards,
   title,
-  updateCardsOrder,
+  updateCardsOrder
 }: {
   cards: Card[];
   title: string;
   updateCardsOrder: (cardId: number, targetIndex: number) => void;
 }) {
-  const [draggedCard, setDraggedCard] = useState<{ cardId: number | null; cardIndex: number | null }>({
+  const [draggedCard, setDraggedCard] = useState<{
+    cardId: number | null;
+    cardIndex: number | null;
+  }>({
     cardId: null,
-    cardIndex: null,
+    cardIndex: null
   });
-  const [draggedOver, setDraggedOver] = useState<{ cardId: number | null; cardIndex: number | null }>({
+  const [draggedOver, setDraggedOver] = useState<{
+    cardId: number | null;
+    cardIndex: number | null;
+  }>({
     cardId: null,
-    cardIndex: null,
+    cardIndex: null
   });
 
   const handleDrop = () => {

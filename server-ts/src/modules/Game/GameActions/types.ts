@@ -1,7 +1,10 @@
-import { AbilityMessagePayload, LegionMessagePayload, Message } from 'src/types';
+import { PrepareNextAbilityResult } from '../GameModes/Abilities/types';
 
-export type PutCardReturnType =
-  | Message
-  | Message<{ legion: LegionMessagePayload }>
-  | Message<{ ability: AbilityMessagePayload }>
-  | undefined;
+export type PlayCardResult = PrepareNextAbilityResult & {
+  error?: string;
+  legionMode?: boolean;
+  gameOver?: boolean;
+  lastAction?: string;
+  putCardOnly?: boolean;
+  abilitiesMode?: boolean;
+};

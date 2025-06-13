@@ -1,4 +1,3 @@
-import { useWebsocket } from 'src/modules/websocket';
 import { ABILITIES, ABILITIES_DESCRIPTION } from '../../constants';
 import { Axe } from './components/Axe';
 import { Bones } from './components/Bones';
@@ -7,6 +6,7 @@ import { FC } from 'react';
 import { Drop } from './components/Drop';
 import { Smile } from './components/Smile';
 import { Teeth } from './components/Teeth';
+import { useAbility } from 'src/modules/websocket/hooks/useAbility';
 
 const ABILITY_CONTROLS: { [key: number]: FC } = {
   0: () => <Wolf />,
@@ -18,7 +18,7 @@ const ABILITY_CONTROLS: { [key: number]: FC } = {
 };
 
 export const ControlsAbility = () => {
-  const ability = useWebsocket((s) => s.ability);
+  const ability = useAbility();
   const abilityDescription = ABILITIES_DESCRIPTION[ability!.abilityType];
   const abilityName = ABILITIES[ability!.abilityType];
 

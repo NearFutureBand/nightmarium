@@ -1,15 +1,9 @@
-import {
-  AbilityMessagePayload,
-  ApplyAbilityParams,
-  GameState,
-  Legion,
-  Message,
-  MessageType,
-  PlayerState
-} from 'src/types';
+import { GameState, Message, MessageType, PlayerState } from 'src/types';
 import { Logger } from 'src/modules/Logger';
 import Player from 'src/modules/Player';
 import GameFabric from '../GameFabric';
+import { Legion } from 'src/modules/Game/GameModes/Legion/types';
+import { AbilityStateSerialized } from 'src/modules/Game/GameModes/Abilities/types';
 
 type GameMessageResponse = {
   broadcast?: Message;
@@ -38,11 +32,9 @@ export default class GameMessagesController extends GameFabric {
       SUBMIT_ABILITY: this.onSubmitAbility,
       CANCEL_ABILITY: this.onCancelAbility,
       THROW_LEGION_CARD: this.onThrowLegionCard,
-      LEAVE_GAME: this.onLeaveGame
-
-      // [MESSAGE_TYPE.LEAVE_GAME]: this.onLeaveGame,
-      // [MESSAGE_TYPE.ADMIN_HANDSHAKE]: this.onAdminHandshake,
-      // [MESSAGE_TYPE.ADMIN_RESORT_CARDS]: this.onAdminResortCards,
+      LEAVE_GAME: this.onLeaveGame,
+      ADMIN_HANDSHAKE: this.onAdminHandshake,
+      ADMIN_RESORT_CARDS: this.onAdminResortCards
     };
   }
 
@@ -82,7 +74,7 @@ export default class GameMessagesController extends GameFabric {
       me: PlayerState;
       otherPlayers: PlayerState[];
       game?: GameState;
-      ability?: AbilityMessagePayload;
+      ability?: AbilityStateSerialized;
       legion?: Legion;
     }> = {
       type: 'HANDSHAKE',
@@ -90,7 +82,8 @@ export default class GameMessagesController extends GameFabric {
       otherPlayers,
       game: usersGame?.serialize(playerId)
       /** @todo get back later */
-      // ability: usersGame?.abilitiesMode?.getMessagePayloadFromCurrentState?.(),
+      // ability: usersGame?.abilitiesMode?.serialize?.(),
+      /** @todo get back later */
       // legion: usersGame?.legionMode?.currentLegion
     };
 
@@ -172,14 +165,41 @@ export default class GameMessagesController extends GameFabric {
     gameId: string;
   }> = (clientId, message) => {
     try {
-      const result = this.getGameById(message.gameId)!.activePlayerPutsCard(
+      const result = this.getGameById(message.gameId)!.playerPutsCard(
         message.cardId,
         message.monsterId
       );
+      if (result.error) {
+        return {
+          toSenderOnly: {
+            type: 'PLAY_CARD',
+            error: result.error
+          }
+        };
+      }
+      if (result.gameOver) {
+        return {
+          broadcast: {
+            type: 'GAME_OVER'
+            // winnerId ?
+          }
+        };
+      }
+      if (result.legionMode) {
+        return {
+          broadcast: {
+            type: 'AWAIT_LEGION_CARD'
+          }
+        };
+      }
+      if (result.abilitiesMode) {
+        return {
+          broadcast: {
+            type: 'AWAIT_ABILITY'
+          }
+        };
+      }
       return {
-        // broadcast: result || {
-        //   type: 'PLAY_CARD'
-        // },
         broadcast: {
           type: 'PLAY_CARD'
         },
@@ -200,7 +220,7 @@ export default class GameMessagesController extends GameFabric {
     message
   ) => {
     const game = this.getGameById(message.gameId)!;
-    game.activePlayerExchangesCards(message.cardIds);
+    game.playerExchangesCards(message.cardIds);
     return {
       broadcast: {
         type: 'EXCHANGE_CARDS'
@@ -215,7 +235,7 @@ export default class GameMessagesController extends GameFabric {
 
   private onTakeCard: GameMessageHandler<{ gameId: string }> = (cliendId, message) => {
     const game = this.getGameById(message.gameId)!;
-    game.activePlayerTakesCard();
+    game.playerTakesCard();
     return {
       broadcast: {
         type: 'TAKE_CARD'
@@ -228,9 +248,11 @@ export default class GameMessagesController extends GameFabric {
     };
   };
 
+  /** @todo refactor */
   private onSubmitAbility: GameMessageHandler = (cliendId: string, message: Message<any>) => {
     const { type, gameId, ...abilityParams } = message;
     const game = this.getGameById(gameId);
+    const result = game?.playerUsesAbility(abilityParams);
     /** @todo get this back later */
     // const result = game!.applyAbility({
     //   ...abilityParams
@@ -247,10 +269,11 @@ export default class GameMessagesController extends GameFabric {
     };
   };
 
+  /** @todo refactor */
   private onCancelAbility: GameMessageHandler<{ gameId: string }> = (cliendId, message) => {
     const game = this.getGameById(message.gameId)!;
     /** @todo get this back later */
-    // const result = game.stopAbilitiesMode();
+    const result = game.stopAbilitiesMode();
     return {
       // broadcast: result || {
       //   type: 'PLAY_CARD'
@@ -269,10 +292,30 @@ export default class GameMessagesController extends GameFabric {
     gameId: string;
   }> = (clientId, message) => {
     const game = this.getGameById(message.gameId)!;
-    /** @todo get this back later */
-    // const result = game.playerThrowsLegionCard(message.playerId, message.cardIds);
+    const result = game.playerThrowsLegionCard(message.playerId, message.cardIds);
+
+    if (result.error) {
+      return {
+        toSenderOnly: {
+          type: 'AWAIT_LEGION_CARD',
+          error: result.error
+        }
+      };
+    }
+
+    // @ts-ignore
+    if (result.abilityMode) {
+      return {
+        broadcast: {
+          type: 'AWAIT_ABILITY'
+        }
+      };
+    }
+
     return {
-      // broadcast: result,
+      broadcast: {
+        type: 'AWAIT_LEGION_CARD'
+      },
       toAdmin: {
         type: 'AWAIT_LEGION_CARD',
         games: this.games,
@@ -297,6 +340,33 @@ export default class GameMessagesController extends GameFabric {
       },
       toAdmin: {
         type: 'LEAVE_GAME',
+        games: this.games,
+        users: this.players
+      }
+    };
+  };
+
+  private onAdminHandshake: GameMessageHandler = (clientId, message) => {
+    this.adminClientId = clientId;
+    return {
+      toAdmin: {
+        type: 'ADMIN_HANDSHAKE',
+        games: this.games,
+        users: this.players
+      }
+    };
+  };
+
+  private onAdminResortCards: GameMessageHandler<{
+    gameId: string;
+    cardId: number;
+    targetIndex: number;
+  }> = (cliendId, message) => {
+    const game = this.getGameById(message.gameId)!;
+    game.changeCardOrder(message.cardId, message.targetIndex);
+    return {
+      toAdmin: {
+        type: 'ADMIN_RESORT_CARDS',
         games: this.games,
         users: this.players
       }

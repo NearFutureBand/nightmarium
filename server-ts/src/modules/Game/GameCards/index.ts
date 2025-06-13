@@ -10,23 +10,23 @@ export default class GameCards {
     this.cardsThrownAway = [];
   }
 
-  giveDefaulCards = (): Card[] => {
+  public giveDefaulCards = (): Card[] => {
     return new Array(6).fill(null).map(() => {
       return this.giveCard();
     });
   };
 
-  giveCard = () => {
+  public giveCard = () => {
     const card = this.cardsAvailable[0];
     this.cardsAvailable = this.cardsAvailable.slice(1);
     return card;
   };
 
-  throwCardAway = (card: Card) => {
+  public throwCardAway = (card: Card) => {
     this.cardsThrownAway.push(card);
   };
 
-  throwCardsAway = (cards: Card[]) => {
+  public throwCardsAway = (cards: Card[]) => {
     cards.forEach((card) => this.throwCardAway(card));
   };
 
@@ -34,5 +34,18 @@ export default class GameCards {
     const result = cards.findIndex((card) => card.id === cardId);
     if (result === -1) return undefined;
     return result;
+  };
+
+  public replaceCards = (cardId: number, targetIndex: number) => {
+    let cardIndexFromAvailable = this.findCardIndexById(cardId, this.cardsAvailable);
+    if (cardIndexFromAvailable !== undefined) {
+      const [movingCard] = this.cardsAvailable.splice(cardIndexFromAvailable, 1);
+      this.cardsAvailable.splice(targetIndex, 0, movingCard);
+      return;
+    }
+    cardIndexFromAvailable = this.findCardIndexById(cardId, this.cardsThrownAway);
+    if (cardIndexFromAvailable === undefined) return;
+    const [movingCard] = this.cardsThrownAway.splice(cardIndexFromAvailable, 1);
+    this.cardsAvailable.splice(targetIndex, 0, movingCard);
   };
 }

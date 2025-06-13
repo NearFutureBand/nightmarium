@@ -1,4 +1,4 @@
-import { Legion } from '../types';
+import { Legion } from 'src/modules/Game/GameModes/Legion/types';
 
 export enum ABILITIES {
   'WOLF',

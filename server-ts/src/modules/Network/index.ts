@@ -96,7 +96,7 @@ export default class Network {
   private sendMessage = <T>(clientId: string, message: Message<T>) => {
     const wsClient = this.clientsMap[clientId];
     if (!wsClient) return;
-    Logger.log('<== Send message', message);
+    // Logger.log('<== Send message', message);
     wsClient.send(JSON.stringify(message));
   };
   private broadcast = (message: Message) => {

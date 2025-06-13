@@ -16,7 +16,7 @@ export enum MESSAGE_TYPE {
   READY_TO_PLAY = 'READY_TO_PLAY',
   LEAVE_GAME = 'LEAVE_GAME',
   ADMIN_HANDSHAKE = 'ADMIN_HANDSHAKE',
-  ADMIN_RESORT_CARDS = 'ADMIN_RESORT_CARDS',
+  ADMIN_RESORT_CARDS = 'ADMIN_RESORT_CARDS'
 }
 
 export type Message<T = object> = T & {
@@ -50,30 +50,31 @@ export type AbilityState = {
 
 export type Game = {
   id: string;
-  cardsAvailable: CardsAvailable;
-  cardsThrownAway: CardsThrownAway;
   _players: Player[];
   activePlayerIndex: number;
   actions: number;
   lastAction: string | null;
   idMap: IdMap;
-  abilitiesMode: {
-    playerId: string;
-    monsterId: number;
-    sequence: (number | null)[];
-    currentAbilityState: AbilityState;
-    giveCard: () => Card;
-    stopAbilitiesMode: () => void;
-    applyAbilityMap: unknown | null;
-  } | null;
-  legionMode: {
-    playerId: string;
-    monsterId: number;
-    otherPlayersResponses: { [playerId: string]: LegionPlayerState }; // Здесь должны быть остальные игроки
-    currentLegion: Legion;
-  } | null;
+  cards: {
+    cardsAvailable: CardsAvailable;
+    cardsThrownAway: CardsThrownAway;
+  };
+  // abilitiesMode: {
+  //   playerId: string;
+  //   monsterId: number;
+  //   sequence: (number | null)[];
+  //   currentAbilityState: AbilityState;
+  //   giveCard: () => Card;
+  //   stopAbilitiesMode: () => void;
+  //   applyAbilityMap: unknown | null;
+  // } | null;
+  // legionMode: {
+  //   playerId: string;
+  //   monsterId: number;
+  //   otherPlayersResponses: { [playerId: string]: LegionPlayerState }; // Здесь должны быть остальные игроки
+  //   currentLegion: Legion;
+  // } | null;
   monstersToWin: number;
-  applyAbilityMap: unknown | null;
 };
 export type Games = Record<string, Game>;
 
